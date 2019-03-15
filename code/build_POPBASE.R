@@ -1,5 +1,5 @@
 ############################################
-#### - Building the G matrix database - ####
+#### - Building the D matrix database - ####
 ############################################
 
 library(plyr)
@@ -9,6 +9,10 @@ list.files()
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
 
+pops_per_study=tapply(ddat$population, ddat$ID, function(x) length(unique(x)))
+
+
+ddat=ddat[-which(ddat$ID%in%names(which(pops_per_study<2))),]
 studies=unique(ddat$ID)
 studies
 length(studies)
@@ -25,6 +29,7 @@ for(s in 1:length(studies)){
 }
 
 names(Dlist)=studies
+Dlist[1:2]
 
 #Preparing metadata
 metadata = ddply(ddat, .(ID), summarize,

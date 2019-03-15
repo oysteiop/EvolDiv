@@ -1,7 +1,6 @@
-
-######################
-Combined
-
+######################################
+#### - Code for plotting G vs D - ####
+######################################
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
 
@@ -11,22 +10,27 @@ dsp=unlist(lapply(POPBASE, function(x) x$Species))
 both_sp=unique(gsp[which(gsp %in% dsp)])
 both_sp
 
-plotGD(species=both_sp[2], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
-plotGD(species=both_sp[2], gmatrix=1, dmatrix=1, log=T)
+x11()
+plotGD(species=both_sp[8], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
+plotGD(species=both_sp[8], gmatrix=1, dmatrix=1, log=T)
 
+s=2
+j=2
 pdf("figs/GvsDplots.pdf",width=5,height=5)
-for(s in 1:length(both_sp)){
+for(s in c(1:8)){
   species=both_sp[s]  
-  npop=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
-      plotGD(species=species, gmatrix="mean", dmatrix=1,nbeta=1000,log=T)
-}    
+  nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
+  nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
+    for(j in 1:1){  
+      plotGD(species=species, gmatrix="mean", dmatrix=j,nbeta=1000,log=T)
+}}
 dev.off()
 
 
 gmatrix=1
 npop=1
 species=both_sp[2]
-dmatrix=1
+dmatrix=2
 nbeta=1000
 
 ######################################################################
@@ -50,19 +54,25 @@ droptraits=function(x){
 
 plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",log=T){
   
-  npop=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
+  nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
+  nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
   
-  if(is.numeric(gmatrix) & gmatrix>npop){ 
-    stop(paste("Sorry, only", npop, "G matrices available for", species))
+  if(is.numeric(gmatrix) & gmatrix>nG){ 
+    stop(paste("Sorry, only", nG, "G matrices available for", species))
          }
+  if(is.numeric(dmatrix) & dmatrix>nD){ 
+    stop(paste("Sorry, only", nD, "D matrices available for", species))
+  }
   
   if(gmatrix=="mean"){
     gmat=computeMeanG(species)
+    gmatname="Mean"
   }
   
   else{
   gindex=which(unlist(lapply(EVOBASE, function(x) x$Species))==species)[gmatrix]
   gmat=EVOBASE[[gindex]]$G
+  gmatname=EVOBASE[[gindex]]$Study_ID
   }
   
   #Remove NAs
@@ -83,6 +93,7 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   
   dindex=which(unlist(lapply(POPBASE, function(x) x$Species))==species)[dmatrix]
   dmat=POPBASE[[dindex]]$D
+  dmatname=POPBASE[[dindex]]$Study_ID
   
   m=match(colnames(gmatscaled),colnames(dmat))
   dmat=dmat[m,m]
@@ -122,5 +133,7 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
     points(gmax,dmax,col="red", pch=16)
     points(gmin,dmin,col="blue", pch=16)
   }
+  
+  legend("topleft", c(paste("G:",gmatname), paste("D:",dmatname)), bty="n")
   return(list(D=dmat,G=gmatscaled))
 }
