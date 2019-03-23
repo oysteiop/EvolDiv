@@ -1,0 +1,350 @@
+##################################################################################################################
+# Description: Univariate analyses in: 
+#              Puentes et al. Similarity in G matrix structure among natural populations of Arabidopsis lyrata.
+#              Evolution.
+# Contact regarding code: Gustaf.Granath@gmail.com
+#
+# Tested with MCMCglmm version 2.22.1, nlme version 3.1-109 and R version 3.3.1 
+# script also requires the R packages "intervals" and "multcomp"
+##################################################################################################################
+
+# Import data ####
+genvar <- read.csv("puentes_etal_phen_univariate.csv")
+genvar$pop <- factor(genvar$pop, levels = c("STUC", "STUS", "SPIT", "VIS")) # Set order of levels
+
+# Get phenotypic means and standard errors and plot figure 1 ####
+
+se <- function (x) sd(x,na.rm = TRUE)/sqrt(length(x)) # SE function
+figdat <- cbind(aggregate(cbind(flowering.start.jd, flowers, petal.length.mm, petal.width.mm, 
+                                fruits, rosette.size.cm2) ~ pop, genvar, FUN=mean, na.rm = TRUE, na.action=NULL),
+                aggregate(cbind(flowering.start.jd, flowers, petal.length.mm, petal.width.mm, 
+                                fruits, rosette.size.cm2) ~ pop, genvar, FUN=se,  na.action=NULL)[,-1])
+
+# Change columns names (shorter)
+colnames(figdat)[-1][1:6] <- c("flwstr", "flow","petl", "petw",  "fruit", "size")
+colnames(figdat)[-1][7:12] <- c("flwstr.se", "flow.se", "petl.se", "petw.se", "fruit.se", "size.se")
+
+# Plot panels
+library(lattice)
+p1 <- dotplot(flwstr~pop, data=figdat, pch=19,col=1,ylim=c(135,150),cex=1.1, 
+              scales=list(x=list(cex=1.2),y=list(at=c(135,140,145,150),labels=c("135","140","145","150"),cex=1.1)),
+              ylab=list(label="Start of flowering",cex=1.2),
+              lo=(figdat$flwstr-figdat$flwstr.se),
+              hi=(figdat$flwstr+figdat$flwstr.se),
+              panel=function(x,y,lo,hi,subscripts,...)
+              {panel.xyplot(x,y,...)
+               panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+               ltext(x=0.75,y=149,label="a)",cex=1.5)
+               ltext(x = c(1:4), y = figdat$flwstr + 2, label = c("A", "A", "B", "B"), cex = 1 )}
+)
+
+p2<-dotplot(petw~pop,data=figdat, pch=19,col=1,ylim=c(2.5,3.5), cex=1.1, 
+            scales=list(x=list(cex=1.2),y=list(cex=1.1)),
+            ylab=list(label="Petal width (mm)",cex=1.2),
+            lo=(figdat$petw-figdat$petw.se),
+            hi=(figdat$petw+figdat$petw.se),
+            panel=function(x,y,lo,hi,subscripts,...)
+            {panel.xyplot(x,y,...)
+             panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+             ltext(x=0.75,y=3.45,label="d)",cex=1.5)
+             ltext(x = c(1:4), y = figdat$petw + 0.15, label = c("A", "A", "B", "A"), cex = 1 )}
+)
+
+p3<-dotplot(petl~pop,data=figdat, pch=19,col=1,ylim=c(2.5,3.5),cex=1.1, 
+            scales=list(x=list(cex=1.2),y=list(cex=1.1)),
+            ylab=list(label="Petal length (mm)",cex=1.2),
+            lo=(figdat$petl-figdat$petl.se),
+            hi=(figdat$petl+figdat$petl.se),
+            panel=function(x,y,lo,hi,subscripts,...)
+            {panel.xyplot(x,y,...)
+             panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+             ltext(x=0.75,y=3.45,label="c)",cex=1.5) 
+             ltext(x = c(1:4), y = figdat$petl + 0.15, label = c("A", "B", "A", "B"), cex = 1 )}
+)
+
+p4<-dotplot(flow~pop,data=figdat, pch=19,col=1,ylim=c(10,40),cex=1.1, 
+            scales=list(x=list(cex=1.2),y=list(cex=1.1)),
+            ylab=list(label="No. of flowers",cex=1.2),
+            lo=figdat$flow - figdat$flow.se,
+            hi=figdat$flow + figdat$flow.se,
+            panel=function(x,y,lo,hi,subscripts,...)
+            {panel.xyplot(x,y,...)
+             panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+             ltext(x=0.75,y=38,label="b)",cex=1.5) 
+             ltext(x = c(1:4), y = figdat$flow + 4, label = c("A", "B", "B", "B"), cex = 1 )}
+)
+
+p5<-dotplot(fruit~pop,data=figdat, pch=19,col=1,ylim=c(0,20),cex=1.1, 
+            scales=list(x=list(cex=1.2),y=list(cex=1.1)),
+            ylab=list(label="No. of fruits",cex=1.2),
+            lo=(figdat$fruit - figdat$fruit.se),
+            hi=(figdat$fruit + figdat$fruit.se),
+            panel=function(x,y,lo,hi,subscripts,...)
+            {panel.xyplot(x,y,...)
+             panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+             ltext(x=0.75,y=19,label="e)",cex=1.5) 
+             ltext(x = c(1:4), y = figdat$fruit + 2.5, label = c("A", "B", "C", "C"), cex = 1 )}
+)
+
+p6<-dotplot(size~pop,data=figdat, pch=19,col=1,ylim=c(0,14),cex=1.1, 
+            scales=list(x=list(cex=1.2),y=list(cex=1.1)),
+            ylab=list(label=expression(paste("Rosette size (",cm^2,")")),cex=1.2),
+            lo=(figdat$size-figdat$size.se),
+            hi=(figdat$size+figdat$size.se),
+            panel=function(x,y,lo,hi,subscripts,...)
+            {panel.xyplot(x,y,...)
+             panel.segments(x,lo[subscripts],x,hi[subscripts],...)
+             ltext(x=0.75,y=13,label="f)",cex=1.5)
+             ltext(x = c(1:4), y = figdat$size + 2, label = c("A", "B", "C", "C"), cex = 1 )}
+)
+
+# Put together panels and write to pdf
+pdf("Fig_1_phenMeans2.pdf", height = 10, width = 8)
+print(p1, split=c(1,1,2,3), more = TRUE)
+print(p4, split=c(2,1,2,3), more = TRUE)
+print(p3, split=c(1,2,2,3), more = TRUE)
+print(p2, split=c(2,2,2,3), more = TRUE)
+print(p5, split=c(1,3,2,3), more = TRUE)
+print(p6, split=c(2,3,2,3), more = TRUE)
+dev.off()
+# End figure 1
+
+
+# Estimate h2, etc for Table 2 ####
+
+# log flowers, fruits and size
+genvar$flowers.log <- log(genvar$flowers)
+genvar$fruits.log <- log(genvar$fruits + 1)
+genvar$rosette.size.cm2.log <- log(genvar$rosette.size.cm2)
+
+# Subset data to remove sires with only one dam
+# First load the trim.dat function in the end of the script.
+fs.genvar <- trim.dat(genvar,  "flowering.start.jd")
+petw.genvar <- trim.dat(genvar,  "petal.width.mm")
+petl.genvar <- trim.dat(genvar,  "petal.length.mm")
+flw.genvar <- trim.dat(genvar,  "flowers.log")
+frts.genvar <- trim.dat(genvar,  "fruits.log")
+size.genvar <- trim.dat(genvar,  "rosette.size.cm2.log")
+
+# Perform statistical analyses
+# Run function to reproduce table 2 in paper
+# NOTE! First load function "uni_table_mcmc" at the end of this script
+# resp = response used for estimating genetic variances
+# reps_means = response used to calculate the population trait means
+# Number of itterations can be lowered for faster computation but give less accurate estimates.
+# WARNING! even with few itterations this takes a long time....very long time.
+library(MCMCglmm)
+set.nitt = 150000
+set.burnin = 20000
+tab.mod1 <- uni_table_mcmc(fs.genvar, resp = "flowering.start.jd", resp_means = "flowering.start.jd", 
+                           nitt=set.nitt,burnin=set.burnin)
+tab.mod2 <- uni_table_mcmc( petw.genvar, resp = "petal.width.mm", resp_means = "petal.width.mm", 
+                            nitt=set.nitt,burnin=set.burnin)
+tab.mod3 <- uni_table_mcmc( petl.genvar, resp = "petal.length.mm", resp_means = "petal.length.mm", 
+                            nitt=set.nitt,burnin=set.burnin)
+tab.mod4 <- uni_table_mcmc( flw.genvar, resp = "flowers.log", resp_means = "flowers", 
+                            nitt=set.nitt,burnin=set.burnin)
+tab.mod5 <- uni_table_mcmc( frts.genvar, resp = "fruits.log", resp_means = "fruits", 
+                            nitt=set.nitt,burnin=set.burnin)
+tab.mod6 <- uni_table_mcmc( size.genvar, resp = "rosette.size.cm2.log", resp_means = "rosette.size.cm2", 
+                            nitt=set.nitt,burnin=set.burnin)
+# Put together the table
+genvar.table <- rbind(
+  do.call(cbind.data.frame, tab.mod1),  	
+  do.call(cbind.data.frame, tab.mod2),		
+  do.call(cbind.data.frame, tab.mod3),		
+  do.call(cbind.data.frame, tab.mod4),		
+  do.call(cbind.data.frame, tab.mod5),		
+  do.call(cbind.data.frame, tab.mod6) )		
+genvar.table # Print table
+
+#save table
+write.csv(genvar.table, file = "genvar_table2_mcmc.csv")
+
+
+# Reproduce REML analyses presented as supplemental material. Table S1.
+# NOTE! First load function "uni_table_lme" at the end of this script
+# resp = response used for estimating genetic variances
+# reps_means = response used to calculate the population trait means
+
+library(nlme)
+tab.mod1 <- uni_table_lme( fs.genvar, resp = "flowering.start.jd", resp_means = "flowering.start.jd")
+tab.mod2 <- uni_table_lme( petw.genvar, resp = "petal.width.mm", resp_means = "petal.width.mm")
+tab.mod3 <- uni_table_lme( petl.genvar, resp = "petal.length.mm", resp_means = "petal.length.mm")
+tab.mod4 <- uni_table_lme( flw.genvar, resp = "flowers.log", resp_means = "flowers")
+tab.mod5 <- uni_table_lme( frts.genvar, resp = "fruits.log", resp_means = "fruits")
+tab.mod6 <- uni_table_lme( size.genvar, resp = "rosette.size.cm2.log", resp_means = "rosette.size.cm2")
+
+# Put table together
+genvar.tableLME <- rbind(
+  do.call(cbind.data.frame, tab.mod1),		
+  do.call(cbind.data.frame, tab.mod2),		
+  do.call(cbind.data.frame, tab.mod3),		
+  do.call(cbind.data.frame, tab.mod4),		
+  do.call(cbind.data.frame, tab.mod5),		
+  do.call(cbind.data.frame, tab.mod6) )		
+genvar.tableLME
+
+#save table
+write.csv(genvar.tableLME, file = "genvar_table_s1_reml.csv")
+
+
+
+# Functions to load first ####
+
+# Function to subset data and remove sires with only one dam
+trim.dat <- function( data, response) {
+  dat <- data[ !(is.na(data[response])), ]
+  len <- rep(1, nrow(dat) )
+  test1 <- with(dat, aggregate(len, list(pop = pop, sire = sire, dam = dam ), sum ))
+  sub.sir <- xtabs( ~ sire, test1)
+  sub.sir <- sub.sir[ sub.sir > 1]
+  out <- subset(dat, sire %in% names(sub.sir) )
+  return(out)
+}
+
+#  Wrapper function for MCMCglmm to reproduce table 2
+uni_table_mcmc <- function (dat, resp, resp_means, nitt=150000,burnin=20000) {
+  var.sire <- numeric();	var.dam <- numeric(); var.resid <- numeric()
+  sign.sire <- numeric();	sign.dam <- numeric();heritability <- numeric()
+  mean.var <- numeric(); se.var <- numeric()
+  formula = "pop"
+  ss<-eval( parse( text = as.expression( paste( resp, "~", formula, sep="" ))))
+  # parameter expansion priors
+  prior <- list(R=list(V=diag(4), nu=4.002),
+                G=list(G1=list(V=diag(4), nu=0.002, alpha.mu=c(0,0,0,0), alpha.V=25^2*diag(4)),
+                       G2=list(V=diag(4), nu=0.002, alpha.mu=c(0,0,0,0), alpha.V=25^2*diag(4))))
+  
+  # sire = sires nested in population with unique ids
+  # dam = dams nested in sire and population with unique ids
+  mod.full <- MCMCglmm(ss, random=~idh(pop):sire + idh(pop):dam,
+                       rcov=~idh(pop):units, data=dat, nitt=nitt, burnin=burnin,thin=50,
+                       prior=prior)
+  
+  # Run models for each population to examine delta DIC for variance components  
+  pop.name <- levels( dat[[ "pop" ]])
+  for (i in 1:4) {
+    
+    dat1<-dat[dat$pop==pop.name[i], ]
+    mean.var[i]<-mean(dat1[[resp_means]])
+    se.var[i]<-sd(dat1[[resp_means]])/sqrt(length(dat1[[resp_means]]))
+    
+    ss <- eval( parse( text = as.expression( paste( resp, "~", "1", sep = "" ))))
+    
+    priorP <- list(R=list(V=diag(1), nu=0.002),
+                   G=list(G1=list(V=diag(1), nu=0.002,alpha.mu=c(0), alpha.V=1000*diag(1)),
+                          G2=list(V=diag(1), nu=0.002,alpha.mu=c(0), alpha.V=1000*diag(1))))    
+    priorPred <- list(R=list(V=diag(1), nu=0.002),
+                      G=list(G1=list(V=diag(1), nu=0.002,alpha.mu=c(0), alpha.V=1000*diag(1))))    
+    
+    mod.start <- MCMCglmm(ss, random=~sire + dam,
+                          data=dat1, nitt=nitt, burnin=burnin,thin=20,
+                          prior=priorP)
+    mod.red <- MCMCglmm(ss, random=~ dam,
+                        data=dat1, nitt=nitt, burnin=burnin,thin=20,
+                        prior=priorPred)
+    
+    sign.sire[i] <- mod.start$DIC - mod.red$DIC
+    
+    mod.red <- MCMCglmm(ss, random=~ sire,
+                        data=dat1, nitt=nitt, burnin=burnin,thin=20,
+                        prior=priorPred)
+    sign.dam[i] <- mod.start$DIC - mod.red$DIC
+    
+  }
+  
+  Nsire <- sapply(with(dat, tapply(sire, pop, unique)), length) 
+  Ndam <- sapply(with(dat, tapply(dam, pop, unique)), length)
+  Nplant <- c( xtabs( ~ pop, dat) )
+  var.sire <- apply(mod.full$VCV[,1:4], 2, mean)
+  var.dam <- apply(mod.full$VCV[,5:8], 2, mean)
+  var.resid <- apply(mod.full$VCV[,9:12], 2, mean)
+  heritability <- (4 * var.sire) / (var.sire + var.dam + var.resid)
+  
+  # Get uncertainty around h2
+  heritabilitySTUC <- (4 * mod.full$VCV[,1]) / 
+    (mod.full$VCV[,1] +  mod.full$VCV[,5] + mod.full$VCV[,9] )
+  heritabilitySTUS <- (4 * mod.full$VCV[,2]) / 
+    (mod.full$VCV[,1] +  mod.full$VCV[,6] + mod.full$VCV[,10] )
+  heritabilitySPIT <- (4 * mod.full$VCV[,3]) / 
+    (mod.full$VCV[,1] +  mod.full$VCV[,7] + mod.full$VCV[,11] )
+  heritabilityVIS <- (4 * mod.full$VCV[,4]) / 
+    (mod.full$VCV[,1] +  mod.full$VCV[,8] + mod.full$VCV[,12] )
+  herUnSTUC <- round(c(HPDinterval(heritabilitySTUC)), 3)
+  herUnSTUS <- round(c(HPDinterval(heritabilitySTUS)), 3)
+  herUnSPIT <- round(c(HPDinterval(heritabilitySPIT)), 3)
+  herUnVIS <- round(c(HPDinterval(heritabilityVIS)), 3)
+  herUn <- rbind(herUnSTUC, herUnSTUS, herUnSPIT, herUnVIS)
+  herUn <- paste(herUn[,1],herUn[,2], sep = ",")
+  
+  # Multcomp of trait means with 95% CI
+  i1 <- HPDinterval(mod.full$Sol[,1])
+  i2 <- HPDinterval(mod.full$Sol[,1])+mean(mod.full$Sol[,2])
+  i3 <- HPDinterval(mod.full$Sol[,1])+mean(mod.full$Sol[,3])
+  i4 <- HPDinterval(mod.full$Sol[,1])+mean(mod.full$Sol[,4])
+  library(intervals)
+  inter <- Intervals(matrix(c(i1,i2,i3,i4), ncol=2,byrow=TRUE))
+  diffs <- interval_overlap(inter, inter)
+  lett <- unlist(lapply(diffs, function (x) x[1]))
+  
+  return( list("response" = resp, "pop" = pop.name, "mean" = round(mean.var, 2), "se" = round(se.var, 2), 
+               "Sign. diff" = lett, "Sire_Sigma" = round(var.sire, 3), "deltaDIC_Sire" = round(sign.sire, 3), "Dam_Sigma" = round(var.dam, 3), 
+               "deltaDIC_dam" = round(sign.dam, 3), "Error_sigma" = round(var.resid, 3), 
+               "H2" = round(heritability, 3), "HPD_H2" = herUn, "No. Sires" = Nsire , "No. Dams" = Ndam, "No. Plants" = Nplant ))
+}
+
+#  Wrapper function for lme to reproduce table 2
+uni_table_lme <- function (dat, resp, resp_means) {
+  var.sire <- numeric();  var.dam <- numeric(); var.resid <- numeric()
+  sign.sire <- numeric();	sign.dam <- numeric();heritability <- numeric()
+  mean.var <- numeric(); se.var <- numeric()
+  formula = "pop"
+  ss<-eval( parse( text = as.expression( paste( resp, "~", formula, sep="" ))))
+  mod.full <- lme(ss, random = ~ 0 + pop|sire/dam, 
+                  data = dat, weights=varIdent(form=~1|pop), control=lmeControl(msMaxIter = 50) )
+  
+  # run models for each population to test variance components with LRT
+  pop.name <- levels( dat[[ "pop" ]])
+  for (i in 1:4) {
+    
+    dat1<-dat[dat$pop==pop.name[i], ]
+    mean.var[i]<-mean(dat1[[resp_means]])
+    se.var[i]<-sd(dat1[[resp_means]])/sqrt(length(dat1[[resp_means]]))
+    
+    ss <- eval( parse( text = as.expression( paste( resp, "~", "1", sep = "" ))))
+    mod.start <- lme(ss, random = ~ 1 |sire/dam, 
+                     data = dat1, control=lmeControl(msMaxIter = 50) )
+    
+    mod.red <- lme(ss, random = ~ 1 |dam, 
+                   data = dat1, control=lmeControl(msMaxIter = 50) )
+    
+    sign.sire[i] <- (1 - pchisq(2 * (logLik(mod.start,REML=TRUE) - logLik(mod.red,REML=TRUE)), 1 )) / 2
+    
+    mod.red <- lme(ss, random = ~ 1 |sire, 
+                   data = dat1, control=lmeControl(msMaxIter = 50) )
+    sign.dam[i] <- (1 - pchisq(2 * (mod.start$logLik - mod.red$logLik), 1 )) / 2
+    
+  }
+  
+  Nsire <- sapply(with(dat, tapply(sire, pop, unique)), length) 
+  Ndam <- sapply(with(dat, tapply(dam, pop, unique)), length)
+  Nplant <- c( xtabs( ~ pop, dat) )
+  var.sire <- as.numeric(VarCorr(mod.full)[ 2:5 ])
+  var.dam <- as.numeric(VarCorr(mod.full)[ 7:10 ])
+  var.resid <- c(as.numeric(VarCorr(mod.full)[ 11]) * (coef(mod.full$modelStruct$varStruct, unconstrained=FALSE, allCoef=TRUE))^2)
+  var.resid <- var.resid[c(2,3,1,4)] # the weights argument in lme() dont keep the pop level order. This fixes that.
+  heritability <- (4 * var.sire) / (var.sire + var.dam + var.resid)
+  
+  library(multcomp) # To test differences between population trait means
+  # The ghlt() function requires that the model terms are in the global environment
+  # Hence the repetition of "ss" and rm()
+  ss <<- eval( parse( text = as.expression( paste( resp, "~", formula, sep="" ))))
+  mult.sum <- summary(glht(mod.full, linfct = mcp(pop = "Tukey")) )
+  mult.letter <- cld(mult.sum)$mcletters$Letters
+  rm(list = ls(envir=globalenv())[grep("ss", ls(envir=globalenv()))], envir = globalenv())
+  
+  return( list("response" = resp, "pop" = pop.name, "mean" = round(mean.var, 2), "se" = round(se.var, 2),
+               "F_stat" = round(anova(mod.full)$'F-value'[2], 2), "P-value" = round(anova(mod.full)$'p-value'[2], 3), "Sign. diff" = mult.letter, 
+               "Sire_Sigma" = round(var.sire, 3), "P_Sire" = round(sign.sire, 3), "Dam_Sigma" = round(var.dam, 3), "P_dam" = round(sign.dam, 3), "Error_sigma" = round(var.resid, 3), 
+               "H2" = round(heritability, 3), "No. Sires" = Nsire , "No. Dams" = Ndam, "No. Plants" = Nplant ))
+}

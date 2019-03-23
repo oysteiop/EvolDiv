@@ -1,0 +1,910 @@
+###################################################################################################################
+# Description: Multivariate/G matrices analyses in: 
+#              Puentes et al. Similarity in G matrix structure among natural populations of Arabidopsis lyrata.
+#              Evolution.
+# Contact regarding code: Gustaf.Granath@gmail.com
+#
+# Tested with MCMCglmm version 2.22.1 and R version 3.3.1 
+# script also requires the R packages "ellipse" and "MasterBayes"
+####################################################################################################################
+
+# Import data ####
+# The data file (puentes_etal_phen_multivariate_G_matrices.csv) contains no missing data
+# for the five response variables and there is at least two dams within each sire.
+genvar <- read.csv("puentes_etal_phen_multivariate_G_matrices.csv")
+genvar$pop <- factor(genvar$pop, levels = c("STUC", "STUS", "SPIT", "VIS")) # Set order of levels
+
+# standardize (1 sd) the 5 response variables included in the G matrix
+genvar$flowering.start.jd.s <- scale(genvar$flowering.start.jd)
+genvar$petal.width.mm.s <- scale(genvar$petal.width.mm)
+genvar$petal.length.mm.s <- scale(genvar$petal.length.mm)
+genvar$flowers.s <- scale(genvar$flowers)
+genvar$rosette.size.cm2.s <- scale(genvar$rosette.size.cm2)
+
+# Estimate G matrices ####
+# Number of iterations can be lowered for faster computation but gives less accurate estimates.
+# WARNING, this takes a long time....very long time.
+# sire = sires nested in population with unique ids
+# dam = dams nested in sire and population with unique ids
+
+library(MCMCglmm)
+# Set priors. Alternative priors were tested as well. See Methods for details.
+priors <- list(R=list(V=diag(5), nu=4.001), 
+         G = list(G1 = list(V=diag(5),nu=4.001),
+                  G2 = list(V=diag(5),nu=4.001)))
+
+# G matrix for Norway (G matrix estimated over the two norwegian populations) 
+genvar.nor <- subset(genvar, country=="norway")
+genvar.nor <- droplevels(genvar.nor)
+Gmat.mod.nor <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1 + trait:pop,
+                     random=~us(trait):sire + us(trait):dam,family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.nor,
+                     rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=400000) 
+
+# G matrix for Sweden (G matrix estimated over the two swedish populations) 
+genvar.swe <- subset(genvar, country=="sweden")
+genvar.swe <- droplevels(genvar.swe)
+Gmat.mod.swe <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1 + trait:pop,
+                         random=~us(trait):sire + us(trait):dam,family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.swe,
+                         rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=400000) 
+
+# G matrix for STUC population 
+genvar.stuc <- subset(genvar, pop=="STUC")
+genvar.stuc <- droplevels(genvar.stuc)
+Gmat.mod.stuc <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1,
+                 random=~us(trait):sire + us(trait):dam,
+                 family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.stuc,
+                 rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=500000) 
+# G matrix for STUS population 
+genvar.stus <- subset(genvar, pop=="STUS")
+genvar.stus <- droplevels(genvar.stus)
+Gmat.mod.stus <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1,
+                          random=~us(trait):sire + us(trait):dam,
+                          family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.stus,
+                          rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=500000) 
+# G matrix for SPIT population
+genvar.spit <- subset(genvar, pop=="SPIT")
+genvar.spit <- droplevels(genvar.spit)
+Gmat.mod.spit <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1,
+                          random=~us(trait):sire + us(trait):dam,
+                          family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.spit,
+                          rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=500000) 
+# G matrix for VIS population 
+genvar.vis <- subset(genvar, pop=="VIS")
+genvar.vis <- droplevels(genvar.vis)
+Gmat.mod.vis <- MCMCglmm(c(flowering.start.jd.s,petal.width.mm.s,petal.length.mm.s, flowers.s, rosette.size.cm2.s) * 10 ~ trait-1,
+                          random=~us(trait):sire + us(trait):dam,
+                          family=c("gaussian","gaussian","gaussian","gaussian","gaussian"), data=genvar.vis,
+                          rcov=~us(trait):units, nitt=4000000, prior=priors, verbose=T, thin=300, burnin=500000) 
+
+# Extract G matrices from models. Variance components are multiplied with 4
+# to account for the half-sib design and divided by 100
+# to adjust for the *10 of the response variables. 
+# (*10 is used to improve estimates of small variances) 
+f <- function(x){list(matrix(x,nrow=5,ncol=5,byrow=F))}
+Gmcmc.nor <- lapply(apply(Gmat.mod.nor$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+Gmcmc.swe <- lapply(apply(Gmat.mod.swe$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+Gmcmc.stuc <- lapply(apply(Gmat.mod.stuc$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+Gmcmc.stus <- lapply(apply(Gmat.mod.stus$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+Gmcmc.spit <- lapply(apply(Gmat.mod.spit$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+Gmcmc.vis <- lapply(apply(Gmat.mod.vis$VCV[,1:25]*4/100, 1, f), "[[", 1) 
+
+# TRAIT VARIATION AMONG POPULATIONS ####
+
+# Calculate mean G matrix for each model
+# Table S2.
+Gmcmc.mean.nor <- matrix(colMeans(Gmat.mod.nor$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.mean.swe <- matrix(colMeans(Gmat.mod.swe$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.mean.stuc <- matrix(colMeans(Gmat.mod.stuc$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.mean.stus <- matrix(colMeans(Gmat.mod.stus$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.mean.spit <- matrix(colMeans(Gmat.mod.spit$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.mean.vis <- matrix(colMeans(Gmat.mod.vis$VCV[,1:25]),nrow=5,ncol=5,byrow=F)*4/100
+# or median
+Gmcmc.median.nor <- matrix(apply(Gmat.mod.nor$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.median.swe <- matrix(apply(Gmat.mod.swe$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.median.stuc <- matrix(apply(Gmat.mod.stuc$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.median.stus <- matrix(apply(Gmat.mod.stus$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.median.spit <- matrix(apply(Gmat.mod.spit$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+Gmcmc.median.vis <- matrix(apply(Gmat.mod.vis$VCV[,1:25],2,median),nrow=5,ncol=5,byrow=F)*4/100
+
+# Get posterior 95% HPD intervals for standardized G matrices
+# Table S3
+# Run the Gmat_HPD function for each population 
+Gmat_HPD <-  function (Gmat) {
+corG2 <- lapply(Gmat, as.vector)
+corG2 <- do.call(rbind,corG2)
+corG2 <- as.mcmc(corG2)
+fhpd <- function (x) { x <- as.mcmc(x); HPDinterval(x, prob=0.95) }
+hpd <- round(apply(corG2,2, fhpd ),3)
+int.res <- paste(hpd[1,],hpd[2,],sep=" , ")
+mat.int <- matrix(int.res,nrow=5,ncol=5, byrow=F)
+return(mat.int)
+}
+# For example STUC population
+Gmat_HPD(Gmcmc.stuc) # repeat for other populations
+
+# Transform standardized G matrices to unstandardized
+# Table S4
+# Calculate SD
+SDmat <- diag(c(sd(genvar$flowering.start.jd), sd(genvar$petal.width.mm),
+                sd(genvar$petal.length.mm), sd(genvar$flowers), sd(genvar$rosette.size.cm2)))
+SDmat[1,2:5] <- SDmat[2:5,1] <- SDmat[1,1]*diag(SDmat)[2:5]
+SDmat[2,3:5] <- SDmat[3:5,2] <- SDmat[2,2]*diag(SDmat)[3:5]
+SDmat[3,4:5] <- SDmat[4:5,3] <- SDmat[3,3]*diag(SDmat)[4:5]
+SDmat[4,5] <- SDmat[5,4] <- SDmat[4,4]*diag(SDmat)[5]
+diag(SDmat) <- diag(SDmat)*diag(SDmat)
+# Transform G matrices to "raw" scale as in Table S4
+rawGnor <-Gmcmc.mean.nor * SDmat
+rawGswe <-Gmcmc.mean.swe * SDmat
+rawGstuc <-Gmcmc.mean.stuc * SDmat
+rawGstus <-Gmcmc.mean.stus * SDmat
+rawGspit <-Gmcmc.mean.spit * SDmat
+rawGvis <-Gmcmc.mean.vis * SDmat
+
+# Genetic and phenotypic correlations ####
+# Fig. 2, Table 3
+
+# Function to test correlation coefficient != 0
+cor.prob <- function(X, dfr = nrow(X) - 2) {
+  R <- cor(X,use="complete.obs")
+  above <- row(R) < col(R)
+  r2 <- R[above]^2
+  Fstat <- r2 * dfr / (1 - r2)
+  R[above] <- 1 - pf(Fstat, 1, dfr)
+  R
+}
+
+# To reproduce Table 3 we loop over the populations to: 
+# 1) calculate phenotypic correlations
+# 2) and associated P-values
+# 3) calculate genetic correlations
+# 4) test if the posterior distribution (HPD interval) of the genetic correlation
+# overlap zero.
+phen.corr <- list()
+phen.corr.tab <- list()
+corr.tab.Sign <- list()
+pop.list <- levels(genvar$pop)
+
+pop.Gs.mcmc <- list(Gmcmc.stuc, Gmcmc.stus, Gmcmc.spit ,Gmcmc.vis )
+pop.Gs.mean <- list(Gmcmc.mean.stuc, Gmcmc.mean.stus, Gmcmc.mean.spit ,Gmcmc.mean.vis )
+
+for (i in 1:4) {
+genvar.sub.pcorr <- as.matrix(subset(genvar[genvar$pop == pop.list[i],], select= c("flowering.start.jd", "petal.width.mm",
+                                             "petal.length.mm", "flowers", "rosette.size.cm2")))
+phen.corr[[i]] <- cor(genvar.sub.pcorr, use="complete.obs")
+colnames(phen.corr[[i]])<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+rownames(phen.corr[[i]])<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+phen.corr.tab[[i]] <- cor.prob(genvar.sub.pcorr)
+corr.tab.Sign[[i]] <- ifelse(phen.corr.tab[[i]]<0.05, paste(round(phen.corr[[i]],3),"*",
+                                                                             sep=""),round(phen.corr[[i]],3) )
+names(corr.tab.Sign)[[i]] <- pop.list[[i]]
+
+# Add genetic correlation to Table 3
+# First calculate the correlation for all Gs and then 
+# test if the posterior distribution overlap zero.
+gen.corr <- round(cov2cor(pop.Gs.mean[[i]]), 3)
+
+corG <- lapply(pop.Gs.mcmc[[i]], function (x) cov2cor(x) )
+corG2 <- lapply(corG, as.vector)
+corG2 <- do.call(rbind,corG2)
+corG2 <- as.mcmc(corG2)
+fhpd <- function (x) { x <- as.mcmc(x); HPDinterval(x,prob=0.85) }
+hpd <- round(apply(corG2,2, fhpd ),3)
+sign.gen <- apply(hpd, 2, function (x) all(x >0) | all(x < 0))
+# Add * if not overlap zero
+gen.corr.sign <- ifelse(sign.gen, paste(gen.corr,"*", sep=""), gen.corr) 
+below <- row(gen.corr) > col(gen.corr)
+corr.tab.Sign[[i]][below] <- gen.corr.sign[below]
+}
+
+# Print Table 3
+corr.tab.Sign
+
+  # Figure 2
+# uses the function myplotcor() (load at the bottom of this script) 
+# which is modified code from the "corrplot" package.
+# Note that this function requires the "ellipse" package.
+
+library(ellipse)
+#png("corr_plot.png",type="cairo", units="in", 
+#		width=5, height=5, pointsize=12, res=300)
+pdf("Figure_2_corrPlot.pdf",
+    width=8, height=8)
+sign.mat <- matrix(0,ncol=5,nrow=5)
+par(col = "red",lty=1,lwd=1)
+sign.mat[4,1] <- 1
+mat <- cov2cor(Gmcmc.mean.stuc)
+colnames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+rownames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+diag(mat) <- NA
+myplotcor(mat,diag=T, type="lower",col="red",new=1,sign.mat=sign.mat)
+sign.mat[4,1] <- 0
+par(col = "red", lty=2,lwd=1)
+mat <- cov2cor(Gmcmc.mean.stus)
+colnames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+rownames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+diag(mat) <- NA
+myplotcor(mat,diag=T, type="lower",col="white",new=0,sign.mat=sign.mat)
+par(col = "black",lty=1,lwd=1)
+sign.mat[2,1] <- 1 
+mat <- cov2cor(Gmcmc.mean.spit)
+colnames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+rownames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+diag(mat) <- NA
+myplotcor(mat,diag=T, type="lower",col="white",new=0,sign.mat=sign.mat)
+sign.mat[2,1] <- 0
+par(col = "black",lty=2,lwd=1)
+sign.mat[4,1] <-1 
+sign.mat[3,2] <-1
+mat <- cov2cor(Gmcmc.mean.vis)
+colnames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+rownames(mat)<-c("Flow. start","Petal width","Petal length","Flowers","Ros. size")
+diag(mat) <- NA
+myplotcor(mat,diag=T, type="lower",col="white",new=0,sign.mat=sign.mat)
+
+sign.mat <- matrix(1,ncol=5,nrow=5)
+sign.mat[1,2] <- 0
+par(col = "red",lty=1,lwd=1)
+diag(phen.corr[[1]]) <- NA
+myplotcor(phen.corr[[1]],diag=T, type="upper",col="white",new=0,sign.mat=sign.mat)
+
+sign.mat[1,3] <- 0
+sign.mat[2,5] <- 0
+par(col = "red",lty=2,lwd=1)
+diag(phen.corr[[2]]) <- NA
+myplotcor(phen.corr[[2]],diag=T, type="upper",col="white",new=0,sign.mat=sign.mat)
+
+sign.mat <- matrix(1,ncol=5,nrow=5)
+sign.mat[1,2] <- 0
+par(col = "black",lty=1,lwd=1)
+diag(phen.corr[[3]]) <- NA
+myplotcor(phen.corr[[3]],diag=T, type="upper",col="white",new=0,sign.mat=sign.mat)
+
+sign.mat[1,3] <- 0
+sign.mat[2,4] <- 0
+par(col = "black",lty=2,lwd=1)
+diag(phen.corr[[4]]) <- NA
+myplotcor(phen.corr[[4]],diag=T, type="upper",col="white",new=0,sign.mat=sign.mat)
+legend(-1.87, 7.4, c("SWE - STUC", "SWE - STUS", "NOR - SPIT", "NOR - VIS"), col=c(2,2,1,1), lty =c(1,2), bty="n")
+dev.off()
+# End figure 2
+
+
+# SIMILARITY AMONG POPULATIONS ####
+# Hansen's difference d and Krzanowski€™s subspace
+
+# Hansens d, Table 4
+# Country comparison
+country.Gs <- list(Gmcmc.swe,Gmcmc.nor)
+n=5
+m=2
+MCMCsamp=length(Gmcmc.swe)
+Garray.count <- array(,c(n,n,m,MCMCsamp))
+traitnames = c("Flow tim", "Pet w", "Pet len", "No flow", "Ros size")
+Gnames=c("swe","nor")
+dimnames(Garray.count) <- list(traitnames,traitnames,Gnames)
+for (k in 1:m) {
+  for (i in 1:MCMCsamp) {
+    Garray.count[,,k,i]<-country.Gs[[k]][[i]]
+  }
+}
+
+# Population comparisons
+pop.Gs <- list(Gmcmc.stuc, Gmcmc.stus, Gmcmc.spit ,Gmcmc.vis )
+n=5
+m=4
+MCMCsamp=length(Gmcmc.stuc)
+Garray.pop <- array(,c(n,n,m,MCMCsamp))
+traitnames = c("Flow tim", "Pet w", "Pet len", "No flow", "Ros size")
+Gnames=c("cli","san","spi","vis")
+dimnames(Garray.pop) <- list(traitnames,traitnames,Gnames)
+for (k in 1:m) {
+  for (i in 1:MCMCsamp) {
+    Garray.pop[,,k,i]<-pop.Gs[[k]][[i]]
+  }
+}
+
+G1      <- Gmcmc.median.stuc
+G2      <- Gmcmc.median.stus
+G3      <- Gmcmc.median.spit
+G4      <- Gmcmc.median.vis
+G5      <- Gmcmc.median.nor 
+G6      <- Gmcmc.median.swe
+
+# Calculate mean difference (d)between populations/countries. 
+d1 <- sqrt(mean(eigen(G1-G2)$values^2)) * (1 - (var(eigen(G1-G2)$values^2)/mean(eigen(G1-G2)$values^2)^2) / (4*(length(eigen(G1-G2)$values)+2) ) )#r
+d2 <- sqrt(mean(eigen(G1-G3)$values^2)) * (1 - (var(eigen(G1-G3)$values^2)/mean(eigen(G1-G3)$values^2)^2) / (4*(length(eigen(G1-G3)$values)+2) ) )#r
+d3 <- sqrt(mean(eigen(G1-G4)$values^2)) * (1 - (var(eigen(G1-G4)$values^2)/mean(eigen(G1-G4)$values^2)^2) / (4*(length(eigen(G1-G4)$values)+2) ) )#r
+d4 <- sqrt(mean(eigen(G2-G3)$values^2)) * (1 - (var(eigen(G2-G3)$values^2)/mean(eigen(G2-G3)$values^2)^2) / (4*(length(eigen(G2-G3)$values)+2) ) )#r
+d5 <- sqrt(mean(eigen(G2-G4)$values^2)) * (1 - (var(eigen(G2-G4)$values^2)/mean(eigen(G2-G4)$values^2)^2) / (4*(length(eigen(G2-G4)$values)+2) ) )#r
+d6 <- sqrt(mean(eigen(G3-G4)$values^2)) * (1 - (var(eigen(G3-G4)$values^2)/mean(eigen(G3-G4)$values^2)^2) / (4*(length(eigen(G3-G4)$values)+2) ) )#r
+d7 <- sqrt(mean(eigen(G5-G6)$values^2)) * (1 - (var(eigen(G5-G6)$values^2)/mean(eigen(G5-G6)$values^2)^2) / (4*(length(eigen(G5-G6)$values)+2) ) )#r
+table4 <- data.frame("Population/region"= c("STUC-STUS","STUC-SPIT","STUC-VIS","STUS-SPIT","STUS-VIS","SPIT-VIS","NOR-SWE"), 
+                     "Response d"= round(c(d1,d2,d3,d4,d5,d6,d7), 2), "lo.ci"=NA, "up.ci"=NA)
+
+# Check unceartinity of differences and test if d != 0
+for (k in 1:7) {
+Garray <- Garray.pop
+if(k  < 4) {pop1 <- 1; pop2 <- k+1} 
+if(k  == 4) {pop1 <- 2; pop2 <- 3} 
+if(k  == 5) {pop1 <- 2; pop2 <- 4} 
+if(k  == 6) {pop1 <- 3; pop2 <- 4} 
+if(k  == 7) {pop1 <- 1; pop2 <- 2; Garray <- Garray.count} #compare countries
+
+yy <- numeric(5500)
+for (i in 1:5500) {
+  nr1   <- sample(1:5500,1)
+  nr2 	<- sample(1:5500,1)
+  G11      <- Garray[,, pop1,nr1]
+  G12      <- Garray[,, pop1,nr2]
+  G21      <- Garray[,, pop2,nr1]
+  G22      <- Garray[,, pop2,nr2]
+  
+  yy[i] <- ( (sqrt(mean(eigen(G11-G12)$values^2))*(1 - (var(eigen(G11-G12)$values^2)/mean(eigen(G11-G12)$values^2)^2) / (4*(length(eigen(G11-G12)$values)+2) ) )) +
+               (sqrt(mean(eigen(G21-G22)$values^2))*(1 - (var(eigen(G21-G22)$values^2)/mean(eigen(G21-G22)$values^2)^2) / (4*(length(eigen(G21-G22)$values)+2) ) ))) -
+    ((sqrt(mean(eigen(G11-G22)$values^2))*(1 - (var(eigen(G11-G22)$values^2)/mean(eigen(G11-G22)$values^2)^2) / (4*(length(eigen(G11-G22)$values)+2) ) )) +
+       (sqrt(mean(eigen(G12-G21)$values^2))*(1 - (var(eigen(G12-G21)$values^2)/mean(eigen(G12-G21)$values^2)^2) / (4*(length(eigen(G12-G21)$values)+2) ) )))
+  
+}
+table4[ k, c("lo.ci","up.ci")] <- round(HPDinterval(as.mcmc(yy), prob = 0.95)[ c(2, 1)],2)*-1 
+# *-1 to get the signs correct since d is positive  
+#quantile(yy, prob=c(0.025, 0.975),na.rm=TRUE)
+}
+
+# Print Table 4
+print(table4)
+
+# Krzanowski€™s subspace comparisons
+# Code adapted from Aguirre et al. 2014
+
+# First create random (NULL) G matrices for the 4 populations (rand.Garray)
+# Following Aguirre et al 2014, we use an animal model to build random G matrices.
+# Package "MasterBayes" needed for the insertPed() function to create
+# the pedigree.
+library(MasterBayes)
+pop.list <- levels(genvar$pop)
+ped.list <- list()
+for (i in 1:4) {
+  genvar.sub <- genvar[genvar$pop == pop.list[i],]
+  genvar.sub <- droplevels(genvar.sub)
+  genvar.sub$animal <- factor(10000 + 1:dim(genvar.sub)[1]) # for animal model
+  ped <- with(genvar.sub, data.frame(animal, dam, sire))
+  ped.list[[i]] <- insertPed(ped)
+  colnames(ped.list[[i]])[c(1,2,3)]<- c("id","dam", "sire")
+}
+# ped.list contains the pedigrees for the populations
+# these are used below to generate random G matrices 
+
+traitnames = c("Flow start", "Pet w", "Pet len", "No flow", "Ros size")
+Gnames=c("stuc","stus","spit","vis")
+MCMCsamp = 5500
+rand.Garray <- array(,c(n,n,m,MCMCsamp))
+dimnames(rand.Garray) <- list(traitnames,traitnames,Gnames)
+library(MCMCglmm)
+for (i in 1:MCMCsamp){
+  b1.bv<-rbv(ped.list[[1]], Garray.pop[,,1,i])
+  b2.bv<-rbv(ped.list[[2]], Garray.pop[,,2,i])
+  c1.bv<-rbv(ped.list[[3]], Garray.pop[,,3,i])
+  c2.bv<-rbv(ped.list[[4]], Garray.pop[,,4,i])
+
+  a.pop <- cumsum(c( length(unique(ped.list[[1]][,3]))-1, length(unique(ped.list[[2]][,3]))-1, 
+                     length(unique(ped.list[[3]][,3]))-1, length(unique(ped.list[[4]][,3]))-1))
+
+  pop.bv <- rbind(b1.bv[1:39,], b2.bv[1:40,], c1.bv[1:37,], c2.bv[1:32,])
+  rand.pop.bv <- pop.bv[sample(dim(pop.bv)[1],replace=F),]
+  rand.Garray[,,1,i] <- cov(rand.pop.bv[1:a.pop[1],])
+  rand.Garray[,,2,i] <- cov(rand.pop.bv[(a.pop[1] + 1):a.pop[2],])
+  rand.Garray[,,3,i] <- cov(rand.pop.bv[(a.pop[2] + 1):a.pop[3],])
+  rand.Garray[,,4,i] <- cov(rand.pop.bv[(a.pop[3] + 1):a.pop[4],])
+}
+
+
+# Load kr.subspace() function
+kr.subspace <- function(Gs, vec){
+  if (dim(Gs)[[1]] != dim(Gs)[[2]]){
+    stop("G array must be of order n x n x m x MCMCsamp")
+  }
+  if (is.na(dim(Gs)[4])) {
+    stop("There are no MCMCsamples")
+  }
+  n <- dim(Gs)[[1]]
+  m <- dim(Gs)[[3]]
+  MCMCsamp <- dim(Gs)[[4]] 
+  if(length(vec) != m){stop("vec must have length = m")}
+  h <- function (g, v){
+    AA <- array(, c(n, n, m))  
+    for (k in 1:m){
+      g.vec <- eigen(g[,,k])$vectors[,1:(v[k])] 
+      AA[,,k] <- g.vec %*% t(g.vec)
+    }
+    H <- apply(AA, 1:2, sum)
+    list(H = H, AA = AA)
+  }
+  #internal function to calculate AA and H
+  MCMC.H <- array(, c(n, n, MCMCsamp))
+  dimnames(MCMC.H) <- list(dimnames(Gs)[[1]], dimnames(Gs)[[1]], dimnames(Gs)[[4]])      
+  MCMC.AA <- array(, c(n, n, m, MCMCsamp))
+  dimnames(MCMC.AA) <- list(dimnames(Gs)[[1]], dimnames(Gs)[[1]], dimnames(Gs)[[3]], dimnames(Gs)[[4]])
+  for (i in 1:MCMCsamp){
+    kr <- h(Gs[,,,i], v = vec)
+    MCMC.H[,,i] <- kr$H
+    MCMC.AA[,,,i] <- kr$AA
+  }	
+  #calculate AA and H for the ith MCMC sample of the G array		
+  avH <- apply(MCMC.H, 1:2, mean)
+  rownames(avH) <- dimnames(Gs)[[1]]
+  colnames(avH) <- dimnames(Gs)[[1]]
+  #calculate the posterior mean H
+  avAA <- apply(MCMC.AA, 1:3, mean)
+  dimnames(avAA) <- list(dimnames(Gs)[[1]], dimnames(Gs)[[1]], dimnames(Gs)[[3]])
+  #calculate the posterior mean AA
+  avH.vec <- eigen(avH)$vectors
+  #eigenanalysis of posterior mean H	
+  proj<- function(a, b) t(b) %*% a %*% b
+  #internal function to do projection
+  avH.theta <- matrix(, n, m)
+  for (i in 1:n){
+    for (i in 1:n){
+      avH.theta[i,] <- acos(sqrt(apply(avAA, 3, proj, b = avH.vec[,i]))) * (180/pi)
+    }
+  }
+  #angles between the eigenvectors posterior mean H and the posterior mean subspaces of each population
+  MCMC.H.val <- matrix(, MCMCsamp, n)
+  colnames(MCMC.H.val) <- paste("h", 1:n, sep="")
+  for (i in 1:n){
+    MCMC.H.val[,i] <- apply(MCMC.H, 3, proj, b = avH.vec[,i])
+  }
+  #posterior distribution of the genetic variance for the eigenvectors of posterior mean H 
+  MCMC.H.theta <- array(, c(n, m, MCMCsamp))
+  rownames(MCMC.H.theta) <- paste("h", 1:n, sep="")
+  colnames(MCMC.H.theta) <- dimnames(Gs)[[3]]
+  for(i in 1:n){
+    for(j in 1:MCMCsamp){
+      MCMC.H.theta[i,,j] <- acos(sqrt(apply(MCMC.AA[,,,j], 3, proj, b = avH.vec[,i]))) * (180/pi)
+    }
+  }
+  #posterior distribution of the angles between the eigenvectors of posterior mean H and the MCMC samples of the subspaces of each population
+  list(avAA = avAA, avH = avH, MCMC.AA = MCMC.AA, MCMC.H = MCMC.H, MCMC.H.val = MCMC.H.val, MCMC.H.theta = MCMC.H.theta)
+}
+# End kr.subspace() function
+
+# Run function using the G matrix arrays of the 4 populations and
+# the random G arrays created above
+MCMCG.kr <- kr.subspace(Garray.pop, vec = rep(2, dim(Garray.pop)[[3]])) # vec = 2 means two eigenvectors included
+MCMCG.kr.rand <- kr.subspace(rand.Garray, vec = rep(2, dim(Garray.pop)[[3]]))
+
+# Make Figure S1
+HPD.H.val <- cbind(HPDinterval(as.mcmc(MCMCG.kr$MCMC.H.val),prob=0.95), 
+                   HPDinterval(as.mcmc(MCMCG.kr.rand$MCMC.H.val),prob=0.95))
+
+pdf("Figure_S1_krSub.pdf", height = 6, width = 6.5)
+par(mfrow=c(1,1))
+
+plot((1:2)-0.1,colMeans(MCMCG.kr$MCMC.H.val)[1:2],type="p",xlab="Krzanowski's H",ylab="lamda",
+     pch=16,cex=1,xaxt="n",frame.plot=F, ylim=c(0, 4),xlim=c(0.5,3.5),cex.lab=1.2,las=1)
+axis(1,at=1:2,labels=c(paste("H",rep(1:2),sep="")),cex=1.2)
+points((1:2)+0.1,colMeans(MCMCG.kr.rand$MCMC.H.val)[1:2],type="p",pch=1,cex=1)
+arrows((1:2)-0.1,colMeans(MCMCG.kr$MCMC.H.val)[1:2],(1:2)-0.1,HPD.H.val[1:2,1],length=0.1,angle=90)
+arrows((1:2)-0.1,colMeans(MCMCG.kr$MCMC.H.val)[1:2],(1:2)-0.1,HPD.H.val[1:2,2],length=0.1,angle=90)
+arrows((1:2)+0.1,colMeans(MCMCG.kr.rand$MCMC.H.val)[1:2],(1:2)+0.1,HPD.H.val[1:2,3],length=0.1,angle=90,lty=5)
+arrows((1:2)+0.1,colMeans(MCMCG.kr.rand$MCMC.H.val)[1:2],(1:2)+0.1,HPD.H.val[1:2,4],length=0.1,angle=90,lty=5)
+legend("topright",legend=c("observed","randomised"),lty=c(1,5),pch=c(16,1),cex=1.2,bty="n")
+dev.off()
+
+
+# Effects of G on evolutionary responses ####
+# Multivariate metrics: evolvability (e), respondability (r) and conditional evolvability (c)
+
+# Reproduce Table S5 and Figure 3 ####
+# First all populations (thereafter country)
+pop.Gs <- list(Gmcmc.stuc, Gmcmc.stus, Gmcmc.spit ,Gmcmc.vis )
+
+exp.var<-matrix(0,ncol=2,nrow=length(pop.Gs[[1]]))
+resp<-numeric()
+e.evol<-numeric()
+c.evol<-numeric()
+n.d<-numeric()
+per.max.e<-numeric()
+per.max.r<-numeric()
+per.max.c<-numeric()
+Es<-matrix(0,ncol=5,nrow=length(pop.Gs[[1]]))
+evo <- list()
+for (k in 1:length(pop.Gs)) {
+  Gmcmc <- pop.Gs[[k]]  
+  for (i in 1:length(Gmcmc)) {
+    exp.var[i,] <- eigen(Gmcmc[[i]])$values[1:2]/sum(eigen(Gmcmc[[i]])$values)#percentage of total variance accounted for by first and second eigenvalue
+    resp[i] <- sqrt(mean( eigen(Gmcmc[[i]])$values^2)) * (1 - (var(eigen(Gmcmc[[i]])$values^2)/mean(eigen(Gmcmc[[i]])$values^2)^2) / (4*(length(eigen(Gmcmc[[i]])$values)+2) ) )#r
+    e.evol[i] <- mean(eigen(Gmcmc[[i]])$values) #e
+    c.evol[i] <- 1/mean(1/eigen(Gmcmc[[i]])$values) * (1 + (2*(var(1/eigen(Gmcmc[[i]])$values)/mean(1/eigen(Gmcmc[[i]])$values)^2)) / ((length(eigen(Gmcmc[[i]])$values)+2) ) )#c
+    n.d[i] <- sum(eigen(Gmcmc[[i]])$values)/max(eigen(Gmcmc[[i]])$values) #n eff
+    per.max.e[i] <- e.evol[i]/eigen(Gmcmc[[i]])$values[1]
+    per.max.r[i] <- resp[i]/eigen(Gmcmc[[i]])$values[1]
+    per.max.c[i] <- c.evol[i]/eigen(Gmcmc[[i]])$values[1]
+    Es[i,] <- eigen(Gmcmc[[i]])$values
+  }
+  resp <- as.mcmc(resp)
+  e.evol<- as.mcmc(e.evol)
+  c.evol<- as.mcmc(c.evol)
+  n.d <- as.mcmc(n.d)
+  per.max.e <- as.mcmc(per.max.e)
+  per.max.r <- as.mcmc(per.max.r)
+  per.max.c <- as.mcmc(per.max.c)
+  exp.var<- as.mcmc(exp.var)
+  evo[[k]] <- list("exp.var" = exp.var, "e.evol" = e.evol,"resp" = resp, "c.evol" = c.evol,
+                   "n.d" = n.d, "per.max.e" = per.max.e, "per.max.r" = per.max.r, "per.max.c" = per.max.c)
+}
+
+# Check if posterior distributions do overlap zero at 90% HPD intervals
+# for the 4 populations
+# See letters in Table S5
+evoci <- matrix(NA,ncol=14,nrow=6)
+tt = 0
+for (k in 1:7) {
+  d1 <- HPDinterval(evo[[1]][[k+1]] - evo[[2]][[k+1]], prob=0.90)[,1:2]
+  d2 <- HPDinterval(evo[[1]][[k+1]] - evo[[3]][[k+1]], prob=0.90)[,1:2]
+  d3 <- HPDinterval(evo[[1]][[k+1]] - evo[[4]][[k+1]], prob=0.90)[,1:2]
+  d4 <- HPDinterval(evo[[2]][[k+1]] - evo[[3]][[k+1]], prob=0.90)[,1:2]
+  d5 <- HPDinterval(evo[[2]][[k+1]] - evo[[4]][[k+1]], prob=0.90)[,1:2]
+  d6 <- HPDinterval(evo[[3]][[k+1]] - evo[[4]][[k+1]], prob=0.90)[,1:2]
+  tt <- tt+1
+  evoci[,tt:(tt+1)]<- rbind(d1,d2,d3,d4,d5,d6) 
+  tt <- tt+1
+}
+rownames(evoci) <- c("STUC-STUS","STUC-SPIT","STUC-VIS","STUS-SPIT","STUS-VIS","SPIT-VIS")
+colnames(evoci) <- rep(c("e","r","c","n.d","per.max.e","per.max.r","per.max.c"),each=2)
+print(evoci) #print comparisons
+
+# Build table
+tables5.coun <- rep(list(NA), length(evo)) 
+for (k in 1:length(evo)) {
+  exp.var = evo[[k]][["exp.var"]]
+  e.evol = evo[[k]][["e.evol"]]
+  resp = evo[[k]][["resp"]]
+  c.evol = evo[[k]][["c.evol"]]
+  n.d = evo[[k]][["n.d"]]
+  per.max.e = evo[[k]][["per.max.e"]]
+  per.max.r = evo[[k]][["per.max.r"]] 
+  per.max.c = evo[[k]][["per.max.c"]]
+  
+  tab.evo <- data.frame(exp.var,e.evol,resp,c.evol,n.d,per.max.e,per.max.r,per.max.c)
+  tab.evo <- data.frame("e"=mean(e.evol),"r"=mean(resp),"c"=mean(c.evol),"Var Exp PC1"=mean(exp.var[,1]),"Var Exp PC2"=mean(exp.var[,2]), 
+                        "n.d"=mean(n.d), "per.max.e"=mean(per.max.e),"per.max.r"=mean(per.max.r),"per.max.c"=mean(per.max.c))
+  tab.evo <- round(tab.evo,4)
+  tab.evo2 <- data.frame("e"=paste(round(HPDinterval(e.evol,prob=0.95)[1:2],4),collapse=","),
+                         "r"=paste(round(HPDinterval(resp,prob=0.95)[1:2],4),collapse=","),
+                         "c"=paste(round(HPDinterval(c.evol,prob=0.95)[1:2],4),collapse=","),
+                         "Var Exp PC1"=paste(round(HPDinterval(exp.var[,1],prob=0.95)[1:2],4),collapse=","),
+                         "Var Exp PC2"=paste(round(HPDinterval(exp.var[,2],prob=0.95)[1:2],4),collapse=","), 
+                         "n.d"=paste(round(HPDinterval(n.d,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.e"=paste(round(HPDinterval(per.max.e,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.r"=paste(round(HPDinterval(per.max.r,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.c"=paste(round(HPDinterval(per.max.c,prob=0.95)[1:2],4),collapse=","))
+  tables5.coun[[k]] <- rbind(tab.evo,tab.evo2)
+}
+tab.evo.pop <- do.call(rbind, tables5.coun)
+rownames(tab.evo.pop) <- paste(rep(c("STUC", "STUS", "SPIT", "VIS"),each=2),c("me","ci"),sep="")
+# Multiply with 100 to get percent as in Table S5
+
+# Now add country level to Table S5
+pop.Gs <- list(Gmcmc.swe, Gmcmc.nor)
+
+exp.var<-matrix(0,ncol=2,nrow=length(pop.Gs[[1]]))
+resp<-numeric()
+e.evol<-numeric()
+c.evol<-numeric()
+n.d<-numeric()
+per.max.e<-numeric()
+per.max.r<-numeric()
+per.max.c<-numeric()
+Es<-matrix(0,ncol=5,nrow=length(pop.Gs[[1]]))
+evo <- list()
+for (k in 1:length(pop.Gs)) {
+  Gmcmc <- pop.Gs[[k]]  
+  for (i in 1:length(Gmcmc)) {
+    exp.var[i,] <- eigen(Gmcmc[[i]])$values[1:2]/sum(eigen(Gmcmc[[i]])$values)#percentage of total variance accounted for by first and second eigenvalue
+    resp[i] <- sqrt(mean( eigen(Gmcmc[[i]])$values^2)) * (1 - (var(eigen(Gmcmc[[i]])$values^2)/mean(eigen(Gmcmc[[i]])$values^2)^2) / (4*(length(eigen(Gmcmc[[i]])$values)+2) ) )#r
+    e.evol[i] <- mean(eigen(Gmcmc[[i]])$values) #e
+    c.evol[i] <- 1/mean(1/eigen(Gmcmc[[i]])$values) * (1 + (2*(var(1/eigen(Gmcmc[[i]])$values)/mean(1/eigen(Gmcmc[[i]])$values)^2)) / ((length(eigen(Gmcmc[[i]])$values)+2) ) )#c
+    n.d[i] <- sum(eigen(Gmcmc[[i]])$values)/max(eigen(Gmcmc[[i]])$values) #n eff
+    per.max.e[i] <- e.evol[i]/eigen(Gmcmc[[i]])$values[1]
+    per.max.r[i] <- resp[i]/eigen(Gmcmc[[i]])$values[1]
+    per.max.c[i] <- c.evol[i]/eigen(Gmcmc[[i]])$values[1]
+    Es[i,] <- eigen(Gmcmc[[i]])$values
+  }
+  resp <- as.mcmc(resp)
+  e.evol<- as.mcmc(e.evol)
+  c.evol<- as.mcmc(c.evol)
+  n.d <- as.mcmc(n.d)
+  per.max.e <- as.mcmc(per.max.e)
+  per.max.r <- as.mcmc(per.max.r)
+  per.max.c <- as.mcmc(per.max.c)
+  exp.var<- as.mcmc(exp.var)
+  evo[[k]] <- list("exp.var" = exp.var, "e.evol" = e.evol,"resp" = resp, "c.evol" = c.evol,
+                   "n.d" = n.d, "per.max.e" = per.max.e, "per.max.r" = per.max.r, "per.max.c" = per.max.c)
+}
+
+# Check if posterior distributions do overlap zero at 90% HPD intervals
+# See letters in Table S5
+evoci <- matrix(NA,ncol=14,nrow=1)
+tt = 0
+for (k in 1:7) {
+  d1 <- HPDinterval(evo[[1]][[k+1]] - evo[[2]][[k+1]], prob=0.90)[,1:2]
+  tt <- tt+1
+  evoci[,tt:(tt+1)]<- d1 
+  tt <- tt+1
+}
+rownames(evoci) <- c("swe-nor")
+colnames(evoci) <- rep(c("e","r","c","n.d","per.max.e","per.max.r","per.max.c"),each=2)
+print(evoci) # print comparison
+
+# Create table for Swe - Nor
+tables5.coun <- rep(list(NA), length(evo)) 
+for (k in 1:length(evo)) {
+  exp.var = evo[[k]][["exp.var"]]
+  e.evol = evo[[k]][["e.evol"]]
+  resp = evo[[k]][["resp"]]
+  c.evol = evo[[k]][["c.evol"]]
+  n.d = evo[[k]][["n.d"]]
+  per.max.e = evo[[k]][["per.max.e"]]
+  per.max.r = evo[[k]][["per.max.r"]] 
+  per.max.c = evo[[k]][["per.max.c"]]
+  
+  tab.evo <- data.frame(exp.var,e.evol,resp,c.evol,n.d,per.max.e,per.max.r,per.max.c)
+  tab.evo <- data.frame("e"=mean(e.evol),"r"=mean(resp),"c"=mean(c.evol),"Var Exp PC1"=mean(exp.var[,1]),"Var Exp PC2"=mean(exp.var[,2]), 
+                        "n.d"=mean(n.d), "per.max.e"=mean(per.max.e),"per.max.r"=mean(per.max.r),"per.max.c"=mean(per.max.c))
+  tab.evo <- round(tab.evo,4)
+  tab.evo2 <- data.frame("e"=paste(round(HPDinterval(e.evol,prob=0.95)[1:2],4),collapse=","),
+                         "r"=paste(round(HPDinterval(resp,prob=0.95)[1:2],4),collapse=","),
+                         "c"=paste(round(HPDinterval(c.evol,prob=0.95)[1:2],4),collapse=","),
+                         "Var Exp PC1"=paste(round(HPDinterval(exp.var[,1],prob=0.95)[1:2],4),collapse=","),
+                         "Var Exp PC2"=paste(round(HPDinterval(exp.var[,2],prob=0.95)[1:2],4),collapse=","), 
+                         "n.d"=paste(round(HPDinterval(n.d,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.e"=paste(round(HPDinterval(per.max.e,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.r"=paste(round(HPDinterval(per.max.r,prob=0.95)[1:2],4),collapse=","),
+                         "per.max.c"=paste(round(HPDinterval(per.max.c,prob=0.95)[1:2],4),collapse=","))
+  tables5.coun[[k]] <- rbind(tab.evo,tab.evo2)
+}
+tab.evo.count <- do.call(rbind, tables5.coun)
+rownames(tab.evo.count) <- paste(rep(c("SWE", "NOR"),each=2),c("me","ci"),sep="")
+
+# Table S5
+tab.evo <- rbind(tab.evo.pop, tab.evo.count)
+print(tab.evo)
+# Multiply with 100 to get percent like in Table S5
+
+# Plot Figure 3. 
+# Posterior median and 95% HPD intervals for multivariate 
+# evolvability (e), respondability (r) and conditional evolvability (c) 
+# expressed as percent of maximum evolvability of G
+
+pdf("Figure_3_evolv.pdf", height = 6, width = 6.5)
+max.d <- apply(tab.evo[c(1,3,5,7),c(7:9)],2, function (x) as.numeric(x))
+me <- t(as.matrix(max.d))*100
+pp <- barplot(me,beside=T,ylim=c(0,100),las=1,col=c("white","gray80","gray40"), xlab = "Population", 
+              ylab = "% of maximum evolvability", cex.lab = 1.4)
+axis(1, labels = c("STUC", "STUS", "SPIT", "VIS" ), at=c(2.5,6.5,10.5,14.5), cex = 1.2)
+legend("topright",legend=c("Evolvability", "Respondability","Conditional"),
+       fill=c("white","gray80","gray40"),cex=1.4)
+abline(a=0,b=0)
+tt1 <- tab.evo[c(2),c(7:9)]
+tt2 <- tab.evo[c(4),c(7:9)]
+tt3 <- tab.evo[c(6),c(7:9)]
+tt4 <- tab.evo[c(8),c(7:9)]
+ci.int <- c(unlist(strsplit(t(tt1), "\\,")), unlist(strsplit(t(tt2), "\\,")),unlist(strsplit(t(tt3), "\\,")),unlist(strsplit(t(tt4), "\\,")))
+segments(as.vector(pp), as.numeric(ci.int[c(1,3,5,7,9,11,13,15,17,19,21,23)])*100, as.vector(pp), 
+         as.numeric(ci.int[c(2,4,6,8,10,12,14,16,18,20,22,24)])*100)
+dev.off()
+
+# Effects of G on evolutionary responses compared among populations ####
+# comparisons of trait responses to selection, Figure 4
+# Get selection coefficients from Sandring and Agren 2009
+
+# Import data from Sandring and Agren 2009
+sel.dat <- read.csv("sandring_agren_2009_selection.csv")
+
+# Calculate relative fitness
+sel.dat$seeds.rel <- sel.dat$seeds.per.plant/mean(sel.dat$seeds.per.plant,na.rm=T) #Relative fitness
+
+# Standardize with sd for each trait
+sel.dat$flowers.per.plant.s <- sel.dat$flowers.per.plant/sd(genvar$flowers) 
+sel.dat$rosette.size.cm2.s <- sel.dat$rosette.size.cm2/sd(genvar$rosette.size.cm2)
+sel.dat$flowering.start.jd.s <- sel.dat$flowering.start.jd/sd(genvar$flowering.start.jd)
+sel.dat$petal.length.mm.s <- sel.dat$petal.length.mm/sd(genvar$petal.length.mm,na.rm=TRUE)
+sel.dat$petal.width.mm.s <-  sel.dat$petal.width.mm/sd(genvar$petal.width.mm,na.rm=TRUE)
+
+# run model
+mod <- lm(seeds.rel ~ flowering.start.jd.s + petal.width.mm.s + petal.length.mm.s + 
+            flowers.per.plant.s + rosette.size.cm2.s + factor(year), sel.dat)
+#summary of model and coef
+summary(mod)
+coef(mod)
+
+# Perform delta Z predictions
+# Code adapted from Aguirre et al. 2014
+beta <- coef(mod)[2:6]
+delta.Z <- function(Gs, B){
+  avG <- apply(Gs, 1:3, mean) #Calculate avG 
+  avG.vec <- array(, c(n, n, m))  
+  for (j in 1:m){
+    avG.vec[,,j] <- eigen(avG[,,j])$vectors 
+    #Eigenvectors of the jth aveG 
+  }
+  S.decompG <- function(e, G, b) (t(e) %*% G %*% e) %*% t(e %*% b) %*% e
+  #Function to calculate delta Z based on the spectral decomposition of a G matrix
+  avG.Mv.Z <- array(, c(n, n, m))
+  dimnames(avG.Mv.Z) <- list(traitnames, traitnames, Gnames)
+  for (i in 1:n){
+    for (j in 1:m){
+      avG.Mv.Z[,i,j] <- S.decompG(avG.vec[,,j][,i], avG[,,j], B) 
+      #Apply S.decompG to the ith eigenvector of the jth aveG
+    }
+  }  
+  if(is.na(dim(Gs)[4])) {warning("There are no MCMCsamples"); MCMCG.Z <- "NA"}  else {
+    MCMC.Mv.Z <- array(,c(n, n, m, MCMCsamp))
+    dimnames(MCMC.Mv.Z) <- list(traitnames, traitnames, Gnames)
+    for (i in 1:n){
+      for (j in 1:m){
+        for (k in 1:MCMCsamp){
+          MCMC.Mv.Z[,i,j,k] <- S.decompG(avG.vec[,,j][,i], Gs[,,j,k], B)
+          #Apply S.decompG to the ith eigenvector of the jth G for the kth MCMC sample
+        }
+      }
+    }
+  }
+  list(avG.Mv.Z = avG.Mv.Z, MCMC.Mv.Z = MCMC.Mv.Z)
+}
+#End delta.Z function
+
+# Run function
+MCMCdelta.Z <- delta.Z(Garray.pop, beta)
+
+# Test changes in trait mean
+m = 4
+Gnames <- levels(genvar$pop)
+traitnames <- c("Flow start", "Pet w", "Pet len", "No flow", "Ros size")
+avG.Z <- apply(MCMCdelta.Z$avG.Mv.Z, 3, rowSums)
+MCMC.Z <- apply(MCMCdelta.Z$MCMC.Mv.Z, 3:4, rowSums)
+prs <- cbind(rep(1:m, each = m), 1:m) 
+prs.comp <- prs[prs[,1] < prs[,2], , drop = FALSE] 
+#setting up an index for HPD comparisons
+Z.score <-matrix(, n, ((m^2 - m)/2))
+rownames(Z.score)<-traitnames
+colnames(Z.score) <- c(paste(Gnames[prs.comp[,1]], ".vs.", Gnames[prs.comp[,2]], sep = ""))
+#empty matrix to store the results 
+for (i in 1:n){
+  HPD.int <- HPDinterval(as.mcmc(t(MCMC.Z[i,,])), prob = 0.95)
+  Z.score[i,] <- ifelse(HPD.int[prs.comp[,1],1] > HPD.int[prs.comp[,2],2] | HPD.int[prs.comp[,2],1] > HPD.int[prs.comp[,1],2],1,0) 
+}
+
+# Print results
+Z.score
+# Only zeros which means no significant differences (i.e. 95% HPD intervals overlap)
+
+# Fix results for figure
+Z.score[,1] <- 1 # Simplify for figure
+sig.G <- cbind(1:n, ifelse(rowSums(Z.score) > 0, 1, 0))
+sig.G <- subset(sig.G,sig.G[,2] == 1)
+#index for the traits with significantly different predicted response to selection among populations
+HPD.deltaZ <- array(, c(m, 2, dim(sig.G)[1]))
+dimnames(HPD.deltaZ) <- list(Gnames, c("lower", "upper"), dimnames(sig.G)[[1]])
+for (i in 1:dim(sig.G)[1]){
+  HPD.deltaZ[,,i] <- HPDinterval(as.mcmc(t(MCMC.Z[sig.G[i,1],,])))
+}
+
+# FIGURE 4 in paper 
+pdf("Fig_4_deltaZ.pdf", width = 11.5, height = 6.5)
+par(mfrow=c(1,5))
+mlab <- c("      Flowering start", "Petal width", "Petal length", "No. of flowers", "Rosette size") #i.e. rownames(sig.G)
+xlabs <- c("STUC", "STUS", "SPIT", "VIS") # i.e Gnames
+for (k in 1:dim(sig.G)[1]){
+  plot(1:m,avG.Z[sig.G[k,1],],ylab=expression(Delta*z),xlab="",
+       pch=16,xaxt="n",frame.plot=F,cex.lab=1.5,xpd=TRUE,las=1,cex.axis=1.1,
+       #ylim=c(floor(min(HPD.deltaZ[,,k])),ceiling(max(HPD.deltaZ[,,k]))))
+       cex = 1.8, ylim=c(-0.6, 0.6))
+  axis(1,at=1:m,labels=rep(" ",4),cex.axis=1.5)
+  arrows(1:m,avG.Z[sig.G[k,1],],1:m,HPD.deltaZ[,1,k],length=0,angle=90)
+  arrows(1:m,avG.Z[sig.G[k,1],],1:m,HPD.deltaZ[,2,k],length=0,angle=90)
+  mtext(mlab[k],side=3,at=2,font=2)
+  text(x=1:4,y=-0.73, xlabs,cex=1.5,xpd=TRUE, srt=40)
+  abline(h=0,lty=2)
+}
+dev.off()
+
+
+
+# Extra plot function for Figure 2 ####
+# this is modified code from the R package "corrplot".
+myplotcor <- function (corr, outline = TRUE, col = "grey", numbers = FALSE, 
+                       type = c("full", "lower", "upper"), diag = (type == "full"), 
+                       bty = "n", axes = FALSE, xlab = "", ylab = "", asp = 1, cex.lab = par("cex.lab"), 
+                       cex = 0.75 * par("cex"), mar = 0.1 + c(2, 2, 4, 2), new, sign.mat, ...) 
+{
+  savepar <- par(pty = "s", mar = mar)
+  on.exit(par(savepar))
+  if (is.null(corr)) 
+    return(invisible())
+  if ((!is.matrix(corr)) || (round(min(corr, na.rm = TRUE), 
+                                   6) < -1) || (round(max(corr, na.rm = TRUE), 6) > 1)) 
+    stop("Need a correlation matrix")
+  if(new=="1") {plot.new()}
+  else {par(new = TRUE)}
+  rowdim <- dim(corr)[1]
+  coldim <- dim(corr)[2]
+  rowlabs <- dimnames(corr)[[1]]
+  collabs <- dimnames(corr)[[2]]
+  if (is.null(rowlabs)) 
+    rowlabs <- 1:rowdim
+  if (is.null(collabs)) 
+    collabs <- 1:coldim
+  rowlabs <- as.character(rowlabs)
+  collabs <- as.character(collabs)
+  col <- rep(col, length = length(corr))
+  dim(col) <- dim(corr)
+  type <- match.arg(type)
+  cols <- 1:coldim
+  rows <- 1:rowdim
+  xshift <- 0
+  yshift <- 0
+  if (!diag) {
+    if (type == "upper") {
+      cols <- 2:coldim
+      rows <- 1:(rowdim - 1)
+      xshift <- 1
+    }
+    else if (type == "lower") {
+      cols <- 1:(coldim - 1)
+      rows <- 2:rowdim
+      yshift <- -1
+    }
+  }
+  maxdim <- max(length(rows), length(cols))
+  plt <- par("plt")
+  xlabwidth <- max(strwidth(rowlabs[rows], units = "figure", 
+                            cex = cex.lab))/(plt[2] - plt[1])
+  xlabwidth <- xlabwidth * maxdim/(1 - xlabwidth)
+  ylabwidth <- max(strwidth(collabs[cols], units = "figure", 
+                            cex = cex.lab))/(plt[4] - plt[3])
+  ylabwidth <- ylabwidth * maxdim/(1 - ylabwidth)
+  plot(c(-xlabwidth - 0.5, maxdim + 0.5), c(0.5, maxdim + 1 + 
+                                              ylabwidth), type = "n", bty = bty, axes = axes, xlab = "", 
+       ylab = "", asp = asp, cex.lab = cex.lab, ...)
+  text(rep(0, length(rows)), length(rows):1, labels = rowlabs[rows], 
+       adj = 1, cex = cex.lab)
+  text(cols - xshift, rep(length(rows) + 1, length(cols)), 
+       labels = collabs[cols], srt = 90, adj = 0, cex = cex.lab)
+  mtext(xlab, 1, 0)
+  mtext(ylab, 2, 0)
+  mat <- diag(c(1, 1))
+  plotcorrInternal <- function() {
+    if (i == j && !diag) 
+      return()
+    if (!numbers) {
+      mat[1, 2] <- corr[i, j]
+      mat[2, 1] <- mat[1, 2]
+      ell <- ellipse(mat, t = 0.43)
+      ell[, 1] <- ell[, 1] + j - xshift
+      ell[, 2] <- ell[, 2] + length(rows) + 1 - i - yshift
+      #polygon(ell, col = col[i, j])	
+      if (outline)
+        if(sign.mat[i, j]==1) {lines(ell, lwd=2)}
+      else {lines(ell)}
+    }
+    else {
+      text(j + 0.3 - xshift, length(rows) + 1 - i - yshift, 
+           round(10 * corr[i, j], 0), adj = 1, cex = cex)
+    }
+  }
+  for (i in 1:dim(corr)[1]) {
+    for (j in 1:dim(corr)[2]) {
+      if (type == "full") {
+        plotcorrInternal()
+      }
+      else if (type == "lower" && (i >= j)) {
+        plotcorrInternal()
+      }
+      else if (type == "upper" && (i <= j)) {
+        plotcorrInternal()
+      }
+    }
+  }
+  invisible()
+}

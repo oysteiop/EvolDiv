@@ -2,9 +2,12 @@
 #### - Building the D matrix database - ####
 ############################################
 
+rm(list=ls())
+
 library(plyr)
 library(reshape2)
 library(evolvability)
+
 list.files()
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")

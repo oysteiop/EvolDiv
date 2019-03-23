@@ -11,8 +11,8 @@ both_sp=unique(gsp[which(gsp %in% dsp)])
 both_sp
 
 x11()
-plotGD(species=both_sp[8], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
-plotGD(species=both_sp[8], gmatrix=1, dmatrix=1, log=T)
+plotGD(species=both_sp[9], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
+plotGD(species=both_sp[6], gmatrix=1, dmatrix=1, log=T)
 
 s=2
 j=2
@@ -29,8 +29,8 @@ dev.off()
 
 gmatrix=1
 npop=1
-species=both_sp[2]
-dmatrix=2
+species=both_sp[6]
+dmatrix=1
 nbeta=1000
 
 ######################################################################
@@ -95,8 +95,14 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   dmat=POPBASE[[dindex]]$D
   dmatname=POPBASE[[dindex]]$Study_ID
   
+  #Match the matrices
   m=match(colnames(gmatscaled),colnames(dmat))
   dmat=dmat[m,m]
+  dmat=droptraits(dmat)
+  
+  m2=match(colnames(dmat), colnames(gmatscaled))
+  gmatscaled=gmatscaled[m2,m2]
+  
   
   #Compute eigenvectors etc.
   first_ev=eigen(gmatscaled)$vectors[,1]

@@ -19,15 +19,15 @@ popmeans=apply(Ddat[,3:12], 2, function(x){tapply(x, Ddat$Population,mean,na.rm=
 popmeans
 Dmat=cov(log(popmeans))
 Dmat
-
+cbind(diag(Dmat))
 #G-matrix
-Gdat = read.csv("Data_Exp2_Gvariance.csv")
+Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
 head(Gdat)
 popmeans=apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type,mean,na.rm=T)})
-popmeans
+round(t(popmeans),3)
 
 vars=apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type,var,na.rm=T)})
-vars
+round(t(vars),4)
 
 (.294*4954.863)/(410.66^2)*100
 
