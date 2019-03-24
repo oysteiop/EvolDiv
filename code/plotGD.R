@@ -11,13 +11,13 @@ both_sp=unique(gsp[which(gsp %in% dsp)])
 both_sp
 
 x11()
-plotGD(species=both_sp[9], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
+plotGD(species=both_sp[10], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
 plotGD(species=both_sp[6], gmatrix=1, dmatrix=1, log=T)
 
 s=2
 j=2
-pdf("figs/GvsDplots.pdf",width=5,height=5)
-for(s in c(1:8)){
+pdf("figs/GvsDplots.pdf",width=4,height=4)
+for(s in c(1:10)){
   species=both_sp[s]  
   nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
   nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])

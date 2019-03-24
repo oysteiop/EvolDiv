@@ -7,13 +7,14 @@ rm(list=ls())
 library(plyr)
 library(reshape2)
 library(evolvability)
+#library(maptools)
+library(rgdal)
 
 list.files()
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
 
 pops_per_study=tapply(ddat$population, ddat$ID, function(x) length(unique(x)))
-
 
 ddat=ddat[-which(ddat$ID%in%names(which(pops_per_study<2))),]
 studies=unique(ddat$ID)
@@ -54,3 +55,7 @@ for(i in 1:length(studies)){
 
 save(POPBASE, file = "data/POPBASE.RData")
 
+
+map1 <- readOGR("C:/data/Political Map.shp")
+plot(map1)
+points(ddat$lon,ddat$lat,pch=16,col="blue")

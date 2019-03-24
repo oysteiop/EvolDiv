@@ -15,11 +15,15 @@ list.files()
 #D-matrix
 Ddat = read.csv("data/walter/Data_Exp1_Dmatrix.csv")
 head(Ddat)
+
 popmeans=apply(Ddat[,3:12], 2, function(x){tapply(x, Ddat$Population,mean,na.rm=T)})
-popmeans
+vars=apply(Ddat[,3:12], 2, function(x){tapply(x, Ddat$Population,var,na.rm=T)})
+ns=apply(Ddat[,3:12], 2, function(x){tapply(x, Ddat$Population,length)})
+
 Dmat=cov(log(popmeans))
 Dmat
 cbind(diag(Dmat))
+
 #G-matrix
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
 head(Gdat)
