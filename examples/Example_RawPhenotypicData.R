@@ -4,7 +4,7 @@
 rm(list=ls())
 library(evolvability)
 library(plyr)
-
+library(MCMCglmm)
 
 #### Phenotypic data from Bartkowska et al. 2018
 #### Raw phenotypic data, allows computing P for each population + D
@@ -40,11 +40,13 @@ popmeans=ddply(indat,.(OutcropSystem),summarize,
                z3=mean(SepalLength.mm,na.rm=T),
                z4=mean(SpurLength.mm,na.rm=T))
 
-popse=ddply(indat,.(OutcropSystem),summarize,
-            z1se=sd(Herkogamy.mm,na.rm=T)/sqrt(sum(Herkogamy.mm>-1,na.rm=T)),
-            z2se=sd(PistilLength.mm,na.rm=T)/sqrt(sum(PistilLength.mm>-1,na.rm=T)),
-            z3se=sd(SepalLength.mm,na.rm=T)/sqrt(sum(SepalLength.mm>-1,na.rm=T)),
-            z4se=sd(SpurLength.mm,na.rm=T)/sqrt(sum(SpurLength.mm>-1,na.rm=T)))
+popse2=ddply(indat,.(OutcropSystem),summarize,
+            z1se=var(Herkogamy.mm,na.rm=T)/sum(Herkogamy.mm>-1,na.rm=T),
+            z2se=var(PistilLength.mm,na.rm=T)/sum(PistilLength.mm>-1,na.rm=T),
+            z3se=var(SepalLength.mm,na.rm=T)/sum(SepalLength.mm>-1,na.rm=T),
+            z4se=var(SpurLength.mm,na.rm=T)/sum(SpurLength.mm>-1,na.rm=T))
+popse2
+
 
 D=cov(popmeans[,2:5])
 
@@ -78,3 +80,39 @@ points(gmax,dmax,col="red", pch=16)
 points(gmin,dmin,col="blue", pch=16)
 
 
+
+
+#Mixed-model####
+head(indat)
+
+n = 4
+alpha.mu <- rep(0, n)
+alpha.V <- diag(n)*400
+prior<-list(R=list(V=diag(n), nu=n+0.002-1), 
+            G=list(G1=list(V=diag(n), nu=n, alpha.mu = alpha.mu, alpha.V = alpha.V)))
+
+samples = 1000
+thin = 200
+burnin = samples*thin*.5
+nitt = (samples*thin)+burnin
+
+
+popmeans[,2:5]=apply(popmeans[,2:5],2,function(x)x*100)
+mev=c(popse2$z1se, popse2$z2se, popse2$z3se, popse2$z4se)*10000
+
+mod<-MCMCglmm(c(z1, z2, z3, z4) ~ -1+trait,
+              random = ~us(trait):OutcropSystem,
+              rcov = ~us(trait):units,
+              mev = mev,
+              data = popmeans, 
+              family = rep("gaussian", n), prior = prior, 
+              nitt = nitt, burnin = burnin, thin = thin)
+
+summary(mod)
+
+modD=matrix(apply(mod$VCV, 2, mean)[1:16]/10000,nrow=4)
+colnames(modD) = rownames(modD) = c("Herkogamy.mm","PistilLength.mm","SepalLength.mm","SpurLength.mm")
+modD
+
+cov(popmeans[,-1]/100)
+Dc

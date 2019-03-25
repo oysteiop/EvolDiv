@@ -7,7 +7,6 @@ rm(list=ls())
 library(plyr)
 library(reshape2)
 library(evolvability)
-#library(maptools)
 library(rgdal)
 
 list.files()
@@ -21,19 +20,32 @@ studies=unique(ddat$ID)
 studies
 length(studies)
 
+meanList=list()
 Dlist=list()
+eVlist=list()
 for(s in 1:length(studies)){
+  
+  #Population means
   red=ddat[ddat$ID==studies[[s]],]
   df=dcast(red,population~trait, value.var="mean")
+  meanList[[s]]=df
+  
+  #D matrix
   df=na.omit(df[,-1])
   df=apply(abs(df),2,log) #NB
-  
   dmat=cov(df)
   Dlist[[s]]=dmat
+  
+  #Error variances
+  df2=dcast(red,population~trait, value.var="vp")
+  #df2=na.omit(df2[,-1])
+  n=dcast(red,population~trait, value.var="n")
+  df2[,-1]=df2[,-1]/n[,-1]
+  eVlist[[s]]=df2
+  
 }
 
 names(Dlist)=studies
-Dlist[1:2]
 
 #Preparing metadata
 metadata = ddply(ddat, .(ID), summarize,
@@ -50,8 +62,12 @@ for(i in 1:length(studies)){
                       Family = paste(metadata$Family[metadata$ID==studies[i]]),
                       Species = paste(metadata$Species[metadata$ID==studies[i]]), 
                       nPop = paste(metadata$nPop[metadata$ID==studies[i]]),
+                      popmeans=meanList[[i]],
+                      eV = eVlist[[i]],
                       D = signif(Dlist[[i]],4)) 
 }
+
+POPBASE[[1]]
 
 save(POPBASE, file = "data/POPBASE.RData")
 

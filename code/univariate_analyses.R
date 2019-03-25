@@ -5,6 +5,7 @@ rm(list=ls())
 library(plyr)
 library(reshape2)
 library(evolvability)
+library(lme4)
 
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
@@ -32,12 +33,15 @@ for(s in 1:length(studies)){
 ddf=rbind.fill(outlist)
 head(ddf,5)
 
+plot(ddf$npop, log(ddf$d))
+cor(ddf$npop, log(ddf$d))
+
 #Combine with data from Evolvability database
 edat=read.table("C:/data/evolvability/evolvabilitydatabase2018.txt", header=T)
 
 tg1=NULL
 for(i in 1:nrow(ddf)){
-  tg1[i]=as.character(edat$traitgroup2)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
+  tg1[i]=as.character(edat$traitgroup1)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
 }
 
 evals=NULL
@@ -48,6 +52,10 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 
 ddf$tg1=tg1
 ddf$evals=evals
+
+head(ddf)
+m=lmer(log(d)~npop+evals+tg1 + (1|species/study_ID), data=ddf)
+summary(m)
 
 ddf=ddf[ddf$d>0,]
 ddf=ddf[ddf$evals>0,]

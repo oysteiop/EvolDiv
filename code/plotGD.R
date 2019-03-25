@@ -12,16 +12,17 @@ both_sp
 
 x11()
 plotGD(species=both_sp[10], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
-plotGD(species=both_sp[6], gmatrix=1, dmatrix=1, log=T)
+plotGD(species=both_sp[2], gmatrix=2, dmatrix=1, nbeta=1000,log=T)
 
-s=2
-j=2
+
+POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
+
 pdf("figs/GvsDplots.pdf",width=4,height=4)
-for(s in c(1:10)){
+for(s in c(1:length(both_sp))){
   species=both_sp[s]  
   nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
   nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
-    for(j in 1:1){  
+    for(j in 1:nD){  
       plotGD(species=species, gmatrix="mean", dmatrix=j,nbeta=1000,log=T)
 }}
 dev.off()
