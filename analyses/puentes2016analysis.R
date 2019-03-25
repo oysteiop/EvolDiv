@@ -9,8 +9,7 @@ library(MCMCglmm)
 
 #### Data from Puentes et al. 2016
 #### Raw phenotypic data + breeding design for multiple populations
-
-Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
+Gdat = read.csv("Z:/data/Evoldiv/data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
 
 head(Gdat)
 popmeans=apply(Gdat[,5:12], 2, function(x) tapply(x, Gdat$pop, mean, na.rm = T))
@@ -53,7 +52,7 @@ prior<-list(R=list(V=diag(n), nu=n+0.002-1),
             G=list(G1=list(V=diag(n), nu=n, alpha.mu = alpha.mu, alpha.V = alpha.V)))
 
 samples = 1000
-thin = 100
+thin = 1000
 burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 
@@ -66,10 +65,10 @@ mod<-MCMCglmm(c(petal.width.mm, petal.length.mm, flowers, rosette.size.cm) ~ -1+
                 nitt = nitt, burnin = burnin, thin = thin)
 Sys.time()-a
 
-save(mod, file="analyses/puentes2016/Gmat_STUC.RData")
+save(mod, file="Z:/data/Evoldiv/analyses/puentes2016/Gmat_STUC.RData")
 #150k in 23.3 min
 
-plot(mod$VCV[,1])
+plot(mod$VCV[,12])
 summary(mod$VCV)
 
 gmat=matrix(apply(mod$VCV, 2, mean)[1:16],nrow=4)
