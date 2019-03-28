@@ -6,8 +6,6 @@ load("data/EVOBASE.RData")
 #Extracting a single species
 print(unlist(lapply(EVOBASE, function(x)x$Study_ID)))
 
-EVOBASE[[28]]
-
 #Extracting just the G matrices
 GG=lapply(EVOBASE,function(x) x$G)
 
@@ -41,3 +39,4 @@ for(i in 1:length(GG)){
 elist=lapply(MG,evolvabilityMeans)
 names(elist)=lapply(EVOBASE, function(x) x$Study_ID)
 elist
+

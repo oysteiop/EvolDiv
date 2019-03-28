@@ -33,7 +33,6 @@ round(t(popmeans),3)
 vars=apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type,var,na.rm=T)})
 round(t(vars),4)
 
-(.294*4954.863)/(410.66^2)*100
 
 
 

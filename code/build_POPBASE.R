@@ -46,6 +46,64 @@ for(s in 1:length(studies)){
 }
 
 names(Dlist)=studies
+meanList[3]
+eVlist[[3]]
+
+
+######Estimate error-corrected D matrices ####
+
+samples = 1000
+thin = 100
+burnin = samples*thin*.5
+nitt = (samples*thin)+burnin
+
+####
+means=meanList[[18]]
+eV=eVlist[[18]]
+
+drop=which(is.na(rowSums(means[-1])))
+if(length(drop)>0){
+means=means[-drop]
+eV=ev[-drop]
+}
+
+#Set prior
+n = ncol(means)-1
+alpha.mu <- rep(0, n)
+alpha.V <- diag(n)*400
+prior<-list(R=list(V=diag(n), nu=n+0.002-1))
+
+means[,2:ncol(means)]=apply(means[,2:ncol(means)], 2, function(x) x*100)
+
+mev=melt(eV[,-1])$value*10000
+
+data=means[,-1]
+
+vars=paste0(colnames(means)[-1], collapse=", ")
+vars=paste0("c(",vars,") ~-1+trait")
+
+mod<-MCMCglmm(as.formula(noquote(vars)),
+              #random = ~us(trait):OutcropSystem,
+              rcov = ~us(trait):units,
+              mev = mev,
+              data = means, 
+              family = rep("gaussian", n), prior = prior, 
+              nitt = nitt, burnin = burnin, thin = thin)
+
+#summary(mod)
+plot(mod$VCV[,2])
+
+modD=matrix(apply(mod$VCV, 2, median)[2:(1+(ncol(means)-1)^2)]/10000,nrow=n)
+colnames(modD) = rownames(modD) = colnames(means)[-1]
+round(modD,3)
+
+#cov(means[,-1]/100)
+
+#plot(c(modD),c(cov(means[,-1]/100)))
+#lines(0:100,0:100)
+  
+#adjDlist[s]=modD
+
 
 #Preparing metadata
 metadata = ddply(ddat, .(ID), summarize,

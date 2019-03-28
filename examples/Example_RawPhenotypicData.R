@@ -91,26 +91,29 @@ alpha.V <- diag(n)*400
 prior<-list(R=list(V=diag(n), nu=n+0.002-1), 
             G=list(G1=list(V=diag(n), nu=n, alpha.mu = alpha.mu, alpha.V = alpha.V)))
 
-samples = 1000
-thin = 200
-burnin = samples*thin*.5
-nitt = (samples*thin)+burnin
+prior<-list(R=list(V=diag(n), nu=n+0.002-1))
 
 
 popmeans[,2:5]=apply(popmeans[,2:5],2,function(x)x*100)
 mev=c(popse2$z1se, popse2$z2se, popse2$z3se, popse2$z4se)*10000
 
+samples = 1000
+thin = 200
+burnin = samples*thin*.5
+nitt = (samples*thin)+burnin
+
 mod<-MCMCglmm(c(z1, z2, z3, z4) ~ -1+trait,
-              random = ~us(trait):OutcropSystem,
+              #random = ~us(trait):OutcropSystem,
               rcov = ~us(trait):units,
               mev = mev,
               data = popmeans, 
               family = rep("gaussian", n), prior = prior, 
               nitt = nitt, burnin = burnin, thin = thin)
 
-summary(mod)
+#summary(mod)
+#plot(mod$VCV[,3])
 
-modD=matrix(apply(mod$VCV, 2, mean)[1:16]/10000,nrow=4)
+modD=matrix(apply(mod$VCV, 2, median)[2:17]/10000,nrow=4)
 colnames(modD) = rownames(modD) = c("Herkogamy.mm","PistilLength.mm","SepalLength.mm","SpurLength.mm")
 modD
 
