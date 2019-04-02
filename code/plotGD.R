@@ -24,7 +24,7 @@ droptraits=function(x){
   }}
 
 plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",log=T){
-  
+  require(evolvability)
   nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
   nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
   
@@ -117,7 +117,8 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
     points(gmin,dmin,col="blue", pch=16)
   }
   
-  legend("topleft", c(paste("G:",gmatname), paste("D:",dmatname)), bty="n")
+  legend("topleft", c(paste("G:",gmatname), paste("D:",dmatname)), bty="n",cex=.7)
+  legend("bottomright",c("gmax","gmin"),pch=16,col=c("red","blue"))
   return(list(D=dmat,G=gmatscaled))
 }
 
@@ -137,8 +138,10 @@ both_sp=unique(gsp[which(gsp %in% dsp)])
 both_sp
 
 x11()
-plotGD(species=both_sp[10], gmatrix="mean", dmatrix=1, nbeta=1000,log=T)
-plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1,log=T)
+par(mfrow=c(1,2))
+plotGD(species=both_sp[11], gmatrix="mean", dmatrix=2, nbeta=1000,log=F)
+plotGD(species=both_sp[11], gmatrix="mean", dmatrix=3, nbeta=1000,log=F)
+#plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1000,log=F)
 
 
 POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
