@@ -5,6 +5,7 @@ load("data/EVOBASE.RData")
 
 #Extracting a single species
 print(unlist(lapply(EVOBASE, function(x)x$Study_ID)))
+EVOBASE[[18]]
 
 #Extracting just the G matrices
 GG=lapply(EVOBASE,function(x) x$G)

@@ -37,7 +37,7 @@ plot(ddf$npop, log(ddf$d))
 cor(ddf$npop, log(ddf$d))
 
 #Combine with data from Evolvability database
-edat=read.table("C:/data/evolvability/evolvabilitydatabase2018.txt", header=T)
+edat=read.table("data/evolvabilitydatabase2018.txt", header=T)
 
 tg1=NULL
 for(i in 1:nrow(ddf)){
