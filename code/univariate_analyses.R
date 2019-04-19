@@ -53,6 +53,8 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 ddf$tg1=tg1
 ddf$evals=evals
 
+plot(as.factor(ddf$tg1), log10(ddf$d))
+
 head(ddf)
 m=lmer(log(d)~npop+evals+tg1 + (1|species/study_ID), data=ddf)
 summary(m)
