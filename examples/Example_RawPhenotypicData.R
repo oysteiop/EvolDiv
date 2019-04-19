@@ -40,6 +40,16 @@ popmeans=ddply(indat,.(OutcropSystem),summarize,
                z3=mean(SepalLength.mm,na.rm=T),
                z4=mean(SpurLength.mm,na.rm=T))
 
+popvars=ddply(indat,.(OutcropSystem),summarize,
+               z1=var(Herkogamy.mm,na.rm=T),
+               z2=var(PistilLength.mm,na.rm=T),
+               z3=var(SepalLength.mm,na.rm=T),
+               z4=var(SpurLength.mm,na.rm=T))
+
+tapply(indat$FlowerID, indat$OutcropSystem, length)
+
+write.csv2(melt(popvars),file="C:/data/bartkdata.csv")
+
 popse2=ddply(indat,.(OutcropSystem),summarize,
             z1se=var(Herkogamy.mm,na.rm=T)/sum(Herkogamy.mm>-1,na.rm=T),
             z2se=var(PistilLength.mm,na.rm=T)/sum(PistilLength.mm>-1,na.rm=T),

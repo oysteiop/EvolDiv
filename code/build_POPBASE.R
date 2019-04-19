@@ -23,10 +23,12 @@ length(studies)
 meanList=list()
 Dlist=list()
 eVlist=list()
+distmatList=list()
 for(s in 1:length(studies)){
   
   #Population means
   red=ddat[ddat$ID==studies[[s]],]
+  red$population=factor(red$population)
   df=dcast(red,population~trait, value.var="mean")
   meanList[[s]]=df
   
@@ -43,13 +45,24 @@ for(s in 1:length(studies)){
   df2[,-1]=df2[,-1]/n[,-1]
   eVlist[[s]]=df2
   
+  #Distance matrices
+  require(geosphere)
+  distdat=cbind(tapply(red$lon, red$population, mean, na.rm=T),
+            tapply(red$lat, red$population, mean, na.rm=T))
+  distmat=matrix(NA,nrow(distdat),nrow(distdat))
+  for(i in 1:nrow(distdat)){
+    distmat[,i] = round((distVincentyEllipsoid(c(distdat[i,1],distdat[i,2]),cbind(distdat[,1],distdat[,2]))),2)
+  }
+  rownames(distmat)=colnames(distmat)=rownames(distdat)
+  
+  distmatList[[s]]=distmat
+  
 }
 
 names(Dlist)=studies
 meanList[3]
 eVlist[[3]]
-
-
+distmatList
 ######Estimate error-corrected D matrices ####
 
 samples = 1000
@@ -120,6 +133,7 @@ for(i in 1:length(studies)){
                       Family = paste(metadata$Family[metadata$ID==studies[i]]),
                       Species = paste(metadata$Species[metadata$ID==studies[i]]), 
                       nPop = paste(metadata$nPop[metadata$ID==studies[i]]),
+                      distmat=round(distmatList[[i]],0),
                       popmeans=meanList[[i]],
                       eV = eVlist[[i]],
                       D = signif(Dlist[[i]],4)) 
