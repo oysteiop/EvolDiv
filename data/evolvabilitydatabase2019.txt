@@ -858,3 +858,17 @@ G1	ØO	NA	Walter_et_al_2018	American_Naturalist	2018	Asteraceae	Senecio	pinnatifo
 G1	ØO	NA	Walter_et_al_2018	American_Naturalist	2018	Asteraceae	Senecio	pinnatifolius	Senecio_pinnatifolius	Australia	natural	NA	O	NA	NA	NA	NA	Insects	Insects	Author_description	Woodland	NA	NA	greenhouse	NA	vegetative	shape	shape	number_of_indents	ratio	count	paternal_halfsibs	narrowsense	38	204	0.269	0.06	0.0002	NA	0.0000538	1.494444444	NA	4.061
 G1	ØO	NA	Walter_et_al_2018	American_Naturalist	2018	Asteraceae	Senecio	pinnatifolius	Senecio_pinnatifolius	Australia	natural	NA	O	NA	NA	NA	NA	Insects	Insects	Author_description	Woodland	NA	NA	greenhouse	NA	vegetative	leaf_size	indent_size	indent_width	ratio	linear	paternal_halfsibs	narrowsense	38	204	0.151	8.605	6.4655	NA	0.9762905	1.318491438	NA	7.413
 G1	ØO	NA	Walter_et_al_2018	American_Naturalist	2018	Asteraceae	Senecio	pinnatifolius	Senecio_pinnatifolius	Australia	natural	NA	O	NA	NA	NA	NA	Insects	Insects	Author_description	Woodland	NA	NA	greenhouse	NA	vegetative	leaf_size	indent_size	indent_depth	ratio	linear	paternal_halfsibs	narrowsense	38	204	0.094	2.188	0.4749	NA	0.0446406	0.932471116	NA	8.987
+78	ØO	NA	Andersson_&_Ofori_2013	Annals_of_Botany	2013	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	natural	SI	O	NA	NA	NA	NA	Generalized	Diptera,_Hymenoptera	Author_description	Vickleby	56.56	16.45	greenhouse	NA	vegetative	leaf_size	leaf_length	leaf_length	ratio	linear	fullsibs	broadsense	84	442	0.250	59.6	82.52	NA	20.63	0.581	NA	1.742
+78	ØO	NA	Andersson_&_Ofori_2013	Annals_of_Botany	2013	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	natural	SI	O	NA	NA	NA	NA	Generalized	Diptera,_Hymenoptera	Author_description	Vickleby	56.56	16.45	greenhouse	NA	vegetative	leaf_size	leaf_width	maximum_leaf_width	ratio	linear	fullsibs	broadsense	84	442	0.200	12.36	4.8	NA	0.96	0.628	NA	2.514
+78	ØO	NA	Andersson_&_Ofori_2013	Annals_of_Botany	2013	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	natural	SI	O	NA	NA	NA	NA	Generalized	Diptera,_Hymenoptera	Author_description	Vickleby	56.56	16.45	greenhouse	NA	vegetative	leaf_size	leaf_width	minimum_leaf_width	ratio	linear	fullsibs	broadsense	84	442	0.290	1.13	0.448275862	NA	0.13	13.000	1	31.828
+78	ØO	NA	Andersson_&_Ofori_2013	Annals_of_Botany	2013	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	natural	SI	O	NA	NA	NA	NA	Generalized	Diptera,_Hymenoptera	Author_description	Vickleby	56.56	16.45	greenhouse	NA	vegetative	leaf_size	leaf_length	tip_distance	ratio	linear	fullsibs	broadsense	84	442	0.120	22	26.41666667	NA	3.17	0.655	NA	4.803
+78	ØO	NA	Andersson_&_Ofori_2013	Annals_of_Botany	2013	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	natural	SI	O	NA	NA	NA	NA	Generalized	Diptera,_Hymenoptera	Author_description	Vickleby	56.56	16.45	greenhouse	NA	vegetative	leaf_shape	leaf_shape	number_of_teeth	ratio	count	fullsibs	broadsense	84	442	0.160	15.06	10.4375	NA	1.67	0.736	NA	3.866
+																																											
+																																											
+																																											
+																																											
+																																											
+																																											
+																																											
+																																											
+																																											

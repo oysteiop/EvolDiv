@@ -108,21 +108,6 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat=dat[dat$TYPE=="POP",]
 head(dat)
 
-popstats=ddply(dat, .(IDENTITY),summarize,
-               n=length(IDNO),
-               LENm=mean(LEN,na.rm=T),
-               LENsd=sd(LEN,na.rm=T),
-               TIPm=mean(TIP,na.rm=T),
-               TIPsd=sd(TIP,na.rm=T),
-               MAXm=mean(MAX,na.rm=T),
-               MAXsd=sd(MAX,na.rm=T),
-               MINm=mean(MIN,na.rm=T),
-               MINsd=sd(MIN,na.rm=T),
-               TEETHm=mean(TEETH,na.rm=T),
-               TEETHsd=sd(TEETH,na.rm=T))
-popstats
-
-
 dat[,c(4:8)]=apply(dat[,c(4:8)], 2, function(x) log(x))
 head(dat)
 

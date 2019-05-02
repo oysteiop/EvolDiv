@@ -79,12 +79,10 @@ ddf=na.omit(ddf)
 plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
-     pch=1,cex=.4*ddf$npop,
+     pch=1,cex=1*sqrt(ddf$npop),
      xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
-
-
 
 sort(tapply(ddf$evals>-Inf, ddf$study_ID, sum, na.rm=T))
 

@@ -62,7 +62,7 @@ for(s in 1:length(studies)){
 names(Dlist)=studies
 meanList[3]
 eVlist[[3]]
-distmatList
+
 ######Estimate error-corrected D matrices ####
 
 samples = 1000
