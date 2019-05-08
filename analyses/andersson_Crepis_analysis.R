@@ -91,16 +91,6 @@ save(mod, file="./analyses/andersson_crepis/Gmat75k.RData")
 summary(mod$VCV)
 plot(mod$VCV[,19])
 
-#Compile G matrix
-gmat=matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
-colnames(gmat)=rownames(gmat)=colnames(dat)[4:8]
-gmat
-
-means=apply(dat[,4:8], 2, mean)
-means
-msG=meanStdG(gmat, means)
-evolvabilityMeans(msG)
-
 #####################################
 #### - Estimating the D matrix - ####
 #####################################
@@ -149,10 +139,44 @@ save(mod, file="./analyses/andersson_crepis/Dmat75k.RData")
 summary(mod$VCV)
 plot(mod$VCV[,19])
 
-#Compile D matrix
+################################
+#### -Divergence analysis - ####
+################################
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
+
+#The G matrix
+load(file="./analyses/andersson_crepis/Gmat75k.RData")
+n=5
+gmat=matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
+colnames(gmat)=rownames(gmat)=colnames(dat)[4:8]
+gmat
+
+#The D matrix
+load(file="./analyses/andersson_crepis/Dmat75k.RData")
+
 dmat=matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat)=rownames(dmat)=colnames(dat)[4:8]
-dmat*100
+dmat=dmat*100
+dmat
 
-gmat
-plot(log(diag(gmat)), log(diag(dmat*100)))
+#Compute eigenvectors etc.
+first_ev=eigen(gmat)$vectors[,1]
+gmax=evolvabilityBeta(gmat, Beta = first_ev)$e
+dmax=evolvabilityBeta(gmat, Beta = first_ev)$e
+
+last_ev=eigen(gmat)$vectors[,nrow(gmat)]
+gmin=evolvabilityBeta(gmat, Beta = last_ev)$e
+dmin=evolvabilityBeta(dmat, Beta = last_ev)$e
+
+betas=randomBeta(1000,nrow(gmat))
+ebeta=evolvabilityBeta(gmat, betas)$e
+dbeta=evolvabilityBeta(dmat, betas)$e
+
+plot(log10(ebeta),log10(dbeta),col="grey", las = 1,
+       xlab="Evolvability",
+       ylab="Population divergence",
+     xlim=c(-1,2))
+  points(log10(diag(gmat)),log10(diag(dmat)),pch=16)
+  points(log10(gmax),log10(dmax),col="red", pch=16)
+  points(log10(gmin),log10(dmin),col="blue", pch=16)
+
