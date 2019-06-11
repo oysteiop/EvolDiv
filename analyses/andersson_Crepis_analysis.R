@@ -1,6 +1,9 @@
-##############################
-#### - Example analyses - ####
-##############################
+###############################################
+#### - Crepis data from Stefan Andersson - ####
+###############################################
+# Crepis tectorum
+# Among-pop and within-pop full sibs + selfed sibs
+
 rm(list=ls())
 library(evolvability)
 library(plyr)
@@ -9,10 +12,6 @@ library(MCMCglmm)
 library(lme4)
 library(kinship2)
 
-
-
-#### Crepis data from Stefan Andersson
-#### Among-pop and within-pop full sibs + selfed sibs
 list.files(path="./data/andersson")
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 head(dat)
@@ -159,7 +158,48 @@ colnames(dmat)=rownames(dmat)=colnames(dat)[4:8]
 dmat=dmat*100
 dmat
 
+# EvolvabilityMeans
+?evolvabilityMeansMCMC
+evolvabilityMeans(gmat)
+evolvabilityMeansMCMC(mod$VCV[,1:(n*n)])
+
 #Compute eigenvectors etc.
+g_ev=eigen(gmat)$vectors
+var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
+
+d_ev=eigen(dmat)$vectors
+var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
+#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+
+#Compute summary stats
+mg=lm(log(var_d_g)~log(var_g_g))
+beta_g=summary(mg)$coef[2,1]
+beta_g
+r2_g=summary(mg)$r.squared
+r2_g
+
+md=lm(log(var_d_d)~log(var_g_d))
+beta_d=summary(md)$coef[2,1]
+beta_d
+r2_d=summary(md)$r.squared
+r2_d
+
+#Plot
+xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+points(log10(var_g_d), log10(var_d_d), pch=16)
+legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
+
+points(log10(diag(gmat)), log10(diag(dmat)), col="blue")
+
+
+#Compute eigenvectors etc. (OLD)
 first_ev=eigen(gmat)$vectors[,1]
 gmax=evolvabilityBeta(gmat, Beta = first_ev)$e
 dmax=evolvabilityBeta(gmat, Beta = first_ev)$e
