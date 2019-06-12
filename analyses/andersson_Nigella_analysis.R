@@ -1,6 +1,9 @@
-##############################
-#### - Example analyses - ####
-##############################
+################################################
+#### - Nigella data from Stefan Andersson - ####
+################################################
+
+#### Mid-parent and offspring values from 2 populations
+
 rm(list=ls())
 library(evolvability)
 library(plyr)
@@ -9,10 +12,6 @@ library(MCMCglmm)
 library(lme4)
 library(kinship2)
 
-
-
-#### Nigella data from Stefan Andersson
-#### Mid-parent and offspring values from 2 populations
 rm(list=ls())
 list.files(path="./data/andersson/Nigella")
 dat = read.csv2("./data/andersson/Nigella/Nigella_edited.csv", dec=".")
@@ -46,7 +45,7 @@ gmat
 means=apply(Mik[,-1], 2, mean)[1:6]
 means
 
-meanStdG(gmat, means)*100
+gmat=meanStdG(gmat, means)*100
 
 #####################################
 #### - Estimating the D matrix - ####
@@ -68,7 +67,53 @@ popmeans=ddply(dat, .(Population), summarize,
 popmeans=popmeans[,-1]
 dmat=cov(log(popmeans))
 
+
+#Simple analysis
+plot(log10(diag(gmat)), log10(diag(dmat)))
+
+
 #Compute eigenvectors etc.
+g_ev=eigen(gmat)$vectors
+var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+#var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
+
+d_ev=eigen(dmat)$vectors
+var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
+#var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
+var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+
+#Compute summary stats
+mg=lm(log(var_d_g)~log(var_g_g))
+beta_g=summary(mg)$coef[2,1]
+beta_g
+r2_g=summary(mg)$r.squared
+r2_g
+
+md=lm(log(var_d_d)~log(var_g_d))
+beta_d=summary(md)$coef[2,1]
+beta_d
+r2_d=summary(md)$r.squared
+r2_d
+
+#Plot
+plot(var_g_g, var_d_g, xlim=c(-20,40), ylim=c(-.1,.1))
+points(var_g_d, var_d_d, pch=16)
+legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
+
+points(diag(gmat), diag(dmat), pch=16, col="blue")
+
+#On log10 scale
+xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin=-3
+ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+points(log10(var_g_d), log10(var_d_d), pch=16)
+legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
+
+
+#Compute eigenvectors etc. (OLD)
 first_ev=eigen(gmat)$vectors[,1]
 gmax=evolvabilityBeta(gmat, Beta = first_ev)$e
 dmax=evolvabilityBeta(dmat, Beta = first_ev)$e
