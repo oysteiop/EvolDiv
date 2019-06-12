@@ -127,16 +127,23 @@ gmat=matrix(apply(mod$VCV, 2, median)[1:16],nrow=4)
 colnames(gmat)=rownames(gmat)=c("petal.width.mm", "petal.length.mm", "flowers", "rosette.size.cm")
 gmat
 
+isSymmetric.matrix(dmat)
+#solve(dmat)
+#dmat[lower.tri(dmat)] <- t(dmat)[lower.tri(dmat)]
+
+gmat=round(gmat, 10)
+dmat=round(dmat, 10)
+
 #Compute eigenvectors etc.
 g_ev=eigen(gmat)$vectors
 var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
-#var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
+var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
 d_ev=eigen(dmat)$vectors
 var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-#var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
+#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
 
 #Compute summary stats
 mg=lm(log(var_d_g)~log(var_g_g))
@@ -167,7 +174,14 @@ plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
 points(log10(var_g_d), log10(var_d_d), pch=16)
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
+#Dimension reduction
 
+g2=t(g_ev)%*%gmat%*%g_ev
+d2=t(g_ev)%*%dmat%*%g_ev
+
+ge2=eigen(g2[1:4,1:4])$vectors
+res1=evolvabilityBeta(g2[1:4,1:4], Beta = g_ev)$e
+res2=evolvabilityBeta(d2[1:4,1:4], Beta = g_ev)$e
 
 
 #Plot both relationship,s upper7lower bounds of scaling relationship
