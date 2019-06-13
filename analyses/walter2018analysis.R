@@ -10,6 +10,7 @@ library(evolvability)
 library(plyr)
 library(MCMCglmm)
 
+setwd("Z:/data/EvolDiv/")
 list.files()
 
 #D-matrix
@@ -63,18 +64,16 @@ prior<-list(R=list(V=diag(n), nu=n+0.002-1),
             G=list(G1=list(V=diag(n), nu=n, alpha.mu = alpha.mu, alpha.V = alpha.V)))
 
 samples = 1000
-thin = 10
+thin = 100
 burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 
-a=Sys.time()
 mod<-MCMCglmm(c(Height, MSL_W, SB, MSD, Area, P2A2, Circularity, Nindents.Peri, IndentWidthMean, IndentDepthMean) ~ -1+trait*Block,
               random = ~us(trait):animal,
               rcov = ~us(trait):units,
               data = reddat, ginverse = list(animal = invA),
               family = rep("gaussian", n), prior = prior, 
               nitt = nitt, burnin = burnin, thin = thin)
-Sys.time()-a
 
 filename=paste0("analyses/walter2018/Gmat_", type,".RData")
 save(mod, file=filename)
@@ -82,9 +81,8 @@ save(mod, file=filename)
 Sys.time()-a
 
 
-plot(mod$VCV[,1])
+plot(mod$VCV[,20])
 summary(mod$VCV)
-
 
 #####################################
 ######## - Analyse G vs. D - ########
@@ -136,6 +134,5 @@ plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
-
 
 #Plot both relationship,s upper7lower bounds of scaling relationship
