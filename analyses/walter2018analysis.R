@@ -93,7 +93,7 @@ load(file="analyses/walter2018/Gmat_Head.RData")
 load(file="analyses/walter2018/Gmat_Table.RData")
 load(file="analyses/walter2018/Gmat_Wood.RData")
 
-plot(mod$VCV[,20])
+plot(mod$VCV[,21])
 summary(mod$VCV)
 
 n=10
