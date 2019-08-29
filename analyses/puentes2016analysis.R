@@ -168,20 +168,21 @@ points(diag(gmat), diag(dmat), pch=16, col="blue")
 #On log10 scale
 xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin=-3
+ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
 points(log10(var_g_d), log10(var_d_d), pch=16)
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
-#Dimension reduction
+#Bending the D matrix
+eigen(dmat)
+lambda=diag(eigen(dmat)$values)
+lambda[4,4]=0.000001
+d2=d_ev%*%lambda%*%t(d_ev)
+eigen(d2)
 
-g2=t(g_ev)%*%gmat%*%g_ev
-d2=t(g_ev)%*%dmat%*%g_ev
+dmat
+d2
 
-ge2=eigen(g2[1:4,1:4])$vectors
-res1=evolvabilityBeta(g2[1:4,1:4], Beta = g_ev)$e
-res2=evolvabilityBeta(d2[1:4,1:4], Beta = g_ev)$e
+dmat=d2
 
-
-#Plot both relationship,s upper7lower bounds of scaling relationship

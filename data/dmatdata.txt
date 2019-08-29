@@ -1822,13 +1822,15 @@ P9	ØO	NA	Andersson_Crepis	NA	NA	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europ
 P9	ØO	NA	Andersson_Crepis	NA	NA	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	VISB	NA	NA	greenhouse	maximum_leaf_width	20.8	26.03	5.101820403	15	1.3173																																													
 P9	ØO	NA	Andersson_Crepis	NA	NA	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	VISB	NA	NA	greenhouse	minimum_leaf_width	3.133333333	2.70	1.641718032	15	0.4239																																													
 P9	ØO	NA	Andersson_Crepis	NA	NA	Asteraceae	Crepis	tectorum	Crepis_tectorum	Europe	VISB	NA	NA	greenhouse	number_of_teeth	22.46666667	27.84	5.276181881	15	1.3623																																													
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	tiller_dry_weight	7.06	5.5	2.34520788	288	0.1382																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	stolon_number	24.60	406	20.14944168	288	1.1873																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	stolon_dry_weight	0.58	1.49	1.220655562	288	0.0719																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	leaf_width	7.80	1.04	1.019803903	288	0.0601																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	flowering_time	33.20	6.87	2.621068484	288	0.1544																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Improved	NA	NA	greenhouse	inflorescense_number	50.1	1879	43.3474336	288	2.5543																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	tiller_dry_weight	8	38	6.164414003	288	0.3632																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	stolon_number	27	753	27.44084547	288	1.6170																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	stolon_dry_weight	0.75	1.37	1.170469991	288	0.0690																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	leaf_width	8.3	7.82	2.796426291	288	0.1648																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	flowering_time	26.2	3.85	1.962141687	288	0.1156																																													
+G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lanatus	Europe	Traditional	NA	NA	greenhouse	inflorescense_number	45.6	135	11.61895004	288	0.6847																																													
