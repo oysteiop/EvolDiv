@@ -10,7 +10,6 @@ library(lme4)
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
 
-
 #List of studies
 studies=sort(unique(ddat$ID))
 studies
@@ -35,19 +34,17 @@ for(s in 1:length(studies)){
 ddf=rbind.fill(outlist)
 head(ddf,5)
 
-plot(ddf$npop, log(ddf$d))
-cor(ddf$npop, log(ddf$d))
-
-sv=ddf$dse2/(ddf$mean^2)
-plot(log(ddf$d), log(sv))
-lines(-100:100,-100:100)
-
 #Combine with data from Evolvability database
 edat=read.table("data/evolvabilitydatabase2019.txt", header=T)
 
 tg1=NULL
 for(i in 1:nrow(ddf)){
   tg1[i]=as.character(edat$traitgroup1)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
+}
+
+dimension=NULL
+for(i in 1:nrow(ddf)){
+  dimension[i]=as.character(edat$dimension)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
 }
 
 evals=NULL
@@ -57,6 +54,7 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
 ddf$tg1=tg1
+ddf$dimension=dimension
 ddf$evals=evals
 head(ddf)
 
@@ -64,11 +62,17 @@ tapply(ddf$d, ddf$tg1, median, na.rm=T)*100
 tapply(ddf$d>-Inf, ddf$tg1, sum, na.rm=T)
 plot(as.factor(ddf$tg1), log10(ddf$d))
 
+ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio"))
+levels(ddf$dimension)
+tapply(ddf$d, ddf$dimension, median, na.rm=T)*100
+tapply(ddf$d>-Inf, ddf$dimension, sum, na.rm=T)
+plot(as.factor(ddf$dimension), log10(ddf$d))
+
 #Informal meta-analysis
 #Covariates: evolvability, n populations, max distance, traitgroup, dimension?, mating system?
 #Mean within-pop se2 as measurement variance in formal meta-analysis
 
-m=lmer(log(d)~npop+evals+tg1 + (1|species/study_ID), data=ddf)
+m=lmer(log(d)~npop + evals + tg1 + dimension+ (1|species/study_ID), data=ddf)
 summary(m)
 
 #Plot
@@ -76,13 +80,51 @@ ddf=ddf[ddf$d>0,]
 ddf=ddf[ddf$evals>0,]
 ddf=na.omit(ddf)
 
+#ddf=ddf[ddf$species!="Dalechampia_scandens_A",]
+
 plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
      pch=1,cex=1*sqrt(ddf$npop),
+     col=as.numeric(as.factor(ddf$tg1)),
      xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+
+ddf2=ddf[ddf$dimension=="linear",]
+plot(log10(ddf2$evals),log10(ddf2$d*100),
+     xlab="Evolvability (%)",
+     ylab="Among-population variance (%)",
+     pch=1,cex=1*sqrt(ddf2$npop),
+     col="blue",
+     main="Linear traits",
+     xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
+axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
+axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+
+ddf2=ddf[ddf$dimension=="area",]
+points(log10(ddf2$evals),log10(ddf2$d*100),col="red",cex=1*sqrt(ddf2$npop))
+ddf2=ddf[ddf$dimension=="mass_volume",]
+points(log10(ddf2$evals),log10(ddf2$d*100),col="darkgreen",cex=1*sqrt(ddf2$npop))
+ddf2=ddf[ddf$dimension=="count",]
+points(log10(ddf2$evals),log10(ddf2$d*100),col="red",cex=1*sqrt(ddf2$npop))
+ddf2=ddf[ddf$dimension=="ratio",]
+points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
+
+# Floral vs. vegetative traits
+ddf2=ddf[ddf$tg1=="floral",]
+plot(log10(ddf2$evals),log10(ddf2$d*100),
+     xlab="Evolvability (%)",
+     ylab="Among-population variance (%)",
+     pch=1,cex=1*sqrt(ddf2$npop),
+     col="blue",
+     xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
+axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
+axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+
+ddf2=ddf[ddf$tg1=="vegetative",]
+points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
+
 
 sort(tapply(ddf$evals>-Inf, ddf$study_ID, sum, na.rm=T))
 
@@ -91,7 +133,7 @@ studies=unique(ddf$study_ID)
 pdf("figs/univariate_G_D_plots.pdf")
 for(s in 1:length(studies)){
   red=ddf[ddf$study_ID==studies[s],]
-  plot(log(red$evals),log(red$d*100),pch=16, main=paste(studies[s]))
+  plot(log(red$evals),log(red$d*100), pch=16, main=paste(studies[s]))
 }
 dev.off()
 
@@ -101,7 +143,7 @@ dev.off()
 
 #Prepare data
 names(ddf)
-moddat=subset(ddf, select=c("d","evals","tg1","study_ID","species","dse2","mean"))
+moddat=subset(ddf, select=c("d", "evals", "tg1", "dimension", "study_ID", "species", "dse2", "mean"))
 moddat=na.omit(moddat)
 moddat$d=moddat$d*100
 
@@ -133,25 +175,4 @@ x11()
 plot(mod$VCV)
 
 summary(mod)
-
-#D. scandens example
-studies
-ofield=ddf[ddf$study_ID==studies[18],]
-ogh=ddf[ddf$study_ID==studies[19],]
-bgh=ddf[ddf$study_ID==studies[3],]
-
-x11()
-par(mfrow=c(1,3))
-plot(log(bgh$evals),log(bgh$d*100),pch=16, main="Mexico, greenhouse")
-plot(log(ogh$evals),log(ogh$d*100),pch=16, main="Costa Rica, greenhouse")
-plot(log(ofield$evals),log(ofield$d*100),pch=16, main="Costa Rica, field")
-
-
-
-
-
-
-x=rnorm(10,10,2)
-
-
 

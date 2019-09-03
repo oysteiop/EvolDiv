@@ -143,7 +143,6 @@ POPBASE[[30]]
 
 save(POPBASE, file = "data/POPBASE.RData")
 
-
 map1 <- readOGR("C:/data/Political Map.shp")
 plot(map1)
 points(ddat$lon,ddat$lat,pch=16,col="blue")
