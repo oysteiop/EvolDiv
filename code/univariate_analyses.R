@@ -10,6 +10,15 @@ library(lme4)
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
 
+#Scaling of trait variances with the mean
+ddat=ddat[ddat$trait!="organ_size",]
+plot(log10(ddat$mean), log10(ddat$sd))
+lines(-10:10, -10:10)
+cv=ddat$sd/ddat$mean
+hist(cv)
+median(cv, na.rm=T)
+#plot(log10(ddat$mean), cv)
+
 #List of studies
 studies=sort(unique(ddat$ID))
 studies
@@ -42,6 +51,11 @@ for(i in 1:nrow(ddf)){
   tg1[i]=as.character(edat$traitgroup1)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
 }
 
+tg2=NULL
+for(i in 1:nrow(ddf)){
+  tg2[i]=as.character(edat$traitgroup2)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
+}
+
 dimension=NULL
 for(i in 1:nrow(ddf)){
   dimension[i]=as.character(edat$dimension)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
@@ -54,6 +68,7 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
 ddf$tg1=tg1
+ddf$tg2=tg2
 ddf$dimension=dimension
 ddf$evals=evals
 head(ddf)
@@ -86,44 +101,53 @@ plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
      pch=1,cex=1*sqrt(ddf$npop),
-     col=as.numeric(as.factor(ddf$tg1)),
+     col="black",
      xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
 
-ddf2=ddf[ddf$dimension=="linear",]
-plot(log10(ddf2$evals),log10(ddf2$d*100),
+# Function to plot e vs. d with subset highlighted ####
+plotSubset=function(category, subset){
+plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
-     pch=1,cex=1*sqrt(ddf2$npop),
-     col="blue",
-     main="Linear traits",
+     pch=1,cex=1*sqrt(ddf$npop),
+     col="grey", main=paste0(category, ": ",subset),
      xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
 
-ddf2=ddf[ddf$dimension=="area",]
-points(log10(ddf2$evals),log10(ddf2$d*100),col="red",cex=1*sqrt(ddf2$npop))
-ddf2=ddf[ddf$dimension=="mass_volume",]
-points(log10(ddf2$evals),log10(ddf2$d*100),col="darkgreen",cex=1*sqrt(ddf2$npop))
-ddf2=ddf[ddf$dimension=="count",]
-points(log10(ddf2$evals),log10(ddf2$d*100),col="red",cex=1*sqrt(ddf2$npop))
-ddf2=ddf[ddf$dimension=="ratio",]
+column=which(names(ddf)==category)
+ddf2=ddf[ddf[,column]==subset,]
 points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
+}
 
-# Floral vs. vegetative traits
-ddf2=ddf[ddf$tg1=="floral",]
-plot(log10(ddf2$evals),log10(ddf2$d*100),
-     xlab="Evolvability (%)",
-     ylab="Among-population variance (%)",
-     pch=1,cex=1*sqrt(ddf2$npop),
-     col="blue",
-     xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
-axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
-axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
+ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
+ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
 
-ddf2=ddf[ddf$tg1=="vegetative",]
-points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
+x11()
+par(mfrow=c(2,3))
+plotSubset("tg1", "floral")
+plotSubset("tg1", "vegetative")
+plotSubset("tg2", "flowersize")
+plotSubset("tg2", "fit")
+plotSubset("tg2", "display")
+plotSubset("tg2", "reward")
+
+par(mfrow=c(2,3))
+plotSubset("dimension", "linear")
+plotSubset("dimension", "area")
+plotSubset("dimension", "mass_volume")
+plotSubset("dimension", "count")
+plotSubset("dimension", "ratio")
+
+pdf("figs/univariate_G_D_plots2.pdf")
+for(s in 1:length(studies)){
+  study=studies[s]
+  plotSubset("study_ID", study)
+}
+dev.off()
 
 
 sort(tapply(ddf$evals>-Inf, ddf$study_ID, sum, na.rm=T))
