@@ -1,4 +1,4 @@
-species=both_sp[11]
+species=both_sp[5]
 gmatrix=1
 dmatrix=1
 
@@ -84,16 +84,19 @@ computeGD=function(species, gmatrix=1, dmatrix=1){
                betaG=beta_g,
                r2G=r2_g,
                betaD=beta_d,
-               r2D=r2_d)
+               r2D=r2_d,
+               iG=evolvabilityMeans(gmatscaled)[7],
+               nBetaG=length(mg$residuals),
+               nBetaD=length(md$residuals))
                
   #Plot
-  xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
-  xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
-  ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
-  ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
-  plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
-  points(log10(var_g_d), log10(var_d_d), pch=16)
-  legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
+  #xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
+  #xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
+  #ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
+  #ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
+  #plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+  #points(log10(var_g_d), log10(var_d_d), pch=16)
+  #legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
   
   return(outlist)
   
@@ -104,7 +107,6 @@ computeGD=function(species, gmatrix=1, dmatrix=1){
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
 
-
 #Species present in both databases
 gsp=unlist(lapply(EVOBASE, function(x) x$Species))
 dsp=unlist(lapply(POPBASE, function(x) x$Species))
@@ -113,6 +115,40 @@ both_sp
 
 POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
 
-computeGD(species = both_sp[11], gmatrix = 1, dmatrix = 1)
+computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 1)
+
+nG=NULL
+nD=NULL
+for(s in c(1:length(both_sp))){
+  species=both_sp[s]  
+  nG[s]=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
+  nD[s]=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
+}
+cbind(both_sp, nG, nD)
+
+reslist=list()
+for(s in 1:length(both_sp)){
+  for(g in 1:nG[s]){
+    for(d in 1:nD[s])
+      res=computeGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:12)]
+      reslist[length(reslist)+1]=as.data.frame(unlist(res)[c(1:10)])
+  }
+}
+
+reslist[[1]]
+
+resmat=as.data.frame(matrix(NA, ncol=10, nrow=29))
+for(i in 1:29){
+  resmat[i,1:2]=as.character(reslist[[i]][1:2])
+  resmat[i,3:8]=round(as.numeric(as.character(reslist[[i]][3:8])),2)
+  resmat[i,9:10]=as.numeric(as.character(reslist[[i]][9:10]))
+ }
+
+colnames(resmat)=c("D", "G", "npop", "betaG", "r2G", "betaD", "r2D","i_mean","nBetaG","nBetaD")
+resmat=resmat[c(2,1,3:10)]
+head(resmat)
+View(resmat)
 
 
+hist(resmat$betaG)
+hist(resmat$r2G[resmat$nBetaG>2])

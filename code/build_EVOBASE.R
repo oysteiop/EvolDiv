@@ -17,6 +17,7 @@ studies
 #Compile G matrices and trait means
 Glist=list()
 MeanList=list()
+dimList=list()
 VpList=list()
 isCor=tapply(indat$isCor,indat$ID,mean)>0
 
@@ -31,6 +32,13 @@ for(s in 1:length(studies)){
   }
   names(means) = traits
   MeanList[[s]] = means
+  
+  dims = NULL
+  for(t in 1:length(traits)){
+    dims[t] = as.character(red$dimension[which(red$traitX==traits[t] & red$traitY==traits[t])])
+  }
+  names(dims) = traits
+  dimList[[s]] = dims
   
   pvars = NULL
   for(t in 1:length(traits)){
@@ -75,7 +83,6 @@ for(s in 1:length(studies)){
   }
 }
 
-
 #Preparing metadata
 metadata = ddply(indat, .(ID), summarize,
                  Family = family[1],
@@ -95,6 +102,7 @@ for(i in 1:length(studies)){
                       LatLon = c(Lat = metadata$Lat[metadata$ID==studies[i]],
                                  Lon = metadata$Lon[metadata$ID==studies[i]]),
                       G = signif(Glist[[i]],4), 
+                      Dims=dimList[[i]],
                       Means = MeanList[[i]],
                       Vp = VpList[[i]])
 }

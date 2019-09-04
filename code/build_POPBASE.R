@@ -139,7 +139,7 @@ for(i in 1:length(studies)){
                       D = signif(Dlist[[i]],4)) 
 }
 
-POPBASE[[30]]
+POPBASE[[31]]
 
 save(POPBASE, file = "data/POPBASE.RData")
 

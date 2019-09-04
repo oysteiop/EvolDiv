@@ -33,6 +33,7 @@ for(s in 1:length(studies)){
   df=data.frame(study_ID=studies[[s]], 
                 species=splist[[s]], 
                 trait=sort(unique(red$trait)),
+                environment=sort(unique(red$environment)),
                 npop=tapply(red$mean>-Inf, red$trait, sum, na.rm=T),
                 d=cbind(tapply(log(red$mean), red$trait, var, na.rm=T)),
                 mean=cbind(tapply(red$mean, red$trait, mean, na.rm=T)),
@@ -42,6 +43,13 @@ for(s in 1:length(studies)){
 }
 ddf=rbind.fill(outlist)
 head(ddf,5)
+
+# Sampling variance of a variance (From Lynch & Walsh 1998 p. 815)
+sv=(2*(ddf$d^2))/(ddf$npop+2)
+ddf$d_se=sqrt(sv)
+
+plot(log(ddf$d), log(ddf$d_se))
+lines(-20:10,-20:10)
 
 #Combine with data from Evolvability database
 edat=read.table("data/evolvabilitydatabase2019.txt", header=T)
@@ -61,6 +69,11 @@ for(i in 1:nrow(ddf)){
   dimension[i]=as.character(edat$dimension)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
 }
 
+ms=NULL
+for(i in 1:nrow(ddf)){
+  ms[i]=as.character(edat$matingsystem)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
+}
+
 evals=NULL
 for(i in 1:nrow(ddf)){
 w=which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(edat$measurement)==as.character(ddf$trait)[i])
@@ -69,16 +82,22 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 
 ddf$tg1=tg1
 ddf$tg2=tg2
+ddf$ms=ms
+ddf$ms=factor(ddf$ms, levels=c("S","M","O"))
 ddf$dimension=dimension
+ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio"))
 ddf$evals=evals
 head(ddf)
+
+ddf=ddf[ddf$d>0,]
+ddf=ddf[ddf$evals>0,]
+ddf=na.omit(ddf)
+#####
 
 tapply(ddf$d, ddf$tg1, median, na.rm=T)*100
 tapply(ddf$d>-Inf, ddf$tg1, sum, na.rm=T)
 plot(as.factor(ddf$tg1), log10(ddf$d))
 
-ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio"))
-levels(ddf$dimension)
 tapply(ddf$d, ddf$dimension, median, na.rm=T)*100
 tapply(ddf$d>-Inf, ddf$dimension, sum, na.rm=T)
 plot(as.factor(ddf$dimension), log10(ddf$d))
@@ -87,13 +106,16 @@ plot(as.factor(ddf$dimension), log10(ddf$d))
 #Covariates: evolvability, n populations, max distance, traitgroup, dimension?, mating system?
 #Mean within-pop se2 as measurement variance in formal meta-analysis
 
-m=lmer(log(d)~npop + evals + tg1 + dimension+ (1|species/study_ID), data=ddf)
+#Remove repeated D. scandens studies
+ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
+ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
+ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
+
+m=lmer(log(d)~evals + npop + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
 summary(m)
 
 #Plot
-ddf=ddf[ddf$d>0,]
-ddf=ddf[ddf$evals>0,]
-ddf=na.omit(ddf)
+
 
 #ddf=ddf[ddf$species!="Dalechampia_scandens_A",]
 
@@ -122,9 +144,10 @@ ddf2=ddf[ddf[,column]==subset,]
 points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
 }
 
-ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
-ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
-ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
+
+plotSubset("ms", "S")
+plotSubset("ms", "M")
+plotSubset("ms", "O")
 
 x11()
 par(mfrow=c(2,3))
@@ -142,22 +165,12 @@ plotSubset("dimension", "mass_volume")
 plotSubset("dimension", "count")
 plotSubset("dimension", "ratio")
 
+studies=unique(ddf$study_ID)
+
 pdf("figs/univariate_G_D_plots2.pdf")
 for(s in 1:length(studies)){
   study=studies[s]
   plotSubset("study_ID", study)
-}
-dev.off()
-
-
-sort(tapply(ddf$evals>-Inf, ddf$study_ID, sum, na.rm=T))
-
-studies=unique(ddf$study_ID)
-
-pdf("figs/univariate_G_D_plots.pdf")
-for(s in 1:length(studies)){
-  red=ddf[ddf$study_ID==studies[s],]
-  plot(log(red$evals),log(red$d*100), pch=16, main=paste(studies[s]))
 }
 dev.off()
 
@@ -199,4 +212,3 @@ x11()
 plot(mod$VCV)
 
 summary(mod)
-

@@ -7,6 +7,8 @@ load("data/EVOBASE.RData")
 print(unlist(lapply(EVOBASE, function(x)x$Study_ID)))
 EVOBASE[[32]]
 
+lapply(EVOBASE, function(x) x$Dims)
+
 #Extracting just the G matrices
 GG=lapply(EVOBASE,function(x) x$G)
 
