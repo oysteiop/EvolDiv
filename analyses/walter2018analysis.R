@@ -125,6 +125,7 @@ beta_d
 r2_d=summary(md)$r.squared
 r2_d
 
+#Plot both relationship,s upper/lower bounds of scaling relationship
 #Plot
 xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -135,4 +136,12 @@ points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
-#Plot both relationship,s upper7lower bounds of scaling relationship
+
+#On log10 scale
+xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+points(log10(var_g_d), log10(var_d_d), pch=16)
+legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))

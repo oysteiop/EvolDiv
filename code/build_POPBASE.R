@@ -64,7 +64,6 @@ meanList[3]
 eVlist[[3]]
 
 ######Estimate error-corrected D matrices ####
-
 samples = 1000
 thin = 100
 burnin = samples*thin*.5

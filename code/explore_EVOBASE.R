@@ -5,7 +5,7 @@ load("data/EVOBASE.RData")
 
 #Extracting a single species
 print(unlist(lapply(EVOBASE, function(x)x$Study_ID)))
-EVOBASE[[32]]
+EVOBASE[[34]]
 
 lapply(EVOBASE, function(x) x$Dims)
 

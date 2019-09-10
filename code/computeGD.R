@@ -76,18 +76,18 @@ computeGD=function(species, gmatrix=1, dmatrix=1){
   beta_d=summary(md)$coef[2,1]
   r2_d=summary(md)$r.squared
   
-  outlist=list(dmat=dmatname,
-               gmat=gmatname,
-               D=dmat,
-               G=gmatscaled,
-               nPop=as.numeric(POPBASE[[dindex]]$nPop),
-               betaG=beta_g,
-               r2G=r2_g,
-               betaD=beta_d,
-               r2D=r2_d,
-               iG=evolvabilityMeans(gmatscaled)[7],
-               nBetaG=length(mg$residuals),
-               nBetaD=length(md$residuals))
+  outlist=list(dmat = dmatname, #Descriptor of D matrix
+               gmat = gmatname, #Descriptor of G matrix
+               D = dmat, #The D matrix
+               G = gmatscaled, #The G matrix
+               nPop = as.numeric(POPBASE[[dindex]]$nPop), #Number of populations included in D
+               betaG = beta_g, #Slope of D on G for eigenvectors of G
+               r2G = r2_g, #r^2 for betaG
+               betaD = beta_d, #Slope for D on G for eigenvectors of D
+               r2D = r2_d, #r^2 for betaD
+               iG = evolvabilityMeans(gmatscaled)[7], #Hansen-Houle integration index for G
+               nBetaG = length(mg$residuals), #Number of positive eigenvalues compared for G eigenvectors
+               nBetaD = length(md$residuals)) #Number of positive eigenvalues compared for D eigenvectors
                
   #Plot
   #xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
@@ -145,10 +145,9 @@ for(i in 1:29){
  }
 
 colnames(resmat)=c("D", "G", "npop", "betaG", "r2G", "betaD", "r2D","i_mean","nBetaG","nBetaD")
-resmat=resmat[c(2,1,3:10)]
+resmat=resmat[c(2,1,3,9,4,5,10,6,7,8)]
 head(resmat)
 View(resmat)
-
 
 hist(resmat$betaG)
 hist(resmat$r2G[resmat$nBetaG>2])

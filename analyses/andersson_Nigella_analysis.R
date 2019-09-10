@@ -25,6 +25,14 @@ str(dat)
 Mik=dat[đat$Population=="Mikonos",]
 summary(lm(Mik[,8]~Mik[,2], na=na.exclude, data=Mik))$coef[2,1]
 
+pairs(Mik[,2:7])
+
+#Remove outlier
+which.max(Mik$mp_Leaf_length)
+Mik=Mik[-12,]
+pairs(Mik[,2:7])
+
+#G-matrix from parent-offspring covariances
 tmp=matrix(NA,nrow=6,ncol=6)
 for(i in 1:6){
   for(j in 1:6){
@@ -46,12 +54,13 @@ means=apply(Mik[,-1], 2, mean)[1:6]
 means
 
 gmat=meanStdG(gmat, means)*100
+gmat
+evolvabilityMeans(gmat)
 
 #####################################
 #### - Estimating the D matrix - ####
 #####################################
 
-rm(list=ls())
 list.files(path="./data/andersson/Nigella")
 dat = read.csv2("./data/andersson/Nigella/Nigella_edited.csv", dec=".")
 head(dat)
@@ -67,21 +76,22 @@ popmeans=ddply(dat, .(Population), summarize,
 popmeans=popmeans[,-1]
 dmat=cov(log(popmeans))
 
+dmat=round(dmat, 10)
+gmat=round(gmat, 10)
 
 #Simple analysis
-plot(log10(diag(gmat)), log10(diag(dmat)))
-
+plot(log10(diag(gmat)), log10(diag(dmat)), pch=16)
 
 #Compute eigenvectors etc.
 g_ev=eigen(gmat)$vectors
-var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
-#var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
 d_ev=eigen(dmat)$vectors
 var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-#var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
+#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
 
 #Compute summary stats
 mg=lm(log(var_d_g)~log(var_g_g))
@@ -97,40 +107,22 @@ r2_d=summary(md)$r.squared
 r2_d
 
 #Plot
-plot(var_g_g, var_d_g, xlim=c(-20,40), ylim=c(-.1,.1))
+plot(var_g_g, var_d_g, xlim=c(-20,40), ylim=c(-.1,.15))
 points(var_g_d, var_d_d, pch=16)
-legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
-
 points(diag(gmat), diag(dmat), pch=16, col="blue")
+legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), 
+       pch=c(1,16, 16), col=c("black", "black", "blue"))
+
 
 #On log10 scale
 xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin=-3
 ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+
+plot(log10(var_g_g), log10(var_d_g), xlim=c(-2,2), ylim=c(-12, 0))
 points(log10(var_g_d), log10(var_d_d), pch=16)
-legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
+points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 
-
-#Compute eigenvectors etc. (OLD)
-first_ev=eigen(gmat)$vectors[,1]
-gmax=evolvabilityBeta(gmat, Beta = first_ev)$e
-dmax=evolvabilityBeta(dmat, Beta = first_ev)$e
-
-last_ev=eigen(gmat)$vectors[,nrow(gmat)]
-gmin=evolvabilityBeta(gmat, Beta = last_ev)$e
-dmin=evolvabilityBeta(dmat, Beta = last_ev)$e
-
-betas=randomBeta(1000,nrow(gmat))
-ebeta=evolvabilityBeta(gmat, betas)$e
-dbeta=evolvabilityBeta(dmat, betas)$e
-
-plot(log10(ebeta),log10(dbeta),col="grey", las = 1,
-     xlab="Evolvability",
-     ylab="Population divergence",
-     xlim=c(-1,2))
-points(log10(diag(gmat)),log10(diag(dmat)),pch=16)
-points(log10(gmax),log10(dmax),col="red", pch=16)
-points(log10(gmin),log10(dmin),col="blue", pch=16)
-
+legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), 
+       pch=c(1,16, 16), col=c("black", "black", "blue"))

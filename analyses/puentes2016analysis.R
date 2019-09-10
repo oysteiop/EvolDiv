@@ -14,14 +14,14 @@ Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
 Gdat$rosette.size.cm=sqrt(Gdat$rosette.size.cm2)
 head(Gdat)
 
-popmeans=apply(Gdat[,5:12], 2, function(x) tapply(x, Gdat$pop, mean, na.rm = T))
-popmeans=popmeans[,c(2,3,5,6)]
+popmeans=apply(Gdat[,5:13], 2, function(x) tapply(x, Gdat$pop, mean, na.rm = T))
+popmeans=popmeans[,c(2,3,5,9)]
 
-vars=apply(Gdat[,5:12], 2, function(x) tapply(x, Gdat$pop, var, na.rm=T))
-vars=vars[,c(2,3,5,6)]
+vars=apply(Gdat[,5:13], 2, function(x) tapply(x, Gdat$pop, var, na.rm=T))
+vars=vars[,c(2,3,5,9)]
 vars
 
-dmat=cov(log(popmeans))
+dmat=cov(log(popmeans))*100
 dmat
 
 #### G matrix for STUC population #### 
@@ -159,7 +159,7 @@ r2_d=summary(md)$r.squared
 r2_d
 
 #Plot
-plot(var_g_g, var_d_g, xlim=c(-5,5), ylim=c(-2,2))
+plot(var_g_g, var_d_g, xlim=c(-5,15), ylim=c(-2,15))
 points(var_g_d, var_d_d, pch=16)
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
@@ -178,6 +178,8 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 eigen(dmat)
 lambda=diag(eigen(dmat)$values)
 lambda[4,4]=0.000001
+lambda[4,4]=0.01
+
 d2=d_ev%*%lambda%*%t(d_ev)
 eigen(d2)
 
@@ -186,3 +188,4 @@ d2
 
 dmat=d2
 
+♥

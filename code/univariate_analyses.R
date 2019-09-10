@@ -6,6 +6,7 @@ library(plyr)
 library(reshape2)
 library(evolvability)
 library(lme4)
+library(MCMCglmm)
 
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
@@ -29,7 +30,6 @@ outlist=list()
 for(s in 1:length(studies)){
   red=ddat[ddat$ID==studies[[s]],]
   red$trait=factor(red$trait)
-  #red$mean=log(red$mean)
   df=data.frame(study_ID=studies[[s]], 
                 species=splist[[s]], 
                 trait=sort(unique(red$trait)),
@@ -45,11 +45,8 @@ ddf=rbind.fill(outlist)
 head(ddf,5)
 
 # Sampling variance of a variance (From Lynch & Walsh 1998 p. 815)
-sv=(2*(ddf$d^2))/(ddf$npop+2)
-ddf$d_se=sqrt(sv)
-
-plot(log(ddf$d), log(ddf$d_se))
-lines(-20:10,-20:10)
+sv = (2*(ddf$d^2))/(ddf$npop+2)
+ddf$d_se = sqrt(sv)
 
 #Combine with data from Evolvability database
 edat=read.table("data/evolvabilitydatabase2019.txt", header=T)
@@ -92,6 +89,8 @@ head(ddf)
 ddf=ddf[ddf$d>0,]
 ddf=ddf[ddf$evals>0,]
 ddf=na.omit(ddf)
+head(ddf)
+
 #####
 
 tapply(ddf$d, ddf$tg1, median, na.rm=T)*100
@@ -104,7 +103,6 @@ plot(as.factor(ddf$dimension), log10(ddf$d))
 
 #Informal meta-analysis
 #Covariates: evolvability, n populations, max distance, traitgroup, dimension?, mating system?
-#Mean within-pop se2 as measurement variance in formal meta-analysis
 
 #Remove repeated D. scandens studies
 ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
@@ -114,11 +112,9 @@ ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhous
 m=lmer(log(d)~evals + npop + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
 summary(m)
 
-#Plot
+# Plotting evolvability vs. divergence
 
-
-#ddf=ddf[ddf$species!="Dalechampia_scandens_A",]
-
+#All data
 plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
@@ -136,15 +132,16 @@ plot(log10(ddf$evals),log10(ddf$d*100),
      pch=1,cex=1*sqrt(ddf$npop),
      col="grey", main=paste0(category, ": ",subset),
      xlim=c(-2.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
-axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
-axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+axis(1,c(-2,-1,0,1,2,3), 10^c(-2,-1,0,1,2,3))
+axis(2,c(-4,-3,-2,-1,0,1,2), 10^c(-4,-3,-2,-1,0,1,2), las=1)
 
 column=which(names(ddf)==category)
 ddf2=ddf[ddf[,column]==subset,]
-points(log10(ddf2$evals),log10(ddf2$d*100),col="black",cex=1*sqrt(ddf2$npop))
+points(log10(ddf2$evals), log10(ddf2$d*100), col="black", cex=1*sqrt(ddf2$npop))
 }
 
-
+x11()
+par(mfrow=c(1,3))
 plotSubset("ms", "S")
 plotSubset("ms", "M")
 plotSubset("ms", "O")
@@ -174,35 +171,47 @@ for(s in 1:length(studies)){
 }
 dev.off()
 
-
 #Formal meta-analysis
-#Can include e.g. trait groups, number of pops, max distance between pops,
 
 #Prepare data
 names(ddf)
-moddat=subset(ddf, select=c("d", "evals", "tg1", "dimension", "study_ID", "species", "dse2", "mean"))
+moddat=subset(ddf, select=c("d", "evals", "npop", "tg1", "dimension", "ms","study_ID", "species", "d_se", "mean"))
 moddat=na.omit(moddat)
 moddat$d=moddat$d*100
+moddat$d_se=moddat$d_se*100
 
 #Set prior
 prior<-list(R=list(V=1, nu=0.002), G=list(G1=list(V=1, nu=0.002),
                                           G2=list(V=1, nu=0.002)))
 
+prior<-list(R=list(V=1, nu=0.002), G=list(G1=list(V=1, nu=0.002),
+                                          G2=list(V=1, nu=0.002),
+                                          G3=list(V = diag(1), fix = 1)))
+
 #Compute mean-scaled measurement error variances
-mev=moddat$dse2/(moddat$mean^2)*100
+mev=moddat$d_se^2
 moddat$SE=sqrt(mev)  
+
+#To log-normal
+moddat$test=(-2*log(moddat$d)) + log(mev+(moddat$d^2))
+moddat$test=sqrt(moddat$test)
+
+hist(moddat$test)
+plot(moddat$npop, moddat$test)
+
+#test2=mev/moddat$d^2
 
 #Set sampling parameters
 samples = 1000
-thin = 10
+thin = 50
 burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 
 #Sample MCMC
-mod<-MCMCglmm(d ~ evals + tg1,
-              random = ~study_ID + species,
-              rcov = ~SE:units,
-              mev = mev,
+mod<-MCMCglmm(log(d) ~ evals + npop + ms + tg1 + dimension,
+              random = ~study_ID + species + idh(test):units,
+              rcov = ~units,
+              #mev = mev,
               data = moddat, 
               family = "gaussian", prior = prior, 
               nitt = nitt, burnin = burnin, thin = thin)
@@ -211,4 +220,5 @@ mod<-MCMCglmm(d ~ evals + tg1,
 x11()
 plot(mod$VCV)
 
+#Parameter estimates
 summary(mod)

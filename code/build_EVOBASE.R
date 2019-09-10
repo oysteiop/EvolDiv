@@ -13,7 +13,6 @@ indat$ID=paste(indat$reference,indat$population,indat$environment,indat$morph, s
 studies=unique(indat$ID)
 studies
 
-
 #Compile G matrices and trait means
 Glist=list()
 MeanList=list()

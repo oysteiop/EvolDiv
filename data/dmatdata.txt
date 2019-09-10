@@ -1858,6 +1858,77 @@ G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lana
 79	ØO	NA	Mcgoey_&_Stinchcombe_2018	bioRxiv	2008	Asteraceae	Ambrosia	artemisiifolia	Ambrosia_artemisiifolia	Europe	LH	NA	NA	common_garden	days_to_flower	53.5	29.1165	5.395970719	231	0.3550																																													
 79	ØO	NA	Mcgoey_&_Stinchcombe_2018	bioRxiv	2008	Asteraceae	Ambrosia	artemisiifolia	Ambrosia_artemisiifolia	Europe	RM	NA	NA	common_garden	days_to_flower	59.93	3.760848	1.939290592	266	0.1189																																													
 79	ØO	NA	Mcgoey_&_Stinchcombe_2018	bioRxiv	2008	Asteraceae	Ambrosia	artemisiifolia	Ambrosia_artemisiifolia	Europe	PG	NA	NA	common_garden	days_to_flower	62.94	12.243176	3.499025007	281	0.2087																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	leaf_length	19.320	8.229	2.868536212	248	0.1822																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	leaf_dissection	11.686	6.814	2.61032565	248	0.1658																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	node_number	33.948	35.796	5.982975848	248	0.3799																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	internode_length	12.104	36.547	6.045411483	248	0.3839																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	flowering_time	80.307	1019.600	31.93117599	248	2.0276																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	number_of_lateral_racemes	3.021	4.269	2.066228448	248	0.1312																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ma	35.416667	24.116667	greenhouse	petal_size	19.527	3.438	1.854157491	248	0.1177																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	leaf_length	21.231	8.114	2.848578593	256	0.1780																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	leaf_dissection	11.838	7.445	2.728461105	256	0.1705																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	node_number	68.313	82.201	9.066476714	256	0.5667																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	internode_length	4.571	3.998	1.999449924	256	0.1250																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	flowering_time	175.996	1297.800	36.02499133	256	2.2516																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	number_of_lateral_racemes	6.676	8.756	2.959020108	256	0.1849																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	To	35.45	23.666667	greenhouse	petal_size	19.511	2.896	1.701851932	256	0.1064																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	leaf_length	14.787	4.047	2.011790248	248	0.1277																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	leaf_dissection	7.386	2.320	1.523121794	248	0.0967																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	node_number	42.041	53.246	7.296985679	248	0.4634																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	internode_length	5.013	7.056	2.656219117	248	0.1687																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	flowering_time	168.457	2922.000	54.05552701	248	3.4325																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	number_of_lateral_racemes	5.000	5.958	2.440942441	248	0.1550																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Mk	35.016667	26.05	greenhouse	petal_size	15.207	1.933	1.390359666	248	0.0883																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	leaf_length	18.299	5.565	2.359088807	200	0.1668																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	leaf_dissection	14.478	5.719	2.391401263	200	0.1691																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	node_number	53.269	93.418	9.665298754	200	0.6834																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	internode_length	6.146	10.508	3.241604541	200	0.2292																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	flowering_time	153.667	450.160	21.21697434	200	1.5003																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	number_of_lateral_racemes	4.627	3.482	1.865958199	200	0.1319																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Ro	35.483333	23.716667	greenhouse	petal_size	19.852	3.327	1.824006579	200	0.1290																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	leaf_length	19.978	5.741	2.396017529	272	0.1453																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	leaf_dissection	14.276	7.931	2.816132099	272	0.1708																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	node_number	54.379	28.360	5.325410782	272	0.3229																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	internode_length	3.641	0.800	0.894572524	272	0.0542																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	flowering_time	187.406	578.200	24.04578965	272	1.4580																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	number_of_lateral_racemes	3.364	1.454	1.20573629	272	0.0731																																													
+80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	petal_size	20.474	1.920	1.385460212	272	0.0840																																													
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
+																																																																	
 																																																																	
 																																																																	
 																																																																	
