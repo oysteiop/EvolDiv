@@ -1893,42 +1893,55 @@ G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lana
 80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	flowering_time	187.406	578.200	24.04578965	272	1.4580																																													
 80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	number_of_lateral_racemes	3.364	1.454	1.20573629	272	0.0731																																													
 80	ØO	NA	Widen_et_al_2002	Journal_of_Evolutionary_Biology	2002	Brassicaceae	Brassica	cretica	Brassica_cretica	Europe	Go	35.233333	25.45	greenhouse	petal_size	20.474	1.920	1.385460212	272	0.0840																																													
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	diameter_of_leaf_rosette_in_September_88	6.6	9.8596	3.14	375	0.1621																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	diameter_of_leaf_rosette_in_December_88	12.8	14.3641	3.79	375	0.1957																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	maximum_leaf_length_in_October_89	9.4	3.9204	1.98	375	0.1022																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	stem_height_89	18.6	20.8849	4.57	375	0.2360																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	stem_height_90	34.4	79.21	8.9	655	0.3478																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	no_of_nodes_on_main_stem_90	8.3	5.3361	2.31	655	0.0903																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	no_of_florets_per_head_89	97.9	268.96	16.4	375	0.8469																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	no_of_florets_per_head_90	88.4	288.3204	16.98	655	0.6635																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	involucre_length_89	6.08	0.454276	0.674	375	0.0348																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_length_89	8.8	1.7956	1.34	375	0.0692																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_length_90	11.3	3.3489	1.83	655	0.0715																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_width_89	3.01	0.2209	0.47	375	0.0243																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_width_90	3.81	0.25	0.5	655	0.0195																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_length_width_ratio_89	3	0.3481	0.59	375	0.0305																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	ligule_length_width_ratio_90	3	0.3721	0.61	655	0.0238																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	corolla_tube_length_90	3.27	0.3136	0.56	655	0.0219																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	style_length_90	4.33	0.2401	0.49	655	0.0191																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	stylar_exsertion_90	1.06	0.2809	0.53	655	0.0207																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	days_from_flowering_to_seed_dispersal_90	52.2	34.2225	5.85	655	0.2286																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	seed_length_89	2.5	0.2116	0.46	375	0.0238																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	seed_length_90	3.61	0.1764	0.42	655	0.0164																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	seed_width_90	0.93	0.0081	0.09	655	0.0035																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	seed_weight_90	75.1	201.64	14.2	655	0.5548																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	pappus_length_89	6.12	1.5876	1.26	375	0.0651																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	pappus_length_90	6.25	1.9044	1.38	655	0.0539																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Benestad	55.524178	13.906054	common_garden	no_days_to_germination_90	12.7	2.6569	1.63	655	0.0637																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	diameter_of_leaf_rosette_in_September_88	6.17	10.0489	3.17	375	0.1637																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	diameter_of_leaf_rosette_in_December_88	13.5	16.1604	4.02	375	0.2076																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	maximum_leaf_length_in_October_89	9.1	3.9204	1.98	375	0.1022																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	stem_height_89	16.3	18.4041	4.29	375	0.2215																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	stem_height_90	30.4	64.3204	8.02	590	0.3302																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	no_of_nodes_on_main_stem_90	8.2	5.29	2.3	590	0.0947																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	no_of_florets_per_head_89	105	349.69	18.7	375	0.9657																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	no_of_florets_per_head_90	96.3	382.9849	19.57	590	0.8057																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	involucre_length_89	6.17	0.467856	0.684	375	0.0353																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_length_89	8.8	2.1904	1.48	375	0.0764																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_length_90	12.2	3.8809	1.97	590	0.0811																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_width_89	2.94	0.1521	0.39	375	0.0201																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_width_90	3.81	0.3025	0.55	590	0.0226																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_length_width_ratio_89	3	0.36	0.6	375	0.0310																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	ligule_length_width_ratio_90	3.3	0.4489	0.67	590	0.0276																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	corolla_tube_length_90	3.17	0.4356	0.66	590	0.0272																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	style_length_90	4.21	0.2304	0.48	590	0.0198																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	stylar_exsertion_90	1.04	0.3364	0.58	590	0.0239																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	days_from_flowering_to_seed_dispersal_90	50.5	28.1961	5.31	590	0.2186																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	seed_length_89	2.5	0.1296	0.36	375	0.0186																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	seed_length_90	3.52	0.1764	0.42	590	0.0173																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	seed_width_90	0.87	0.0064	0.08	590	0.0033																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	seed_weight_90	64.1	107.3296	10.36	590	0.4265																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	pappus_length_89	6.56	1.5129	1.23	375	0.0635																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	pappus_length_90	6.56	1.8769	1.37	590	0.0564																																													
+81	ØO	NA	Widen_&_Andersson_1993	Heredity	1993	Asteraceae	Senecio	integrifolius	Senecio_integrifolius	Europe	Grödby	56.080333	14.518559	common_garden	no_days_to_germination_90	12.1	2.3409	1.53	590	0.0630																																													

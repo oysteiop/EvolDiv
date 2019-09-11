@@ -138,10 +138,32 @@ for(i in 1:length(studies)){
                       D = signif(Dlist[[i]],4)) 
 }
 
-POPBASE[[31]]
+POPBASE[[33]]
 
 save(POPBASE, file = "data/POPBASE.RData")
+
+load(file = "data/POPBASE.RData")
 
 map1 <- readOGR("C:/data/Political Map.shp")
 plot(map1)
 points(ddat$lon,ddat$lat,pch=16,col="blue")
+
+
+maxdists=cbind(print(unlist(lapply(POPBASE, function(x)x$Study_ID))),
+      print(unlist(lapply(POPBASE, function(x) max(x$distmat)/1000))))
+View(maxdists)
+
+maxdists[which(maxdists[,1]=="Barrett_&_Shore_1987_Turnera_ulmifolia_greenhouse"),2]=188 #Ca. distance from map in paper
+maxdists[which(maxdists[,1]=="Podolsky_et_al._1997_Clarkia_dudleyana_greenhouse"),2]=11.3 #Ca. distance from map in paper
+maxdists[which(maxdists[,1]=="Carter_&_Murdy_1986_Talinum_mengesii_greenhouse"),2]=214 #Ca. distance from map in paper
+
+maxdists[which(maxdists[,1]=="Carr_&_Fenster_1994_Mimulus_guttatus_greenhouse"),2]=10 #Description in paper
+maxdists[which(maxdists[,1]=="Fenster_&_Carr_1997_Mimulus_guttatus_greenhouse"),2]=10 #Description in Carr & Fenster 1994
+maxdists[which(maxdists[,1]=="Caruso_2000_Ipomopsis_aggregata_field"),2]=3.5 #Ca. distance author description/map in paper
+maxdists[which(maxdists[,1]=="Caruso_2001_Ipomopsis_aggregata_field"),2]=3 #Ca. distance ("a few km") from author description
+  
+maxdists[which(maxdists[,1]=="Andersson_Crepis_Crepis_tectorum_greenhouse"),2]=2500 #Ca. distance author description, without the Canadian pops
+maxdists[which(maxdists[,1]=="Billington_et_al_1988_Holcus_lanatus_greenhouse"),2]=.5 #Ca. distance from description in paper ("adjacent fields")
+maxdists[which(maxdists[,1]=="Mcgoey_&_Stinchcombe_2018_Ambrosia_artemisiifolia_common_garden"),2]=540 #Ca. distance for North American pops from map in paper. Around 180 km for French pops
+  
+write.csv(maxdists, file="data/maxdists.csv")

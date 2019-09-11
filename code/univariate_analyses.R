@@ -11,6 +11,8 @@ library(MCMCglmm)
 ddat=read.table("data/dmatdata.txt", header=T)
 ddat$ID=paste(ddat$reference,ddat$species,ddat$environment, sep="_")
 
+maxdists=read.csv(file="data/maxdists.csv")
+
 #Scaling of trait variances with the mean
 ddat=ddat[ddat$trait!="organ_size",]
 plot(log10(ddat$mean), log10(ddat$sd))
@@ -71,12 +73,18 @@ for(i in 1:nrow(ddf)){
   ms[i]=as.character(edat$matingsystem)[which(as.character(edat$measurement)==as.character(ddf$trait)[i])[1]]
 }
 
+maxdist=NULL
+for(i in 1:nrow(ddf)){
+  maxdist[i]=as.numeric(maxdists[which(maxdists[,2]==as.character(ddf$study_ID)[i])[1],3])
+}
+
 evals=NULL
 for(i in 1:nrow(ddf)){
 w=which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(edat$measurement)==as.character(ddf$trait)[i])
 evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
+ddf$maxdist=maxdist
 ddf$tg1=tg1
 ddf$tg2=tg2
 ddf$ms=ms
@@ -87,29 +95,19 @@ ddf$evals=evals
 head(ddf)
 
 ddf=ddf[ddf$d>0,]
+ddf=ddf[ddf$maxdist>0,]
 ddf=ddf[ddf$evals>0,]
 ddf=na.omit(ddf)
 head(ddf)
 
-#####
+# Informal meta-analysis
 
-tapply(ddf$d, ddf$tg1, median, na.rm=T)*100
-tapply(ddf$d>-Inf, ddf$tg1, sum, na.rm=T)
-plot(as.factor(ddf$tg1), log10(ddf$d))
-
-tapply(ddf$d, ddf$dimension, median, na.rm=T)*100
-tapply(ddf$d>-Inf, ddf$dimension, sum, na.rm=T)
-plot(as.factor(ddf$dimension), log10(ddf$d))
-
-#Informal meta-analysis
-#Covariates: evolvability, n populations, max distance, traitgroup, dimension?, mating system?
-
-#Remove repeated D. scandens studies
+#Remove repeated D. scandens studies?
 ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
 ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
 ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
 
-m=lmer(log(d)~evals + npop + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
+m=lmer(log(d)~log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
 summary(m)
 
 # Plotting evolvability vs. divergence
@@ -175,7 +173,7 @@ dev.off()
 
 #Prepare data
 names(ddf)
-moddat=subset(ddf, select=c("d", "evals", "npop", "tg1", "dimension", "ms","study_ID", "species", "d_se", "mean"))
+moddat=subset(ddf, select=c("d", "evals", "maxdist", "npop", "tg1", "dimension", "ms","study_ID", "species", "d_se", "mean"))
 moddat=na.omit(moddat)
 moddat$d=moddat$d*100
 moddat$d_se=moddat$d_se*100
@@ -208,7 +206,7 @@ burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 
 #Sample MCMC
-mod<-MCMCglmm(log(d) ~ evals + npop + ms + tg1 + dimension,
+mod<-MCMCglmm(log(d) ~ log(evals) + log(maxdist) + log(npop) + ms + tg1 + dimension,
               random = ~study_ID + species + idh(test):units,
               rcov = ~units,
               #mev = mev,
