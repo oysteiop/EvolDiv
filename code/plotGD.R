@@ -1,7 +1,7 @@
 gmatrix=1
 npop=1
-species=both_sp[11]
-dmatrix=3
+species=both_sp[12]
+dmatrix=1
 nbeta=1000
 
 ######################################################################
@@ -10,7 +10,7 @@ nbeta=1000
 computeMeanG=function(species){
   sp=unlist(lapply(EVOBASE, function(x) x$Species))
   gMats=lapply(EVOBASE[which(sp==species)], function(x) x$G)
-  MeanG=apply(simplify2array(gMats), 1:2, mean)
+  MeanG=apply(simplify2array(gMats), 1:2, mean, na.rm=T) #NB, with na.rm=T will use whatever data is available
   return(MeanG)
 }
 
@@ -60,10 +60,10 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   }
   means=means[which(names(means) %in% colnames(gmat))]
   
-  gmatscaled=meanStdG(gmat, means)
+  gmatscaled=meanStdG(gmat, means)*100
   
   dindex=which(unlist(lapply(POPBASE, function(x) x$Species))==species)[dmatrix]
-  dmat=POPBASE[[dindex]]$D
+  dmat=POPBASE[[dindex]]$D*100
   dmatname=POPBASE[[dindex]]$Study_ID
   
   #Match the matrices
@@ -96,8 +96,8 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
     
     
         plot(log10(ebeta),log10(dbeta),col=betacol,main=paste(species), las = 1,
-         xlab="Evolvability",
-         ylab="Population divergence",
+         xlab="Evolvability (log %)",
+         ylab="Population divergence (log %)",
           xlim=c(min(xminvals[xminvals>-Inf]),max(xmaxvals[xmaxvals>-Inf])),
           ylim=c(min(yminvals[yminvals>-Inf]),max(ymaxvals[ymaxvals>-Inf])))
     
@@ -108,8 +108,8 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   
   if(!log){
     plot(ebeta,dbeta,col=betacol,main=paste(species), las=1,
-         xlab="Evolvability",
-         ylab="Population divergence",
+         xlab="Evolvability (%)",
+         ylab="Population divergence (%)",
          xlim=c(min(c(gmin,diag(gmatscaled),ebeta)),max(c(gmax,diag(gmatscaled),ebeta))),
          ylim=c(min(c(dmin,diag(dmat),dbeta)),max(c(dmax,diag(dmat),dbeta))))
     points(diag(gmatscaled),diag(dmat),pch=16)
@@ -130,7 +130,6 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
 
-
 #Species present in both databases
 gsp=unlist(lapply(EVOBASE, function(x) x$Species))
 dsp=unlist(lapply(POPBASE, function(x) x$Species))
@@ -139,21 +138,27 @@ both_sp
 
 x11()
 par(mfrow=c(1,2))
-plotGD(species=both_sp[1], gmatrix="mean", dmatrix=3, nbeta=1000,log=F)
-plotGD(species=both_sp[4], gmatrix="mean", dmatrix=1, nbeta=1000,log=F)
+plotGD(species=both_sp[12], gmatrix=1, dmatrix=1, nbeta=1000, log=F)
+plotGD(species=both_sp[1], gmatrix="mean", dmatrix=2, nbeta=1000, log=T)
+
 #plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1000,log=F)
 
 
 POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
 
-pdf("figs/GvsDplots.pdf",width=4,height=4)
+pdf("figs/GvsDplots.pdf",width=8,height=4.5)
 for(s in c(1:length(both_sp))){
   species=both_sp[s]  
   nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
   nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
-    for(j in 1:nD){  
-      plotGD(species=species, gmatrix="mean", dmatrix=j,nbeta=1000,log=T)
-}}
+    for(g in 1:nG){  
+      for(d in 1:nD){  
+        par(mfrow=c(1,2))
+        plotGD(species=species, gmatrix=g, dmatrix=d, nbeta=1000, log=F)
+        plotGD(species=species, gmatrix=g, dmatrix=d, nbeta=1000, log=T)
+      }
+    }
+  }
 dev.off()
 
 

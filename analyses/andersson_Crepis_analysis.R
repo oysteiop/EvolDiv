@@ -198,25 +198,6 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
 points(log10(diag(gmat)), log10(diag(dmat)), col="blue")
 
-
-#Compute eigenvectors etc. (OLD)
-first_ev=eigen(gmat)$vectors[,1]
-gmax=evolvabilityBeta(gmat, Beta = first_ev)$e
-dmax=evolvabilityBeta(gmat, Beta = first_ev)$e
-
-last_ev=eigen(gmat)$vectors[,nrow(gmat)]
-gmin=evolvabilityBeta(gmat, Beta = last_ev)$e
-dmin=evolvabilityBeta(dmat, Beta = last_ev)$e
-
-betas=randomBeta(1000,nrow(gmat))
-ebeta=evolvabilityBeta(gmat, betas)$e
-dbeta=evolvabilityBeta(dmat, betas)$e
-
-plot(log10(ebeta),log10(dbeta),col="grey", las = 1,
-       xlab="Evolvability",
-       ylab="Population divergence",
-     xlim=c(-1,2))
-  points(log10(diag(gmat)),log10(diag(dmat)),pch=16)
-  points(log10(gmax),log10(dmax),col="red", pch=16)
-  points(log10(gmin),log10(dmin),col="blue", pch=16)
+#Angles
+180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 

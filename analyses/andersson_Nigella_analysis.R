@@ -23,38 +23,44 @@ str(dat)
 #####################################
 
 Mik=dat[đat$Population=="Mikonos",]
-summary(lm(Mik[,8]~Mik[,2], na=na.exclude, data=Mik))$coef[2,1]
-
-pairs(Mik[,2:7])
 
 #Remove outlier
-which.max(Mik$mp_Leaf_length)
-Mik=Mik[-12,]
-pairs(Mik[,2:7])
+Mik=Mik[-which.max(Mik$mp_Leaf_length),]
+
+#Log-transform
+Mik[,2:13]=apply(Mik[,2:13], 2, log)
+
+#x11()
+#par(mfrow=c(3, 4))
+#for(i in 2:13){hist(Mik[, i])}
 
 #G-matrix from parent-offspring covariances
-tmp=matrix(NA,nrow=6,ncol=6)
+tmp = matrix(NA,nrow=6,ncol=6)
 for(i in 1:6){
   for(j in 1:6){
-    tmp[i,j]=cov(Mik[,i+1],Mik[,j+7])
+    tmp[i,j] = cov(Mik[,i+1],Mik[,j+7])
 }}
 tmp
 
-gmat=matrix(NA,nrow=6,ncol=6)
+gmat = matrix(NA,nrow=6,ncol=6)
 for(i in 1:6){
   for(j in 1:6){
-    gmat[i,j]=gmat[j,i]=tmp[i,j]+tmp[j,i]
+    gmat[i,j] = gmat[j,i]=tmp[i,j]+tmp[j,i]
 }}
-diag(gmat)=diag(gmat)/2
+#diag(gmat)=diag(gmat)/2
+gmat=gmat/2
 
 colnames(gmat)=rownames(gmat)=c("Plant height", "Leaf distance", "Leaf length", "Sepal length", "Nectary length", "Anther length")
-gmat
 
-means=apply(Mik[,-1], 2, mean)[1:6]
-means
-
-gmat=meanStdG(gmat, means)*100
 gmat
+cov2cor(gmat)
+
+gmat=gmat*100
+#means=apply(Mik[,-1], 2, mean)[1:6]
+#means
+
+#gmat=meanStdG(gmat, means)*100
+#gmat
 evolvabilityMeans(gmat)
 
 #####################################
@@ -126,3 +132,6 @@ points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), 
        pch=c(1,16, 16), col=c("black", "black", "blue"))
+
+#Angles
+acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)

@@ -89,16 +89,7 @@ computeGD=function(species, gmatrix=1, dmatrix=1){
                nBetaG = length(mg$residuals), #Number of positive eigenvalues compared for G eigenvectors
                nBetaD = length(md$residuals)) #Number of positive eigenvalues compared for D eigenvectors
                
-  #Plot
-  #xmin=log10(min(c(var_g_g, var_g_d), na.rm=T))
-  #xmax=log10(max(c(var_g_g, var_g_d), na.rm=T))
-  #ymin=log10(min(c(var_d_g, var_d_d), na.rm=T))
-  #ymax=log10(max(c(var_d_g, var_d_d), na.rm=T))
-  #plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
-  #points(log10(var_g_d), log10(var_d_d), pch=16)
-  #legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
-  
-  return(outlist)
+    return(outlist)
   
   }
 
@@ -115,7 +106,7 @@ both_sp
 
 POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
 
-computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 1)
+computeGD(species = both_sp[2], gmatrix = 1, dmatrix = 1)
 
 nG=NULL
 nD=NULL
@@ -129,16 +120,17 @@ cbind(both_sp, nG, nD)
 reslist=list()
 for(s in 1:length(both_sp)){
   for(g in 1:nG[s]){
-    for(d in 1:nD[s])
+    for(d in 1:nD[s]){
       res=computeGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:12)]
       reslist[length(reslist)+1]=as.data.frame(unlist(res)[c(1:10)])
+    }
   }
 }
+length(reslist)
+reslist[[2]]
 
-reslist[[1]]
-
-resmat=as.data.frame(matrix(NA, ncol=10, nrow=29))
-for(i in 1:29){
+resmat=as.data.frame(matrix(NA, ncol=10, nrow=length(reslist)))
+for(i in 1:length(reslist)){
   resmat[i,1:2]=as.character(reslist[[i]][1:2])
   resmat[i,3:8]=round(as.numeric(as.character(reslist[[i]][3:8])),2)
   resmat[i,9:10]=as.numeric(as.character(reslist[[i]][9:10]))
@@ -149,5 +141,12 @@ resmat=resmat[c(2,1,3,9,4,5,10,6,7,8)]
 head(resmat)
 View(resmat)
 
-hist(resmat$betaG)
+mean(resmat$betaG[resmat$nBetaG>2])
 hist(resmat$r2G[resmat$nBetaG>2])
+
+plot(resmat$npop, resmat$betaG)
+plot(resmat$npop, resmat$r2G, cex=resmat$nBetaG*.5)
+
+plot(resmat$i_mean[resmat$i_mean<=1 & resmat$i_mean>=0], 
+     resmat$r2G[resmat$i_mean<=1 & resmat$i_mean>=0], 
+     cex=resmat$nBetaG*.5)
