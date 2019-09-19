@@ -65,13 +65,14 @@ eVlist[[3]]
 
 ######Estimate error-corrected D matrices ####
 samples = 1000
-thin = 100
+thin = 1
 burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 
 ####
-means=meanList[[18]]
-eV=eVlist[[18]]
+names(Dlist)
+means=meanList[[32]]
+eV=eVlist[[32]]
 
 drop=which(is.na(rowSums(means[-1])))
 if(length(drop)>0){
@@ -85,9 +86,9 @@ alpha.mu <- rep(0, n)
 alpha.V <- diag(n)*400
 prior<-list(R=list(V=diag(n), nu=n+0.002-1))
 
-means[,2:ncol(means)]=apply(means[,2:ncol(means)], 2, function(x) x*100)
+means[,2:ncol(means)]=apply(means[,2:ncol(means)], 2, function(x) x*10)
 
-mev=melt(eV[,-1])$value*10000
+mev=melt(eV[,-1])$value*100
 
 data=means[,-1]
 

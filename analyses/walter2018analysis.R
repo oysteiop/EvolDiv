@@ -137,6 +137,5 @@ points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 
 
-
 #Angles
-180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
+acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)

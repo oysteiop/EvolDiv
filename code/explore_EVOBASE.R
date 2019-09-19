@@ -1,6 +1,9 @@
 ##########################################
 #### - Extracting data from EVOBASE - ####
 ##########################################
+
+library(evolvability)
+
 load("data/EVOBASE.RData")
 
 #Extracting a single species

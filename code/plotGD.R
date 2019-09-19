@@ -139,7 +139,7 @@ both_sp
 x11()
 par(mfrow=c(1,2))
 plotGD(species=both_sp[12], gmatrix=1, dmatrix=1, nbeta=1000, log=F)
-plotGD(species=both_sp[1], gmatrix="mean", dmatrix=2, nbeta=1000, log=T)
+plotGD(species=both_sp[1], gmatrix=2, dmatrix=2, nbeta=1000, log=T)
 
 #plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1000,log=F)
 
