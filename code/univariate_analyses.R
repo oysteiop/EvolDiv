@@ -2,6 +2,7 @@
 #### - Univariate analysis of D database - ####
 ###############################################
 rm(list=ls())
+
 library(plyr)
 library(reshape2)
 library(lme4)
@@ -154,7 +155,7 @@ plot(log10(ddf$evals),log10(ddf$d*100),
      ylab="Among-population variance (%)",
      pch=1,cex=1*sqrt(ddf$npop),
      col="black",
-     xlim=c(-5.5,2),ylim=c(-4,3),xaxt="n", yaxt="n")
+     xlim=c(-2.5, 2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
 

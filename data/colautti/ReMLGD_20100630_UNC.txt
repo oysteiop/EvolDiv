@@ -1,0 +1,73 @@
+/* This code calculates Family and Pop BLUPs */
+
+/*NB: LnTRAIT is NOT NECESSARILY ln-transformed; All traits are box-cox transformed to pop means. Ln is leftover from previous variable declaration and transformation */
+
+/* ADD STATEMENT TO IMPORT DATAFILE AllDataFixed.txt and save it as Work.GH*/
+
+
+RUN;
+proc sort data=work.gh; by Uni_ind; run;
+
+/*for non-transformed data*/
+data GH;
+set GH;
+LnVegW=HVegW;
+LnInfW=HInfW;
+run;
+
+proc sort data=work.GH;
+by Lat;
+run;
+
+/* THIS REORGANIZES MEASUREMENTS FROM INDIVIDUAL ROWS INTO A REPEATED MEASURES DESIGN - 1 column called 'Trait' and one column called 'Value' */
+data THeight; set GH; Trait="THeight"; Value=THeight; run;
+data TLeafArea; set GH; Trait="TLeafArea"; Value=TLeafArea; run;
+data Height2wk; set GH; Trait="Height2wk"; Value=Height2wk; run;
+data Height4wk; set GH; Trait="Height4wk"; Value=Height4wk; run;
+data FDays; set GH; Trait="FDays"; Value=FDays; run;
+data FVeg; set GH; Trait="FVeg"; Value=FVeg; run;
+data FInf; set GH; Trait="FInf"; Value=FInf; run;
+data FStemWidth; set GH; Trait="FStemWidth"; Value=FStemWidth; run;
+data FSize; set GH; Trait="FSize"; Value=FSize; run;
+data HVeg; set GH; Trait="HVeg"; Value=HVeg; run;
+data HInf; set GH; Trait="HInf"; Value=HInf; run;
+data LnVegW; set GH; Trait="LnVegW"; Value=LnVegW; run;
+data LnInfW; set GH; Trait="LnInfW"; Value=LnInfW; run;
+
+data Traits; set THeight TLeafArea Height2wk Height4wk FDays FVeg FInf FStemWidth HVeg HInf LnVegW LnInfW; keep Table Pop_Code Fam TrueFam Ind Uni_Ind Lat Trait Value; run;
+
+proc sort data=work.Traits;
+by Trait Lat Fam Ind;
+run;
+
+proc standard data=work.Traits mean=0 std=1 Out=Work.Traits;
+var Value ;
+by Trait;
+run;
+
+/*This model is the 'full model'; it is used to calculate BLUPs*/
+proc mixed data=work.Traits lognote method=reml scoring=5; 
+class Trait Table Lat Fam TrueFam Ind Uni_Ind; 
+model Value = Lat*Trait /noint ddfm=satterthwaite solution; 
+random Trait /solution subject = Fam(Lat) type=un;
+repeated Trait /subject = Ind(Fam Lat) type=un;
+run;
+
+/*This is the factor-analytical model with 6 dimensions; it is used along with the next model to test for significance in the 6th dimension of G*/
+proc mixed data=work.Traits lognote method=reml scoring=5; 
+class Trait Table Lat Fam TrueFam Ind Uni_Ind; 
+model Value = Lat*Trait /noint ddfm=satterthwaite ; 
+random Trait / subject = Fam(Lat) type=fa0(6);
+repeated Trait /subject = Ind(Fam Lat) type=un;
+run;
+
+/*This is the FA model with 5 dimensions*/
+proc mixed data=work.Traits lognote method=reml scoring=5; 
+class Trait Table Lat Fam TrueFam Ind Uni_Ind; 
+model Value = Lat*Trait /noint ddfm=satterthwaite ; 
+random Trait / subject = Fam(Lat) type=fa0(5);
+repeated Trait /subject = Ind(Fam Lat) type=un;
+run;
+
+
+quit;

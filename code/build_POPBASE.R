@@ -166,5 +166,7 @@ maxdists[which(maxdists[,1]=="Caruso_2001_Ipomopsis_aggregata_field"),2]=3 #Ca. 
 maxdists[which(maxdists[,1]=="Andersson_Crepis_Crepis_tectorum_greenhouse"),2]=2500 #Ca. distance author description, without the Canadian pops
 maxdists[which(maxdists[,1]=="Billington_et_al_1988_Holcus_lanatus_greenhouse"),2]=.5 #Ca. distance from description in paper ("adjacent fields")
 maxdists[which(maxdists[,1]=="Mcgoey_&_Stinchcombe_2018_Ambrosia_artemisiifolia_common_garden"),2]=540 #Ca. distance for North American pops from map in paper. Around 180 km for French pops
-  
+maxdists[which(maxdists[,1]=="Colautti_&_Barrett_2011_Lythrum_salicaria_greenhouse"),2]=1200 #Ca. distance from coordinate range in paper
+
+
 write.csv(maxdists, file="data/maxdists.csv")
