@@ -139,7 +139,8 @@ for(i in 1:length(studies)){
                       D = signif(Dlist[[i]],4)) 
 }
 
-POPBASE[[33]]
+length(POPBASE)
+POPBASE[[35]]
 
 save(POPBASE, file = "data/POPBASE.RData")
 
@@ -168,5 +169,8 @@ maxdists[which(maxdists[,1]=="Billington_et_al_1988_Holcus_lanatus_greenhouse"),
 maxdists[which(maxdists[,1]=="Mcgoey_&_Stinchcombe_2018_Ambrosia_artemisiifolia_common_garden"),2]=540 #Ca. distance for North American pops from map in paper. Around 180 km for French pops
 maxdists[which(maxdists[,1]=="Colautti_&_Barrett_2011_Lythrum_salicaria_greenhouse"),2]=1200 #Ca. distance from coordinate range in paper
 
+maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_tenuituba_field"),2]=0.0943 #Author description in Excel file
+maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_x_tenuituba_field"),2]=0.96 #Author description in Excel file
+maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_field"),2]=0.199 #Author description in Excel file
 
 write.csv(maxdists, file="data/maxdists.csv")

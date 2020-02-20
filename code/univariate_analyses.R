@@ -150,6 +150,7 @@ summary(m)
 #### Plotting evolvability vs. divergence ####
 
 #All data
+par(mfrow=c(1,1))
 plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",

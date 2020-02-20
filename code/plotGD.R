@@ -23,7 +23,7 @@ droptraits=function(x){
     x=x
   }}
 
-plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",log=T){
+plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey", log=T){
   require(evolvability)
   nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
   nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
@@ -89,13 +89,13 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   dbeta=evolvabilityBeta(dmat, betas)$e
   
   if(log){
-    xminvals=na.omit(c(log10(gmin),log10(diag(gmatscaled)),log10(ebeta)))
-    xmaxvals=na.omit(c(log10(gmax),log10(diag(gmatscaled)),log10(ebeta)))
-    yminvals=na.omit(c(log10(dmin),log10(diag(dmat)),log10(dbeta)))
-    ymaxvals=na.omit(c(log10(dmax),log10(diag(dmat)),log10(dbeta)))
+    xminvals=na.omit(c(log10(gmin), log10(diag(gmatscaled)), log10(ebeta)))
+    xmaxvals=na.omit(c(log10(gmax), log10(diag(gmatscaled)), log10(ebeta)))
+    yminvals=na.omit(c(log10(dmin), log10(diag(dmat)), log10(dbeta)))
+    ymaxvals=na.omit(c(log10(dmax), log10(diag(dmat)), log10(dbeta)))
     
     
-        plot(log10(ebeta),log10(dbeta),col=betacol,main=paste(species), las = 1,
+        plot(log10(ebeta), log10(dbeta), col=betacol, main=paste(species), las = 1,
          xlab="Evolvability (log %)",
          ylab="Population divergence (log %)",
           xlim=c(min(xminvals[xminvals>-Inf]),max(xmaxvals[xmaxvals>-Inf])),
@@ -107,7 +107,7 @@ plotGD=function(species, gmatrix="mean", dmatrix=1, nbeta=1000, betacol="grey",l
   }
   
   if(!log){
-    plot(ebeta,dbeta,col=betacol,main=paste(species), las=1,
+    plot(ebeta, dbeta, col=betacol, main=paste(species), las=1,
          xlab="Evolvability (%)",
          ylab="Population divergence (%)",
          xlim=c(min(c(gmin,diag(gmatscaled),ebeta)),max(c(gmax,diag(gmatscaled),ebeta))),
@@ -138,19 +138,19 @@ both_sp
 
 x11()
 par(mfrow=c(1,2))
-plotGD(species=both_sp[12], gmatrix=1, dmatrix=1, nbeta=1000, log=F)
-plotGD(species=both_sp[1], gmatrix=2, dmatrix=2, nbeta=1000, log=T)
+plotGD(species=both_sp[11], gmatrix=1, dmatrix=2, nbeta=1000, log=F, betacol="white")
+plotGD(species=both_sp[11], gmatrix=1, dmatrix=3, nbeta=1000, log=F, betacol="white")
 
 #plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1000,log=F)
 
 
-POPBASE=POPBASE[-c(14:15)] #Dropping second M. guttatus study
+POPBASE = POPBASE[-c(14:15)] #Dropping second M. guttatus study
 
-pdf("figs/GvsDplots.pdf",width=8,height=4.5)
+pdf("figs/GvsDplots.pdf", width=8, height=4.5)
 for(s in c(1:length(both_sp))){
-  species=both_sp[s]  
-  nG=length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
-  nD=length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
+  species = both_sp[s]  
+  nG = length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
+  nD = length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
     for(g in 1:nG){  
       for(d in 1:nD){  
         par(mfrow=c(1,2))

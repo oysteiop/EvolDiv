@@ -2185,35 +2185,54 @@ G2	ØO	ØO	Billington_et_al_1988	Evolution	1988	Poaceae	Holcus	lanatus	Holcus_lana
 82	ØO	NA	Colautti_&_Barrett_2011	Evolution	2011	Lythraceae	Lythrum	salicaria	Lythrum_salicaria	North_America	PASR	NA	NA	greenhouse	inflorescence_length_at_harvest	69.09	376.26	19.40	133	1.6820																																													
 82	ØO	NA	Colautti_&_Barrett_2011	Evolution	2011	Lythraceae	Lythrum	salicaria	Lythrum_salicaria	North_America	PASR	NA	NA	greenhouse	final_vegetative_biomass	4.69	4.07	2.02	135	0.1737																																													
 82	ØO	NA	Colautti_&_Barrett_2011	Evolution	2011	Lythraceae	Lythrum	salicaria	Lythrum_salicaria	North_America	PASR	NA	NA	greenhouse	final_inflorescence_biomass	2.31	1.28	1.13	133	0.0980																																													
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
-																																																																	
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	A_2015_2016	NA	NA	field	corolla_length	34.3483	8.06	2.83886	20	0.6348																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	A_2015_2016	NA	NA	field	corolla_width	2.78633	0.14	0.37127	20	0.0830																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	A_2015_2016	NA	NA	field	anther_position	28.9317	4.47	2.11493	20	0.4729																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	B_2015_2016	NA	NA	field	corolla_length	34.5783	7.97	2.82311	20	0.6313																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	B_2015_2016	NA	NA	field	corolla_width	3.19917	6.80	2.60757	20	0.5831																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	B_2015_2016	NA	NA	field	anther_position	28.5875	10.00	3.16168	20	0.7070																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	C_2015_2016	NA	NA	field	corolla_length	33.7867	4.42	2.10331	20	0.4703																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	C_2015_2016	NA	NA	field	corolla_width	2.77167	0.08	0.29025	20	0.0649																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	tenuituba	Ipomopsis_tenuituba	North_America	C_2015_2016	NA	NA	field	anther_position	28.8317	4.60	2.14581	20	0.4798																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	D_2015_2016	NA	NA	field	corolla_length	33.6567	9.08	3.01342	20	0.6738																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	D_2015_2016	NA	NA	field	corolla_width	2.73667	0.08	0.28794	20	0.0644																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	D_2015_2016	NA	NA	field	anther_position	28.28	4.55	2.13192	20	0.4767																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	E_2015_2016	NA	NA	field	corolla_length	34.1947	4.34	2.08446	20	0.4661																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	E_2015_2016	NA	NA	field	corolla_width	2.70404	0.10	0.31238	20	0.0699																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	E_2015_2016	NA	NA	field	anther_position	28.4456	6.03	2.45526	20	0.5490																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	F_2015_2016	NA	NA	field	corolla_length	37.6648	11.12	3.33446	20	0.7456																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	F_2015_2016	NA	NA	field	corolla_width	3.05741	0.09	0.29678	20	0.0664																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	F_2015_2016	NA	NA	field	anther_position	31.6759	9.42	3.06984	20	0.6864																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	G_2015_2016	NA	NA	field	corolla_length	34.8275	12.33	3.51206	20	0.7853																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	G_2015_2016	NA	NA	field	corolla_width	2.98167	0.12	0.33916	20	0.0758																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	G_2015_2016	NA	NA	field	anther_position	30.2667	10.98	3.31294	20	0.7408																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	H_2015_2016	NA	NA	field	corolla_length	33.849	6.36	2.52127	19	0.5784																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	H_2015_2016	NA	NA	field	corolla_width	3.00392	0.13	0.36111	19	0.0828																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	H_2015_2016	NA	NA	field	anther_position	29.1314	9.15	3.02525	19	0.6940																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	I_2015_2016	NA	NA	field	corolla_length	29.3123	14.26	3.77571	20	0.8443																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	I_2015_2016	NA	NA	field	corolla_width	3.00263	0.12	0.34651	20	0.0775																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	I_2015_2016	NA	NA	field	anther_position	26.6787	12.74	3.56918	20	0.7981																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	J_2015_2016	NA	NA	field	corolla_length	28.2511	13.92	3.73099	20	0.8343																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	J_2015_2016	NA	NA	field	corolla_width	3.16623	0.09	0.30052	20	0.0672																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata_x_tenuituba	Ipomopsis_aggregata_x_tenuituba	North_America	J_2015_2016	NA	NA	field	anther_position	26.1904	10.59	3.25478	20	0.7278																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	K_2015_2016	NA	NA	field	corolla_length	27.9213	2.48	1.57615	20	0.3524																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	K_2015_2016	NA	NA	field	corolla_width	3.28958	0.07	0.26772	20	0.0599																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	K_2015_2016	NA	NA	field	anther_position	26.3196	3.29	1.81485	20	0.4058																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	L_2015_2016	NA	NA	field	corolla_length	27.0112	6.35	2.52083	41	0.3937																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	L_2015_2016	NA	NA	field	corolla_width	3.54817	0.15	0.38872	41	0.0607																																													
+P10	ØO	NA	Campbell_et_al_2018	Annals_of_Botany	2018	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	L_2015_2016	NA	NA	field	anther_position	26.5469	5.85	2.41783	41	0.3776																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Poverty_Gulch_L	38.9556	107.075	field	corolla_length	27.6107	7.91	2.81299	46	0.4148																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Poverty_Gulch_L	38.9556	107.075	field	corolla_width	3.43188	0.09	0.30294	46	0.0447																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Poverty_Gulch_L	38.9556	107.075	field	anther_position	27.5911	9.97	3.15831	46	0.4657																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Poverty_Gulch_L	38.9556	107.075	field	nectar_volume	2.478	1.67	1.292	41	0.2018																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Vera_Falls	38.9617	106.9925	field	corolla_length	26.9536	7.21	2.68444	24	0.5480																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Vera_Falls	38.9617	106.9925	field	corolla_width	3.35	0.06	0.25111	24	0.0513																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Vera_Falls	38.9617	106.9925	field	anther_position	27.8087	5.61	2.36925	24	0.4836																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Vera_Falls	38.9617	106.9925	field	nectar_volume	2.469	1.06	1.03	23	0.2148																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Maxfield	38.9492	106.9908	field	corolla_length	25.3739	4.98	2.23196	30	0.4075																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Maxfield	38.9492	106.9908	field	corolla_width	3.4456	0.13	0.35791	30	0.0653																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Maxfield	38.9492	106.9908	field	anther_position	25.6156	4.58	2.14013	30	0.3907																																													
+P11	ØO	NA	Campbell_unpublished_2019	NA	NA	Polemoniaceae	Ipomopsis	aggregata	Ipomopsis_aggregata	North_America	Maxfield	38.9492	106.9908	field	nectar_volume	2.297	1.18	1.084	33	0.1887																																													
 																																																																	
 																																																																	
 																																																																	

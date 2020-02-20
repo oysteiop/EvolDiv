@@ -177,8 +177,9 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors"), pch=c(1,16))
 #Bending the D matrix
 eigen(dmat)
 lambda=diag(eigen(dmat)$values)
+lambda
 lambda[4,4]=0.000001
-lambda[4,4]=0.01
+#lambda[4,4]=0.01
 
 d2=d_ev%*%lambda%*%t(d_ev)
 eigen(d2)
@@ -188,4 +189,3 @@ d2
 
 dmat=d2
 
-♥
