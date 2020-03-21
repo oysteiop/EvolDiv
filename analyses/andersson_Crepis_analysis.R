@@ -159,9 +159,9 @@ dmat = dmat*100
 dmat
 
 # EvolvabilityMeans
-?evolvabilityMeansMCMC
 evolvabilityMeans(gmat)
 evolvabilityMeansMCMC(mod$VCV[,1:(n*n)])
+evolvabilityMeans(dmat)
 
 #Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
@@ -193,7 +193,11 @@ xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), xlim=c(xmin, xmax), ylim=c(ymin, ymax))
+plot(log10(var_g_g), log10(var_d_g), 
+     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
+     xlab="log10 (Evolvability [%])", 
+     ylab="log10 (Divergence [%])", 
+     main="Crepis tectorum", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))

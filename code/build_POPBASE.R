@@ -60,7 +60,7 @@ for(s in 1:length(studies)){
 }
 
 names(Dlist)=studies
-meanList[3]
+meanList[39]
 eVlist[[3]]
 
 ######Estimate error-corrected D matrices ####
@@ -140,7 +140,7 @@ for(i in 1:length(studies)){
 }
 
 length(POPBASE)
-POPBASE[[35]]
+POPBASE[[39]]
 
 save(POPBASE, file = "data/POPBASE.RData")
 
@@ -149,7 +149,6 @@ load(file = "data/POPBASE.RData")
 map1 <- readOGR("C:/data/Political Map.shp")
 plot(map1)
 points(ddat$lon,ddat$lat,pch=16,col="blue")
-
 
 maxdists=cbind(print(unlist(lapply(POPBASE, function(x)x$Study_ID))),
       print(unlist(lapply(POPBASE, function(x) max(x$distmat)/1000))))

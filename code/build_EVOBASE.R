@@ -2,6 +2,7 @@
 #### - Building the G matrix database - ####
 ############################################
 
+rm(list=ls())
 library(plyr)
 library(evolvability)
 list.files()

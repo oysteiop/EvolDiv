@@ -7,7 +7,8 @@ library(plyr)
 library(reshape2)
 library(lme4)
 library(MCMCglmm)
-#library(devtools)
+library(devtools)
+#install_github("GHBolstad/evolvability")
 #library(withr)
 #with_libpaths(new="C:/Program Files/R/R-3.5.0/library",install_github("GHBolstad/evolvability"))
 #.libPaths("C:/Program Files/R/R-3.5.0/library")
@@ -50,7 +51,11 @@ sv = (2*(ddf$d^2))/(ddf$npop+2)
 ddf$d_se = sqrt(sv)
 
 #Combine with data from Evolvability database
-edat=read.table("data/evolvabilitydatabase2019.txt", header=T)
+edat=read.table("data/evolvabilitydatabase2020.txt", header=T)
+
+ft = edat[edat$traitgroup1=="floral" & edat$traitgroup2=="fitness",]
+ft$traitgroup3=factor(ft$traitgroup3)
+table(ft$traitgroup3)
 
 edat$species_measurement=paste0(edat$species,"_",edat$measurement)
 ddf$species_trait=paste0(ddf$species,"_",ddf$trait)
@@ -87,12 +92,12 @@ evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
 ddf$maxdist=maxdist
-ddf$tg1=tg1
-ddf$tg2=tg2
+ddf$tg1=factor(tg1)
+ddf$tg2=factor(tg2)
 ddf$ms=ms
 ddf$ms=factor(ddf$ms, levels=c("S","M","O"))
 ddf$dimension=dimension
-ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio"))
+ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio", "time"))
 ddf$evals=evals
 head(ddf)
 
@@ -116,6 +121,63 @@ for(i in 1:nrow(ddf)){
   evals[i]=mean(sel$evolvability)
 }
 
+# Boxplots ####
+ddf$logd = log10(ddf$d*100)
+
+veg = ddf[ddf$tg1=="vegetative",]
+#veg$loge[which(veg$loge==-Inf)]=log10(0.01) #Set zero evolvabilities to 0.01
+
+medians = tapply(veg$logd, veg$tg2, median, na.rm=T)
+veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
+levels(veg$tg2)
+
+x11(height=4, width=6)
+par(mar=c(6,4,2,2))
+plot(veg$tg2, veg$logd, cex=.8, notch=F, xaxt="n", col="darkgreen", 
+     ylab="Divergence (%)", xlab="", yaxt="n", ylim=c(-3,3), xlim=c(0,30))
+axis(2, at=c(-3:3), c(signif(10^(c(-3:3)),1)), las=1)
+axis(1, at=1:7, labels = FALSE)
+labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+labels = sub("_"," ",labels)
+text(1:7, par("usr")[3] - 0.45, srt = 45, adj = 1,cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logd[ddf$tg1=="vegetative"], na.rm=T)
+segments(1, h, 7, h, lwd=3)
+
+floral = ddf[ddf$tg1=="floral" & ddf$tg2!="fitness",]
+#floral$logd[which(floral$logd==-Inf)]=log10(0.01)
+
+medians = tapply(floral$logd, floral$tg2, median, na.rm=T)
+floral$tg2 = factor(floral$tg2, levels=names(sort(medians,decreasing=T)))
+levels(floral$tg2)
+
+par(new=T)
+plot(floral$tg2, floral$logd, cex=.8, yaxt="n", at=9:21, xaxt="n", col="darkblue",
+     ylab="", xlab="", ylim=c(-3,3), xlim=c(0,30))
+axis(1, at=9:21, labels = FALSE)
+labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+labels = sub("_"," ",labels)
+text(9:21, par("usr")[3] - 0.45, srt = 45, adj = 1, cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
+segments(9, h, 22, h, lwd=3)
+
+lifehist = ddf[ddf$tg1=="lifehistory",]
+
+medians = tapply(lifehist$logd, lifehist$tg2, median, na.rm=T)
+lifehist$tg2 = factor(lifehist$tg2, levels=names(sort(medians,decreasing=T)))
+levels(lifehist$tg2)
+
+par(new=T)
+plot(lifehist$tg2, lifehist$logd, cex=.8, yaxt="n", at=23:28, xaxt="n", col="brown",
+     ylab="", xlab="", ylim=c(-3,3), xlim=c(0,30))
+axis(1, at=23:28, labels = FALSE)
+labels = paste0(toupper(as.character(levels(lifehist$tg2)))," (",tapply(lifehist$logd>-100, lifehist$tg2, sum, na.rm=T),") ")
+labels = sub("_"," ",labels)
+text(23:28, par("usr")[3] - 0.45, srt = 45, adj = 1, cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logd[ddf$tg1=="lifehistory"], na.rm=T)
+segments(23, h, 28, h, lwd=3)
 
 #### Test off-setting of area and cubic measures ####
 for(i in 1:nrow(ddf)){
@@ -131,19 +193,19 @@ for(i in 1:nrow(ddf)){
 
 # Informal meta-analysis
 
-#Remove repeated D. scandens studies?
-#ddf=ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
-#ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
+#Remove some of the repeated D. scandens studies?
+ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
+ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
 #ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
 
-m=lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
+m = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), data=ddf)
 summary(m)
 
 # Formal meta-analysis using Almer_SE
 
-SE=sqrt((ddf$d_se^2)/(ddf$d^2))
+SE = sqrt((ddf$d_se^2)/(ddf$d^2))
 plot(ddf$npop, SE)
-m=Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), 
+m = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), 
            SE=SE, maxiter = 100, data=ddf)
 summary(m)
 
@@ -198,6 +260,8 @@ plotSubset("dimension", "area")
 plotSubset("dimension", "mass_volume")
 plotSubset("dimension", "count")
 plotSubset("dimension", "ratio")
+plotSubset("dimension", "time")
+
 
 studies=unique(ddf$study_ID)
 
@@ -261,6 +325,18 @@ plot(mod$VCV)
 
 #Parameter estimates
 summary(mod)
+str(summary(mod)$solutions)
+ests = summary(mod)$solutions
+
+x11(height=5, width=5)
+par(mar=c(4, 8, 2, 2))
+plot(rev(ests[-1,1]), 1:12, xlim=c(-4, 3), las=1, pch=16, yaxt="n", ylab="", xlab="")
+mtext(1, text="Estimate (95% CI)", line=2.5)
+axis(2, 1:12, labels=F)
+segments(rev(ests[-1,2]), 1:12, rev(ests[-1,3]), 1:12)
+abline(v=0, lty=2)
+labels=rev(rownames(ests)[-1])
+text(x=-4.7, y=1:12, labels=labels, las=1, cex=.8, adj=1, xpd=T)
 
 
 plot(log(moddat$maxdist), log(moddat$d))

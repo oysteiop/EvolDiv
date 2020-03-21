@@ -1,7 +1,3 @@
-species=both_sp[5]
-gmatrix=1
-dmatrix=1
-
 ###########################################################
 #### - Computing statistics for scaling of D with G - #####
 ###########################################################
@@ -66,7 +62,7 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
   d_ev = eigen(dmat)$vectors
   var_g_d = evolvabilityBeta(gmatscaled, Beta = d_ev)$e
   var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
-
+  
   #Compute summary stats
   mg = lm(log(var_d_g)~log(var_g_g))
   beta_g = summary(mg)$coef[2,1]
@@ -98,85 +94,7 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
                  nBetaG = length(mg$residuals), #Number of positive eigenvalues compared for G eigenvectors
                  nBetaD = length(md$residuals), #Number of positive eigenvalues compared for D eigenvectors
                  nBetaT = length(mt$residuals)) #Number of traits compared
-               
-    return(outlist)
   
-  }
-
-######################################
-######################################
-load("data/EVOBASE.RData")
-load("data/POPBASE.RData")
-
-#Species present in both databases
-gsp = unlist(lapply(EVOBASE, function(x) x$Species))
-dsp = unlist(lapply(POPBASE, function(x) x$Species))
-both_sp = unique(gsp[which(gsp %in% dsp)])
-both_sp
-
-POPBASE = POPBASE[-c(14:15)] #Dropping second M. guttatus study
-
-computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 1)
-
-nG = NULL
-nD = NULL
-for(s in c(1:length(both_sp))){
-  species = both_sp[s]  
-  nG[s] = length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
-  nD[s] = length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
+  return(outlist)
+  
 }
-cbind(both_sp, nG, nD)
-
-reslist = list()
-for(s in 1:length(both_sp)){
-  for(g in 1:nG[s]){
-    for(d in 1:nD[s]){
-      res = computeGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:18)]
-      reslist[length(reslist)+1] = as.data.frame(unlist(res)[c(1:16)])
-    }
-  }
-}
-length(reslist)
-reslist[[20]]
-
-resmat = as.data.frame(matrix(NA, ncol=16, nrow=length(reslist)))
-for(i in 1:length(reslist)){
-  resmat[i,1:2]=as.character(reslist[[i]][1:2])
-  resmat[i,3:13]=round(as.numeric(as.character(reslist[[i]][3:13])),2)
-  resmat[i,14:16]=as.numeric(as.character(reslist[[i]][14:16]))
- }
-
-colnames(resmat)=c("D", "G", "npop", "theta", "betaG", "r2G", "betaD", "r2D","betaT","r2T","i_mean","e_mean","d_mean","nBetaG","nBetaD","nBetaT")
-
-for(i in 1:nrow(resmat)){
-  if(resmat$theta[i]>=90){
-    resmat$theta[i] = 180 - resmat$theta[i]
-  }
-}
-
-names(resmat)
-#resmat = resmat[,c(2,1,16,3, 12,13,4,5,6)]
-head(resmat)
-View(resmat)
-
-plot(resmat$theta, resmat$betaG, pch=16)
-plot(resmat$theta, resmat$r2G, pch=16)
-
-resmat = resmat[resmat$npop>2,]
-resmat = resmat[resmat$nBetaG>2,]
-resmat = resmat[resmat$nBetaD>2,]
-resmat = resmat[resmat$nBetaT>2,]
-
-mean(resmat$betaG)
-hist(resmat$r2G)
-hist(resmat$betaG)
-
-plot(resmat$betaT, resmat$betaG)
-plot(resmat$r2T, resmat$r2G)
-
-plot(resmat$theta, resmat$betaG)
-
-plot(resmat$npop, resmat$betaG)
-plot(resmat$npop, resmat$r2G, cex=resmat$nBetaG*.5)
-
-plot(resmat$i_mean, resmat$r2G, cex=resmat$nBetaG*.5, xlim=c(0,1))
