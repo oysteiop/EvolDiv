@@ -7,14 +7,14 @@ library(plyr)
 library(evolvability)
 list.files()
 
-indat=read.table("data/gmatdata.txt", header=T)
-indat$morph=as.character(indat$morph)
-indat$morph[which(is.na(indat$morph))]="all"
-indat$ID=paste(indat$reference,indat$population,indat$environment,indat$morph, sep="_")
-studies=unique(indat$ID)
+indat = read.table("data/gmatdata.txt", header=T)
+indat$morph = as.character(indat$morph)
+indat$morph[which(is.na(indat$morph))] = "all"
+indat$ID = paste(indat$reference, indat$population, indat$environment, indat$morph, sep="_")
+studies = unique(indat$ID)
 studies
 
-#Compile G matrices and trait means
+# Compile G matrices and trait means
 Glist=list()
 MeanList=list()
 dimList=list()

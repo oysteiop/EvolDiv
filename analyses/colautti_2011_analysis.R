@@ -1,5 +1,5 @@
 ##############################################################
-#### Lythrum salicaria: Data from Colautti & Barrett 2011 ####
+#### Lythrum salicaria, data from Colautti & Barrett 2011 ####
 ##############################################################
 
 rm(list=ls())
@@ -9,7 +9,6 @@ library(reshape2)
 library(MCMCglmm)
 
 # Summary stats
-#Gdat = read.table("data/colautti/AllDataFixed.txt", dec=".", sep=",", header=T)
 Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
 names(Gdat)
 
@@ -104,9 +103,9 @@ colnames(emat) = traits
 evals = colMeans(emat)
 evals
 
-########################################################
-###### Joint estimation of D and average G ######
-########################################################
+################################################
+###### Joint estimation of D and average G #####
+################################################
 Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
 Gdat$TLeafArea = sqrt(Gdat$TLeafArea)
 names(Gdat)
@@ -141,7 +140,7 @@ Sys.time() - a
 
 save(mod, file="analyses/colautti/mod75.RData")
 
-#The D matrix
+# The D matrix
 Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
 names(Gdat)
 
@@ -174,42 +173,39 @@ pmat = cov(pmatdat)
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 
-#Compute eigenvectors etc.
-g_ev=eigen(gmat)$vectors
-var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+# Compute eigenvectors etc.
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
-d_ev=eigen(dmat)$vectors
-var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
-p_ev=eigen(pmat)$vectors
-var_g_p=evolvabilityBeta(gmat, Beta = p_ev)$e
-var_d_p=evolvabilityBeta(dmat, Beta = p_ev)$e
+p_ev = eigen(pmat)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
-#Compute summary stats
-mg=lm(log(var_d_g)~log(var_g_g))
-beta_g=summary(mg)$coef[2,1]
+# Compute summary stats
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
 beta_g
-r2_g=summary(mg)$r.squared
+r2_g = summary(mg)$r.squared
 r2_g
 
-md=lm(log(var_d_d)~log(var_g_d))
-beta_d=summary(md)$coef[2,1]
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
 beta_d
-r2_d=summary(md)$r.squared
+r2_d = summary(md)$r.squared
 r2_d
 
-mp=lm(log(var_d_p)~log(var_g_p))
-beta_p=summary(mp)$coef[2,1]
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
 beta_p
-r2_p=summary(mp)$r.squared
+r2_p = summary(mp)$r.squared
 r2_p
 
-#Plot both relationship,s upper/lower bounds of scaling relationship
-#Plot
+# Plot
 x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -221,14 +217,13 @@ plot(log10(var_g_g), log10(var_d_g),
      ylab="log10 (Divergence [%])", 
      main="Lythrum salicaria", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-points(log10(var_g_p), log10(var_d_p), pch=16, col="red")
 
-#Angles
+# Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
-180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
 # Ellipse plot
 source("GDellipse.R")

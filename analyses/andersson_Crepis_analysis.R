@@ -1,8 +1,6 @@
-###############################################
-#### - Crepis data from Stefan Andersson - ####
-###############################################
-# Crepis tectorum
-# Among-pop and within-pop full sibs + selfed sibs
+#####################################################
+#### Crepis tectorum, data from Stefan Andersson ####
+#####################################################
 
 rm(list=ls())
 library(evolvability)
@@ -17,6 +15,24 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 head(dat)
 str(dat)
 
+##########################################
+#### - Estimating the P mean matrix - ####
+##########################################
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
+dat = dat[dat$TYPE=="POP",]
+head(dat)
+
+pops = unique(dat$IDENTITY)
+length(pops)
+Plist = list()
+for(i in 1:length(pops)){
+  sub = dat[dat$IDENTITY==pops[i],]
+  Plist[[i]] = cov(sub[,4:8])
+}
+
+MeanP = apply(simplify2array(Plist), 1:2, mean)
+MeanP
+
 #####################################
 #### - Estimating the G matrix - ####
 #####################################
@@ -24,7 +40,7 @@ dat = dat[dat$TYPE=="OUTX",]
 dat$animal = 1:nrow(dat)
 head(dat)
 
-#Build the pedigree
+# Build the pedigree
 pedigree = data.frame(as.character(dat$animal))
 pedigree$dam = paste0(dat$IDNO, "d")
 pedigree$sire = paste0(dat$IDNO, "s")
@@ -38,32 +54,16 @@ names(parentped) = c("animal","dam","sire")
 pedigree = rbind(parentped, pedigree)
 head(pedigree)
 
-#Mean-scale and multiply by 10
-#names(dat)[3]="animal"
+# Mean-scale and multiply by 10
 dat[,c(4:8)] = apply(dat[,c(4:8)], 2, function(x) 10*x/mean(x, na.rm=T))
 head(dat)
 
-#Simple analysis
-m = lmer(LEN~1+(1|IDNO), data=dat)
-summary(m)
-.568*2
-(20.29*2)/63.13^2*100
-
-m = lmer(MAX~1+(1|IDNO), data=dat)
-summary(m)
-.6205*2
-
-m = lmer(MIN~1+(1|IDNO), data=dat)
-summary(m)
-.6205*2
-
-
-#Run the MCMCglmm analysis
+# Run the MCMCglmm analysis
 #Aped <- 2 * kinship2::kinship(pedigree[, 1], pedigree[,2], pedigree[, 3])
 
 invA = inverseA(pedigree)$Ainv
 
-#Five traits
+# Five traits
 n = 5
 alpha.mu <- rep(0, n)
 alpha.V <- diag(n)*400
@@ -86,9 +86,9 @@ Sys.time()-a
 
 save(mod, file="./analyses/andersson_crepis/Gmat75k.RData")
 
-#Check convergence
+# Check convergence
 summary(mod$VCV)
-plot(mod$VCV[,19])
+plot(mod$VCV[,1])
 
 #####################################
 #### - Estimating the D matrix - ####
@@ -100,18 +100,7 @@ head(dat)
 dat[,c(4:8)] = apply(dat[,c(4:8)], 2, function(x) log(x))
 head(dat)
 
-#Simple analysis
-m = lmer(LEN~1+(1|IDENTITY), data=dat)
-summary(m)
-
-m = lmer(MAX~1+(1|IDNO), data=dat)
-summary(m)
-
-m = lmer(MIN~1+(1|IDNO), data=dat)
-summary(m)
-
-
-#Five traits
+# Five traits
 n = 5
 alpha.mu <- rep(0, n)
 alpha.V <- diag(n)*5
@@ -134,23 +123,23 @@ Sys.time()-a
 
 save(mod, file="./analyses/andersson_crepis/Dmat75k.RData")
 
-#Check convergence
+# Check convergence
 summary(mod$VCV)
 plot(mod$VCV[,19])
 
-################################
-#### -Divergence analysis - ####
-################################
+#################################
+#### - Divergence analysis - ####
+#################################
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 
-#The G matrix
+# The G matrix
 load(file="./analyses/andersson_crepis/Gmat75k.RData")
 n = 5
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat) = rownames(gmat) = colnames(dat)[4:8]
 gmat
 
-#The D matrix
+# The D matrix
 load(file="./analyses/andersson_crepis/Dmat75k.RData")
 
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
@@ -160,21 +149,25 @@ dmat
 
 # EvolvabilityMeans
 evolvabilityMeans(gmat)
-evolvabilityMeansMCMC(mod$VCV[,1:(n*n)])
+#evolvabilityMeansMCMC(mod$VCV[,1:(n*n)])
 evolvabilityMeans(dmat)
+signif(cov2cor(gmat), 2)
+signif(cov2cor(dmat), 2)
 
-#Compute eigenvectors etc.
+# Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
 var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
 d_ev = eigen(dmat)$vectors
 var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
 var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
-#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
 
-#Compute summary stats
+p_ev = eigen(MeanP)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
+
+# Compute summary stats
 mg = lm(log(var_d_g)~log(var_g_g))
 beta_g = summary(mg)$coef[2,1]
 beta_g
@@ -187,7 +180,13 @@ beta_d
 r2_d = summary(md)$r.squared
 r2_d
 
-#Plot
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
+beta_p
+r2_p = summary(mp)$r.squared
+r2_p
+
+# Plot
 x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -196,12 +195,14 @@ ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(var_g_g), log10(var_d_g), 
      xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
      xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [%])", 
+     ylab="log10 (Divergence [x100])", 
      main="Crepis tectorum", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
+
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-#Angles
+# Angles
 180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 

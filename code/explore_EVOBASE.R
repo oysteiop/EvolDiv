@@ -13,7 +13,7 @@ EVOBASE[[34]]
 lapply(EVOBASE, function(x) x$Dims)
 
 #Extracting just the G matrices
-GG=lapply(EVOBASE,function(x) x$G)
+GG = lapply(EVOBASE, function(x) x$G)
 
 #Function to remove NAs from G matrices
 droptraits=function(x){

@@ -130,8 +130,6 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Gmat_Tovar.RData")
 
-
-
 ##################################################################
 ###### D matrix for Mexican populations of D. scandensoides ######
 ##################################################################
@@ -319,7 +317,7 @@ dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
 
 load("analyses/dalechampia/Gmat_Tulum.RData")
 
-n = length(nms)
+n = 6
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
@@ -331,42 +329,39 @@ pmat = cov(pmatdat)
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 
-#Compute eigenvectors etc.
-g_ev=eigen(gmat)$vectors
-var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+# Compute eigenvectors etc.
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
-d_ev=eigen(dmat)$vectors
-var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
-p_ev=eigen(pmat)$vectors
-var_g_p=evolvabilityBeta(gmat, Beta = p_ev)$e
-var_d_p=evolvabilityBeta(dmat, Beta = p_ev)$e
+p_ev = eigen(pmat)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
-#Compute summary stats
-mg=lm(log(var_d_g)~log(var_g_g))
-beta_g=summary(mg)$coef[2,1]
+# Compute summary stats
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
 beta_g
-r2_g=summary(mg)$r.squared
+r2_g = summary(mg)$r.squared
 r2_g
 
-md=lm(log(var_d_d)~log(var_g_d))
-beta_d=summary(md)$coef[2,1]
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
 beta_d
-r2_d=summary(md)$r.squared
+r2_d = summary(md)$r.squared
 r2_d
 
-mp=lm(log(var_d_p)~log(var_g_p))
-beta_p=summary(mp)$coef[2,1]
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
 beta_p
-r2_p=summary(mp)$r.squared
+r2_p = summary(mp)$r.squared
 r2_p
 
-#Plot both relationship,s upper/lower bounds of scaling relationship
-#Plot
+# Plot
 x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -378,20 +373,18 @@ plot(log10(var_g_g), log10(var_d_g),
      ylab="log10 (Divergence [%])", 
      main="Dalechampia: Tulum Mexico", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-points(log10(var_g_p), log10(var_d_p), pch=16, col="red")
-
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
-180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
 #############################################
 ######## Analyse G vs. D: Costa Rica ########
 #############################################
 
-#The D matrix
+# The D matrix
 dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
 dat$GSD = apply(subset(dat, select=c(GSDl, GSDc, GSDr)), 1, mean, na.rm=T)
 dat$GH  = apply(subset(dat, select=c(GHl, GHr)), 1, mean, na.rm=T)
@@ -408,7 +401,7 @@ dmat
 
 #plot(mod$VCV[,1])
 
-#The G matrix
+# The G matrix
 dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
 dat$GSD = apply(subset(dat, select=c(GSDL, GSDC, GSDR)), 1, mean, na.rm=T)
 dat$GH  = apply(subset(dat, select=c(GHL, GHR)), 1, mean, na.rm=T)
@@ -432,42 +425,39 @@ pmat = cov(pmatdat)
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 
-#Compute eigenvectors etc.
-g_ev=eigen(gmat)$vectors
-var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+# Compute eigenvectors etc.
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
-d_ev=eigen(dmat)$vectors
-var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
-p_ev=eigen(pmat)$vectors
-var_g_p=evolvabilityBeta(gmat, Beta = p_ev)$e
-var_d_p=evolvabilityBeta(dmat, Beta = p_ev)$e
+p_ev = eigen(pmat)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
-#Compute summary stats
-mg=lm(log(var_d_g)~log(var_g_g))
-beta_g=summary(mg)$coef[2,1]
+# Compute summary stats
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
 beta_g
-r2_g=summary(mg)$r.squared
+r2_g = summary(mg)$r.squared
 r2_g
 
-md=lm(log(var_d_d)~log(var_g_d))
-beta_d=summary(md)$coef[2,1]
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
 beta_d
-r2_d=summary(md)$r.squared
+r2_d = summary(md)$r.squared
 r2_d
 
-mp=lm(log(var_d_p)~log(var_g_p))
-beta_p=summary(mp)$coef[2,1]
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
 beta_p
-r2_p=summary(mp)$r.squared
+r2_p = summary(mp)$r.squared
 r2_p
 
-#Plot both relationship,s upper/lower bounds of scaling relationship
-#Plot
+# Plot
 x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -479,28 +469,22 @@ plot(log10(var_g_g), log10(var_d_g),
      ylab="log10 (Divergence [%])", 
      main="Dalechampia: Tulum CR", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-points(log10(var_g_p), log10(var_d_p), pch=16, col="red")
-
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
-180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
-
-acos(t(g_ev[,2]) %*% d_ev[,2])*(180/pi)
 
 # Ellipse plot
 source(GDellipse)
 GDellipse(dmat, gmat, xlim=c(-2,2), ylim=c(-1.5, 1.5), main="Dalechampia: Tulum: Costa Rica")
 
-
-
 #####################################################
 ######## Analyse G vs. D: Mexico D. scandens ########
 #####################################################
 
-#The D matrix
+# The D matrix
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 
 load(file="analyses/dalechampia/Dmat_Mexico_SG_75k.RData")
@@ -535,42 +519,39 @@ pmat = cov(pmatdat)
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 
-#Compute eigenvectors etc.
-g_ev=eigen(gmat)$vectors
-var_g_g=evolvabilityBeta(gmat, Beta = g_ev)$e
+# Compute eigenvectors etc.
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-#var_d_g = diag(t(g_ev) %*% dmat %*% g_ev)
 
-d_ev=eigen(dmat)$vectors
-var_g_d=evolvabilityBeta(gmat, Beta = d_ev)$e
-var_d_d=evolvabilityBeta(dmat, Beta = d_ev)$e
-#var_d_d = diag(t(d_ev) %*% dmat %*% d_ev)
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
-p_ev=eigen(pmat)$vectors
-var_g_p=evolvabilityBeta(gmat, Beta = p_ev)$e
-var_d_p=evolvabilityBeta(dmat, Beta = p_ev)$e
+p_ev = eigen(pmat)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
-#Compute summary stats
-mg=lm(log(var_d_g)~log(var_g_g))
-beta_g=summary(mg)$coef[2,1]
+# Compute summary stats
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
 beta_g
-r2_g=summary(mg)$r.squared
+r2_g = summary(mg)$r.squared
 r2_g
 
-md=lm(log(var_d_d)~log(var_g_d))
-beta_d=summary(md)$coef[2,1]
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
 beta_d
-r2_d=summary(md)$r.squared
+r2_d = summary(md)$r.squared
 r2_d
 
-mp=lm(log(var_d_p)~log(var_g_p))
-beta_p=summary(mp)$coef[2,1]
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
 beta_p
-r2_p=summary(mp)$r.squared
+r2_p = summary(mp)$r.squared
 r2_p
 
-#Plot both relationship,s upper/lower bounds of scaling relationship
-#Plot
+# Plot
 x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
@@ -582,11 +563,9 @@ plot(log10(var_g_g), log10(var_d_g),
      ylab="log10 (Divergence [%])", 
      main="Dalechampia: Tovar Mexico", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-points(log10(var_g_p), log10(var_d_p), pch=16, col="red")
-
-#Angles
+# Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
-180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
