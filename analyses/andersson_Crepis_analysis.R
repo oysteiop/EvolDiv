@@ -36,6 +36,7 @@ MeanP
 #####################################
 #### - Estimating the G matrix - ####
 #####################################
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="OUTX",]
 dat$animal = 1:nrow(dat)
 head(dat)

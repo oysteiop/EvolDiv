@@ -518,6 +518,8 @@ pmat = cov(pmatdat)
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
+cov2cor(gmat)
+cov2cor(dmat)
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors

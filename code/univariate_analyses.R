@@ -43,18 +43,18 @@ for(s in 1:length(studies)){
   df=na.omit(df)
   outlist[[s]]=df
 }
-ddf=rbind.fill(outlist)
-head(ddf,5)
+ddf = rbind.fill(outlist)
+head(ddf, 5)
 
 # Sampling variance of a variance (From Lynch & Walsh 1998 p. 815)
 sv = (2*(ddf$d^2))/(ddf$npop+2)
 ddf$d_se = sqrt(sv)
 
 #Combine with data from Evolvability database
-edat=read.table("data/evolvabilitydatabase2020.txt", header=T)
+edat = read.table("data/evolvabilitydatabase2020.txt", header=T)
 
-edat$species_measurement=paste0(edat$species,"_",edat$measurement)
-ddf$species_trait=paste0(ddf$species,"_",ddf$trait)
+edat$species_measurement = paste0(edat$species,"_",edat$measurement)
+ddf$species_trait = paste0(ddf$species,"_",ddf$trait)
 
 tg1=NULL
 for(i in 1:nrow(ddf)){
@@ -87,15 +87,15 @@ w=which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(
 evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
-ddf$maxdist=maxdist
-ddf$tg1=factor(tg1)
-ddf$tg2=factor(tg2)
-ddf$ms=ms
-ddf$ms=factor(ddf$ms, levels=c("S","M","O"))
-ddf$dimension=dimension
-ddf$dimension=factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio", "time"))
-ddf$evals=evals
-ddf$environment=factor(ddf$environment, levels=c("greenhouse", "common_garden", "field"))
+ddf$maxdist = maxdist
+ddf$tg1 = factor(tg1)
+ddf$tg2 = factor(tg2)
+ddf$ms = ms
+ddf$ms = factor(ddf$ms, levels=c("S","M","O"))
+ddf$dimension = dimension
+ddf$dimension = factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio", "time"))
+ddf$evals = evals
+ddf$environment = factor(ddf$environment, levels=c("greenhouse", "common_garden", "field"))
 head(ddf)
 
 # Boxplots ####
@@ -164,7 +164,6 @@ text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
 h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
-
 #### Subset data for d vs. e meta-analysis ####
 ddf = ddf[ddf$d>0,]
 ddf = ddf[ddf$evals>0,]
@@ -191,6 +190,16 @@ length(unique(ddf$species))
 
 tapply(ddf$d*100, ddf$tg1, median)
 tapply(ddf$d>-Inf, ddf$tg1, sum)
+tapply(ddf$d*100, list(ddf$tg1, ddf$tg2), median)
+tapply(ddf$d>-Inf, ddf$tg2, sum)
+
+tapply(ddf$d*100, list(ddf$tg1, ddf$dimension), median)
+
+tapply(ddf$d*100, list(ddf$ms, ddf$tg1), median, na.rm=T)
+tapply(ddf$d>-Inf, list(ddf$ms, ddf$tg1), sum, na.rm=T)
+
+lin = ddf[ddf$dimension=="linear",]
+t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
 
 #### Informal meta-analysis ####
 
@@ -204,6 +213,9 @@ ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
 
 m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
 summary(m0)
+
+m = lmer(log(d)~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), data=ddf)
+summary(m)
 
 m = lmer(log(d)~ log(evals)*ms + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
 AIC(m0, m)
@@ -221,14 +233,20 @@ floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
 m0 = lmer(log(d) ~ log(evals)+ log(npop) +log(maxdist) + (1|species/study_ID), data=floveg)
 m = lmer(log(d) ~ log(evals)*tg1 + log(npop) + log(maxdist) + (1|species/study_ID), data=floveg)
+
 AIC(m0, m)
+AIC(m0, m)[2,2]-AIC(m0, m)[1,2]
+
+
+m = lmer(log(d) ~ -1+ tg1 + log(evals):tg1 + log(npop) + log(maxdist) + (1|species/study_ID), data=floveg)
 summary(m)
 
 # Formal meta-analysis using Almer_SE
 SE = sqrt((ddf$d_se^2)/(ddf$d^2))
 plot(ddf$npop, SE)
-m = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + ms + tg1 + dimension + (1|species/study_ID), 
+m = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), 
            SE=SE, maxiter = 100, data=ddf)
+AIC(m0, m)
 summary(m)
 
 #### Plotting evolvability vs. divergence ####
