@@ -850,3 +850,110 @@ colnames(modD) = rownames(modD) = colnames(means)
 modD = meanStdG(modD, colMeans(means))
 round(modD, 3)
 
+#### Divergence vectors multiple populations ####
+
+#### Lobelia ####
+out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=25 #Lobelia, Caruso 2012 Greenhouse
+s=21 #Caruso 2003 Field 
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+means
+z0=EVOBASE[[1]]$Means[c(1,3:6)]
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+
+for(i in 1:nrow(means)){
+z1=unlist(means[i,])
+delta = z1-z0
+scale_delta = delta/sqrt(sum(delta^2)) 
+d = c(delta/z0)
+div = abs(mean(d*100))
+
+e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+
+outdat[i,]=c(div, e_delta, c_delta)
+}
+outdat
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,6), las=1,
+     xlab="", ylab="",
+     main="Lobelia siphilitica")
+mtext("Divergence from focal population(%)", 1, line=2.5)
+mtext("Evolvability(%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Brassica ####
+both_sp
+out = computeGD(species = both_sp[13], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=30
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+means=means[-1,] #Focal pop
+
+z0=EVOBASE[[34]]$Means
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+
+for(i in 1:nrow(means)){
+  z1=unlist(means[i,])
+  delta = z1-z0
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = c(delta/z0)
+  div = abs(mean(d*100))
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+outdat
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, las=1, ylim=c(-5, 20),
+     xlab="", ylab="",
+     main="Brassica cretica")
+mtext("Divergence from focal population(%)", 1, line=2.5)
+mtext("Evolvability(%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=24.5, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
