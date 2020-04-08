@@ -19,9 +19,7 @@ vars = apply(Gdat[,5:13], 2, function(x) tapply(x, Gdat$pop, var, na.rm=T))
 vars = vars[,c(2,3,5,9)]
 vars
 
-#############################################
 #### - Estimating the average P matrix - ####
-#############################################
 dat = Gdat
 head(dat)
 
@@ -36,9 +34,7 @@ for(i in 1:length(pops)){
 MeanP = apply(simplify2array(Plist), 1:2, mean)
 MeanP
 
-#####################################
 #### - Estimating the D matrix - ####
-#####################################
 dat = Gdat
 head(dat)
 dat$fam = paste(dat$dam, dat$sire, sep="_")
@@ -81,7 +77,7 @@ reddat = droplevels(reddat)
 reddat$cID = 1:nrow(reddat)
 reddat$animal = paste(as.character(reddat$sire), as.character(reddat$dam), reddat$cID, sep="_")
 
-#Mean-scale and multiply by 10
+# Mean-scale and multiply by 10
 reddat[,c(6,7,9,13)] = apply(reddat[,c(6,7,9,13)], 2, function(x) 10*x/mean(x, na.rm=T))
 
 ped = subset(reddat, select = c("animal", "dam", "sire"))
@@ -113,11 +109,9 @@ save(mod, file=filename)
 }
 Sys.time()-a
 
-#####################################
 ######## - Analyse G vs. D - ########
-#####################################
 
-#The D matrix
+# The D matrix
 dat = Gdat
 
 load(file="./analyses/puentes2016/Dmat150k.RData")
@@ -158,7 +152,7 @@ evolvabilityMeans(dmat)
 signif(cov2cor(gmat), 2)
 signif(cov2cor(dmat), 2)
 
-#Compute eigenvectors etc.
+# Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
 var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
@@ -171,7 +165,7 @@ p_ev = eigen(MeanP)$vectors
 var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
 var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
-#Compute summary stats
+# Compute summary stats
 mg = lm(log(var_d_g)~log(var_g_g))
 beta_g = summary(mg)$coef[2,1]
 beta_g
@@ -205,3 +199,63 @@ points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
+
+#### Divergence vectors ####
+
+# The G matrix
+load(file="analyses/puentes2016/Gmat_SPIT.RData")
+load(file="analyses/puentes2016/Gmat_STUC.RData")
+load(file="analyses/puentes2016/Gmat_STUS.RData")
+load(file="analyses/puentes2016/Gmat_VIS.RData")
+
+gmat = matrix(apply(mod$VCV, 2, median)[1:16], nrow=4)
+colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flowers", "rosette.size.cm")
+round(gmat, 2)
+
+Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
+Gdat$rosette.size.cm = sqrt(Gdat$rosette.size.cm2)
+popmeans = apply(Gdat[,5:13], 2, function(x) tapply(x, Gdat$pop, mean, na.rm = T))
+popmeans = popmeans[,c(2,3,5,9)]
+z0 = popmeans[4,]
+
+# Pop means
+means=popmeans
+head(means)
+dim(means)
+
+# Compute divergence etc.
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+        z1=unlist(means[i,])
+        delta = log(z1)-log(z0)
+        scale_delta = delta/sqrt(sum(delta^2)) 
+        d = delta
+        div = mean(abs(d))*100
+        e_delta = evolvabilityBeta(gmat, scale_delta)$e
+        c_delta = evolvabilityBeta(gmat, scale_delta)$c
+        
+        outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, outdat)
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0, 10), las=1,
+     xlab="", ylab="",
+     main="Arabidopsis lyrata: SPIT")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 33
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")

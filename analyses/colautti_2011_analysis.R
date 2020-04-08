@@ -103,9 +103,7 @@ colnames(emat) = traits
 evals = colMeans(emat)
 evals
 
-################################################
 ###### Joint estimation of D and average G #####
-################################################
 Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
 Gdat$TLeafArea = sqrt(Gdat$TLeafArea)
 names(Gdat)
@@ -229,4 +227,61 @@ acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 source("GDellipse.R")
 GDellipse(dmat, gmat, xlim=c(-2,2), ylim=c(-2, 2), main="Lythrum salicaria")
 
+
+#### Divergence vectors ####
+
+# The G matrix
+load(file="analyses/colautti/mod75.RData")
+traits = c("TLeafArea","THeight", "Height2wk", "Height4wk",
+           "FStemWidth", "FVeg", "FInf")
+n = length(traits)
+gmat = matrix(apply(mod$VCV, 2, median)[((n*n)+1):((n*n)*2)], nrow=n)
+colnames(gmat) = rownames(gmat) = traits
+round(gmat, 2)
+
+# Pop means
+Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
+popmeans = as.data.frame(apply(Gdat[,c(11:23, 25:38)], 2, function(x) tapply(x, Gdat$Pop, mean, na.rm = T)))
+popmeans = subset(popmeans, select=c("TLeafArea","THeight", "Height2wk", "Height4wk",
+                                     "FStemWidth", "FVeg", "FInf"))
+colnames(popmeans)==colnames(gmat)
+means = popmeans
+dim(means)
+
+z0 = colMeans(means)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  div = mean(abs(delta))*100
+  
+  e_delta = evolvabilityBeta(gmat, scale_delta)$e
+  c_delta = evolvabilityBeta(gmat, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+head(outdat)
+
+#x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,6), las=1,
+     xlab="", ylab="",
+     main="Lythrum salicaria")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 33
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 

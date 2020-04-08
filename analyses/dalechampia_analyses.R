@@ -7,9 +7,7 @@ library(evolvability)
 library(plyr)
 library(MCMCglmm)
 
-########################################################
 ###### G matrix for the Tulum population (Mexico) ######
-########################################################
 dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
 head(dat)
 
@@ -64,9 +62,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Gmat_Tulum.RData")
 
-###########################################################
 ###### G matrix for the Tovar population (Venezuela) ######
-###########################################################
 dat = read.csv("data/dalechampia/tovar/Merida diallel.csv", header=T)
 head(dat)
 names(dat)
@@ -130,9 +126,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Gmat_Tovar.RData")
 
-##################################################################
 ###### D matrix for Mexican populations of D. scandensoides ######
-##################################################################
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 head(dat)
 
@@ -185,9 +179,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Dmat_Mexico_75k.RData")
 
-#############################################################
 ###### D matrix for Mexican populations of D. scandens ######
-#############################################################
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 head(dat)
 
@@ -238,9 +230,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Dmat_Mexico_SG_75k.RData")
 
-########################################################
 ###### D matrix for Costa Rican populations ######
-########################################################
 dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
 head(dat)
 
@@ -290,9 +280,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Dmat_CostaRica_75k.RData")
 
-#########################################
 ######## Analyse G vs. D: Mexico ########
-#########################################
 
 #The D matrix
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
@@ -380,9 +368,7 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,1
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-#############################################
 ######## Analyse G vs. D: Costa Rica ########
-#############################################
 
 # The D matrix
 dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
@@ -427,15 +413,15 @@ evolvabilityMeans(dmat)
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
-var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$c
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
 
 d_ev = eigen(dmat)$vectors
-var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$c
 var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
 p_ev = eigen(pmat)$vectors
-var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$c
 var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
 # Compute summary stats
@@ -473,6 +459,14 @@ points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
+cvals=NULL
+for(i in 1:ncol(gmat)){
+        b=rep(0,ncol(gmat))
+        b[i]=1
+        cvals[i] = evolvabilityBeta(gmat, b)$c
+}
+points(log10(cvals), log10(diag(dmat)), pch=16, col="red")
+
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
@@ -480,9 +474,7 @@ acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 source(GDellipse)
 GDellipse(dmat, gmat, xlim=c(-2,2), ylim=c(-1.5, 1.5), main="Dalechampia: Tulum: Costa Rica")
 
-#####################################################
 ######## Analyse G vs. D: Mexico D. scandens ########
-#####################################################
 
 # The D matrix
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
@@ -571,3 +563,169 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,1
 
 # Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
+
+
+#### Divergence vectors Tulum MX ####
+
+# The G matrix
+dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDL, GSDC, GSDR)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHL, GHR)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWL, SWC, SWR)), 1, mean, na.rm=T)
+dat$UBL = apply(subset(dat, select=c(UBL, UBC, UBR)), 1, mean, na.rm=T)
+dat$LBL = apply(subset(dat, select=c(LBL, LBC, LBR)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GWTot)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+
+load("analyses/dalechampia/Gmat_Tulum.RData")
+n = 6
+gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
+colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
+round(gmat, 2)
+
+names(dat)
+dat=dat[,which(colnames(dat) %in% colnames(gmat))]
+dat=dat[,c(6,5,3,4,1,2)]
+names(dat)==colnames(gmat)
+z0 = colMeans(dat, na.rm=T)
+
+# Pop means
+dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDL, GSDC, GSDR)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHL, GHR)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWL, SWC, SWR)), 1, mean, na.rm=T)
+dat$UBL = apply(subset(dat, select=c(UBL, UBC, UBR)), 1, mean, na.rm=T)
+dat$LBL = apply(subset(dat, select=c(LBL, LBC, LBR)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GWTot)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+
+dat$ind = paste(dat$pop, dat$plant, dat$seed, sep="_")
+dat$ind = factor(dat$ind)
+dat = dat[dat$population %in% c("BA", "C", "CA", "CC", "CN", "CP", "GS", "LM", "M", "PM", "T", "Tulum51"),]
+dat$population = factor(dat$population)
+head(dat)
+means = apply(dat[,which(colnames(dat) %in% colnames(gmat))], 2, function(x) tapply(x, dat$population, mean, na.rm=T))
+means=means[,c(6,5,3,4,1,2)]
+head(means)
+dim(means)
+
+# Compute divergence etc.
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+        z1=unlist(means[i,])
+        delta = log(z1)-log(z0)
+        scale_delta = delta/sqrt(sum(delta^2)) 
+        #d = c(delta/z0)
+        d = delta
+        div = mean(abs(d))*100
+        e_delta = evolvabilityBeta(gmat, scale_delta)$e
+        c_delta = evolvabilityBeta(gmat, scale_delta)$c
+        
+        outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, outdat)
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,2), las=1,
+     xlab="", ylab="",
+     main="Dalechampia Tulum MX")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 56
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Divergence vectors Tulum CR ####
+
+# The G matrix
+dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDL, GSDC, GSDR)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHL, GHR)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWL, SWC, SWR)), 1, mean, na.rm=T)
+dat$UBL = apply(subset(dat, select=c(UBL, UBC, UBR)), 1, mean, na.rm=T)
+dat$LBL = apply(subset(dat, select=c(LBL, LBC, LBR)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GWTot)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+
+load("analyses/dalechampia/Gmat_Tulum.RData")
+n = 6
+gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
+colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
+round(gmat, 2)
+
+names(dat)
+dat = dat[,which(colnames(dat) %in% colnames(gmat))]
+dat = dat[,c(6,5,3,4,1,2)]
+names(dat)==colnames(gmat)
+z0 = colMeans(dat, na.rm=T)
+
+# Pop means
+dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDl, GSDc, GSDr)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHl, GHr)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWl, SWc, SWr)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GW)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+
+dat$ind = dat$ID
+dat$ind = factor(dat$ind)
+dat = dat[dat$Pop %in% c("S1","S2","S3","S6","S7","S8","S9","S11","S12","S13","S16","S19","S20","S21","S22","S26"),]
+dat$population = factor(dat$Pop)
+
+means = apply(dat[,which(colnames(dat) %in% colnames(gmat))], 2, function(x) tapply(x, dat$population, mean, na.rm=T))
+means = means[,c(6,5,3,4,2,1)]
+colnames(means)==colnames(gmat)
+head(means)
+dim(means)
+
+# Compute divergence etc.
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+        z1 = unlist(means[i,])
+        delta = log(z1)-log(z0)
+        scale_delta = delta/sqrt(sum(delta^2)) 
+        #d = c(delta/z0)
+        d = delta
+        div = mean(abs(d))*100
+        
+        e_delta = evolvabilityBeta(gmat, scale_delta)$e
+        c_delta = evolvabilityBeta(gmat, scale_delta)$c
+        
+        outdat[i,]=c(div, e_delta, c_delta)
+}
+head(outdat)
+
+data.frame(means, outdat)
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,2), las=1,
+     xlab="", ylab="",
+     main="Dalechampia Tulum CR")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 38
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")

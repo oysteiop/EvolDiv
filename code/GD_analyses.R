@@ -29,8 +29,8 @@ out$dmat
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 2)$G
-glist[[2]] = computeGD(species = both_sp[1], gmatrix = 2, dmatrix = 2)$G
+glist[[1]] = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)$G
+glist[[2]] = computeGD(species = both_sp[1], gmatrix = 2, dmatrix = 3)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -60,6 +60,7 @@ cor(c(modD), c(out$D))
 
 out$D = modD*100
 out$G = gmat*100
+
 out$G = out$G*100
 
 evolvabilityMeans(out$G)
@@ -69,11 +70,11 @@ signif(cov2cor(out$D),2)
 
 # Compute eigenvectors etc.
 g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
+var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$c
 var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
 
 d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
+var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$c
 var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
 
 # Compute summary stats
@@ -103,6 +104,14 @@ plot(log10(var_g_g), log10(var_d_g),
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+
+cvals=NULL
+for(i in 1:ncol(out$G)){
+  b=rep(0,ncol(out$G))
+  b[i]=1
+  cvals[i] = evolvabilityBeta(out$G, b)$c
+}
+points(log10(cvals), log10(diag(out$D)), pch=16, col="red")
 
 #### Brassica ####
 out = computeGD(species = both_sp[13], gmatrix = 5, dmatrix = 1)
@@ -535,7 +544,7 @@ g1 = meanStdG(g1, m1)*100
 g2 = meanStdG(g2, m2)*100
 c(names(m1)==colnames(g1), names(m2)==colnames(g2))
 
-delta = m1-m2
+delta = log(m1)-log(m2)
 delta = delta/sqrt(sum(delta^2)) #Unit-length
 
 evolvabilityBeta(g1, delta)$e
@@ -569,8 +578,8 @@ acos(t(eigen(g1)$vectors[,1]) %*% delta)*(180/pi) #G1 vs. divergence vector
 
 ##### Mimulus micranthus ####
 gsp
-m1 = EVOBASE[[5]]$Means[c(2,4:9)]
-m2 = EVOBASE[[6]]$Means[c(2,4:9)]
+m1 = abs(EVOBASE[[5]]$Means[c(2,4:9)])
+m2 = abs(EVOBASE[[6]]$Means[c(2,4:9)])
 names(m1)==names(m2)
 
 g1 = droptraits(EVOBASE[[3]]$G)
@@ -580,7 +589,7 @@ g2 = meanStdG(g2, m2)*100
 
 c(names(m1)==colnames(g1), names(m2)==colnames(g2))
 
-delta = m2-m1
+delta = log(m2)-log(m1)
 delta = delta/sqrt(sum(delta^2)) #Unit-length
 
 evolvabilityBeta(g1, delta)$e
@@ -614,7 +623,7 @@ g1 = droptraits(EVOBASE[[32]]$G)
 g1 = meanStdG(g1, m1)*100
 c(names(m1)==colnames(g1))
 
-delta = m2-m1
+delta = log(m2)-log(m1)
 delta = delta/sqrt(sum(delta^2)) #Unit-length
 
 evolvabilityBeta(g1, delta)$e
@@ -638,7 +647,7 @@ g2 = droptraits(EVOBASE[[33]]$G)
 g2 = meanStdG(g2, m2)*100
 c(names(m1)==colnames(g2))
 
-delta = m2-m1
+delta = log(m2)-log(m1)
 delta = delta/sqrt(sum(delta^2)) #Unit-length
 
 evolvabilityBeta(g2, delta)$e
@@ -662,7 +671,7 @@ names(m1)==names(m2)
 g1=meanStdG(g1, m1)*100
 c(names(m1)==colnames(g1))
 
-delta = m1-m2
+delta = log(m1)-log(m2)
 delta = delta/sqrt(sum(delta^2)) #Unit length
 
 evolvabilityBeta(g1, delta)$e
@@ -686,7 +695,7 @@ names(m1)==names(m2)
 g2=meanStdG(g2, m2)*100
 c(names(m2)==colnames(g2))
 
-delta = m1-m2
+delta = log(m1)-log(m2)
 delta = delta/sqrt(sum(delta^2)) #Unit length
 
 evolvabilityBeta(g2, delta)$e
@@ -869,28 +878,28 @@ means
 z0=EVOBASE[[1]]$Means[c(1,3:6)]
 
 outdat=matrix(NA, nrow=nrow(means), ncol=3)
-
 for(i in 1:nrow(means)){
-z1=unlist(means[i,])
-delta = z1-z0
+z1 = unlist(means[i,])
+delta = log(z1)-log(z0)
 scale_delta = delta/sqrt(sum(delta^2)) 
-d = c(delta/z0)
-div = abs(mean(d*100))
+d = delta
+div = mean(abs(d))*100
 
 e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
 c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
 
 outdat[i,]=c(div, e_delta, c_delta)
 }
-outdat
+
+data.frame(means, round(outdat, 2))
 
 x11(width=5, height=5)
 par(mar=c(4,4,5,4))
-plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,6), las=1,
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,7), las=1,
      xlab="", ylab="",
      main="Lobelia siphilitica")
-mtext("Divergence from focal population(%)", 1, line=2.5)
-mtext("Evolvability(%)", 2, line=2.5)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
 points(outdat[,1], outdat[,3], pch=16, col="grey")
 
 evolvabilityMeans(out$G*100)
@@ -898,10 +907,11 @@ abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
 abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
 abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
 abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+x=28
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
 
 legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 
@@ -925,10 +935,11 @@ outdat=matrix(NA, nrow=nrow(means), ncol=3)
 
 for(i in 1:nrow(means)){
   z1=unlist(means[i,])
-  delta = z1-z0
+  delta = log(z1)-log(z0)
   scale_delta = delta/sqrt(sum(delta^2)) 
-  d = c(delta/z0)
-  div = abs(mean(d*100))
+  #d = c(delta/z0)
+  d = delta
+  div = mean(abs(d))*100
   
   e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
   c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
@@ -951,9 +962,11 @@ abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
 abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
 abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
 abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=24.5, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+x=52
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
 
 legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+  

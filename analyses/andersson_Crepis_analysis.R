@@ -15,9 +15,7 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 head(dat)
 str(dat)
 
-##########################################
 #### - Estimating the P mean matrix - ####
-##########################################
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="POP",]
 head(dat)
@@ -33,9 +31,7 @@ for(i in 1:length(pops)){
 MeanP = apply(simplify2array(Plist), 1:2, mean)
 MeanP
 
-#####################################
 #### - Estimating the G matrix - ####
-#####################################
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="OUTX",]
 dat$animal = 1:nrow(dat)
@@ -91,9 +87,7 @@ save(mod, file="./analyses/andersson_crepis/Gmat75k.RData")
 summary(mod$VCV)
 plot(mod$VCV[,1])
 
-#####################################
 #### - Estimating the D matrix - ####
-#####################################
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="POP",]
 head(dat)
@@ -128,9 +122,7 @@ save(mod, file="./analyses/andersson_crepis/Dmat75k.RData")
 summary(mod$VCV)
 plot(mod$VCV[,19])
 
-#################################
-#### - Divergence analysis - ####
-#################################
+#### Divergence analysis ####
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 
 # The G matrix
@@ -204,6 +196,76 @@ points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
+cvals=NULL
+for(i in 1:5){
+b=rep(0,5)
+b[i]=1
+cvals[i] = evolvabilityBeta(gmat, b)$c
+}
+points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
+
 # Angles
 180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
+
+#### Divergence vectors ####
+
+# The G matrix
+load(file="./analyses/andersson_crepis/Gmat75k.RData")
+n = 5
+gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
+colnames(gmat) = rownames(gmat) = colnames(dat)[4:8]
+round(gmat, 2)
+
+# Pop means
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
+dat = dat[dat$TYPE=="POP",]
+dat$IDENTITY = factor(dat$IDENTITY)
+means = apply(dat[,4:8], 2, function(x) tapply(x, dat$IDENTITY, mean, na.rm=T))
+
+head(means)
+dim(means)
+
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
+dat = dat[dat$TYPE=="OUTX",]
+z0 = colMeans(dat[,4:8])
+
+outdat=matrix(NA, nrow=nrow(means), ncol=4)
+i=1
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  #d = c(delta/z0)
+  div1 = mean((abs(z1-z0)/z0))*100
+  div2 = mean(abs(delta))*100
+  
+  e_delta = evolvabilityBeta(gmat, scale_delta)$e
+  c_delta = evolvabilityBeta(gmat, scale_delta)$c
+  
+  outdat[i,]=c(div2, e_delta, c_delta, div1)
+}
+head(outdat)
+plot(outdat[,1], outdat[,4])
+lines(0:100, 0:100)
+
+#x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,50), las=1,
+     xlab="", ylab="",
+     main="Crepis tectorum")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 87
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 

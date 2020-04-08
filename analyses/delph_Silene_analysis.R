@@ -90,6 +90,9 @@ Sys.time()-a
 
 save(mod, file="./analyses/delph_Silene/Gmat75k_2traits.RData")
 
+load(file="./analyses/delph_Silene/Gmat75k_2traits.RData")
+n=2
+
 # Check convergence
 summary(mod$VCV)
 plot(mod$VCV[,4])
@@ -97,7 +100,7 @@ plot(mod$VCV[,4])
 # Compile G matrix
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat) = rownames(gmat) = c("calyx_F", "calyx_M")
-gmat
+round(gmat, 2)
 
 # Compile D matrix (among dam pops)
 dmat = matrix(apply(mod$VCV, 2, median)[5:8], nrow=n)
@@ -200,10 +203,48 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,1
 # Angles
 acos(t(g_ev[,1]) %*% s_ev[,1])*(180/pi)
 
+#### Divergence vectors ####
 
+means = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T))
+means
+z0 = colMeans(means)
 
+# Compute divergence etc.
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1=unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  e_delta = evolvabilityBeta(gmat, scale_delta)$e
+  c_delta = evolvabilityBeta(gmat, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
 
+data.frame(means, outdat)
 
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,2), las=1,
+     xlab="", ylab="",
+     main="Silene latifolia")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 5.5
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 
 
 #### Raw D matrix ####

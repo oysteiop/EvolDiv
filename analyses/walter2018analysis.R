@@ -216,3 +216,66 @@ acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 # Ellipse plot
 source("GDellipse.R")
 GDellipse(dmat, gmat, xlim=c(-7,7), ylim=c(-7, 7), main="Senecio: Dune")
+
+
+#### Divergence vectors ####
+
+# The G matrix
+Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
+load(file="analyses/walter2018/Gmat_Dune.RData")
+load(file="analyses/walter2018/Gmat_Head.RData")
+load(file="analyses/walter2018/Gmat_Table.RData")
+load(file="analyses/walter2018/Gmat_Wood.RData")
+
+n=10
+gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
+colnames(gmat)=rownames(gmat)=c("Height", "MSL_W", "SB", "MSD", "Area", "P2A2", "Circularity", "Nindents.Peri", "IndentWidthMean", "IndentDepthMean")
+gmat
+
+#Pop means
+Ddat = read.csv("data/walter/Data_Exp1_Dmatrix.csv")
+popmeans = apply(Ddat[,3:12], 2, function(x){tapply(x, Ddat$Population, mean, na.rm=T)})
+means = popmeans
+ecotype = factor(substr(rownames(popmeans), 1, 1))
+
+Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
+head(Gdat)
+z0 = apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type,mean,na.rm=T)})
+z0=z0[1,]
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  #d = c(delta/z0)
+  div = mean(abs(delta))*100
+  
+  e_delta = evolvabilityBeta(gmat, scale_delta)$e
+  c_delta = evolvabilityBeta(gmat, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+head(outdat)
+
+#x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,12), las=1,
+     xlab="", ylab="",
+     main="Senecio pinnatifolius", col=c("black", "red", "blue", "green")[as.numeric(ecotype)])
+mtext("Divergence from focal population(%)", 1, line=2.5)
+mtext("Evolvability(%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(gmat)
+abline(h=evolvabilityMeans(gmat)[1], lty=2)
+abline(h=evolvabilityMeans(gmat)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(gmat)[2], lty=1)
+abline(h=evolvabilityMeans(gmat)[3], lty=1)
+x = 127
+text(x=x, y=evolvabilityMeans(gmat)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
