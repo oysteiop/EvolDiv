@@ -98,6 +98,37 @@ ddf$evals = evals
 ddf$environment = factor(ddf$environment, levels=c("greenhouse", "common_garden", "field"))
 head(ddf)
 
+# Write csv of this and gap-fill manually, then import file
+#write.csv2(ddf, file="data/ddf.csv", row.names=F)
+
+ddf = read.csv2(file="data/ddf_gapfilled.csv")
+
+#### Summary stats with all divergence data####
+length(unique(ddf$study_ID))
+length(unique(ddf$species))
+
+tapply(ddf$d*100, ddf$tg1, median)
+tapply(ddf$d>-Inf, ddf$tg1, sum)
+tapply(ddf$d*100, list(ddf$tg1, ddf$tg2), median)
+tapply(ddf$d>-Inf, ddf$tg2, sum)
+
+tapply(ddf$d*100, list(ddf$tg1, ddf$dimension), median)
+
+tapply(ddf$d*100, list(ddf$ms, ddf$tg1), median, na.rm=T)
+tapply(ddf$d>-Inf, list(ddf$ms, ddf$tg1), sum, na.rm=T)
+
+lin = ddf[ddf$dimension=="linear",]
+t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
+
+are = ddf[ddf$dimension=="area",]
+t(tapply(are$d*100, list(are$tg1,are$species), median))
+
+mvo = ddf[ddf$dimension=="mass_volume",]
+t(tapply(mvo$d*100, list(mvo$tg1,mvo$species), median))
+
+cou = ddf[ddf$dimension=="count",]
+t(tapply(cou$d*100, list(cou$tg1, cou$species), median))
+
 # Boxplots ####
 ddf$logd = log10(ddf$d*100)
 ddf$logd[which(ddf$logd==-Inf)]=log10(0.001) #Set zero evolvabilities to 0.01

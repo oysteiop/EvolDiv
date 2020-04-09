@@ -8,18 +8,23 @@ library(evolvability)
 list.files()
 
 indat = read.table("data/gmatdata.txt", header=T)
+sort(unique(indat$studyID))
+
 indat$morph = as.character(indat$morph)
 indat$morph[which(is.na(indat$morph))] = "all"
 indat$ID = paste(indat$reference, indat$population, indat$environment, indat$morph, sep="_")
 studies = unique(indat$ID)
 studies
 
+indat$mean[which(indat$e_on_log==1)]=1 #Set mean to 1 for log-scale estimates to get correct mean-scaled G
+
 # Compile G matrices and trait means
-Glist=list()
-MeanList=list()
-dimList=list()
-VpList=list()
-isCor=tapply(indat$isCor,indat$ID,mean)>0
+Glist = list()
+groupList = list()
+MeanList = list()
+dimList = list()
+VpList = list()
+isCor = tapply(indat$isCor, indat$ID, mean)>0
 
 for(s in 1:length(studies)){
   red = indat[indat$ID==studies[s],]
@@ -32,6 +37,13 @@ for(s in 1:length(studies)){
   }
   names(means) = traits
   MeanList[[s]] = means
+  
+  groups = NULL
+  for(t in 1:length(traits)){
+    groups[t] = as.character(red$traitgroup1[which(red$traitX==traits[t] & red$traitY==traits[t])])
+  }
+  names(groups) = traits
+  groupList[[s]] = groups
   
   dims = NULL
   for(t in 1:length(traits)){
@@ -83,7 +95,7 @@ for(s in 1:length(studies)){
   }
 }
 
-#Preparing metadata
+# Preparing metadata
 metadata = ddply(indat, .(ID), summarize,
                  Family = family[1],
                  Species = species[1],
@@ -92,7 +104,7 @@ metadata = ddply(indat, .(ID), summarize,
                  Lon = mean(lon, na.rm=T))
 metadata
 
-#### - Building the database list - ####
+#### Building the database list ####
 EVOBASE = list()
 for(i in 1:length(studies)){
   EVOBASE[[i]] = list(Study_ID = paste(metadata$ID[metadata$ID==studies[i]]), 
@@ -102,9 +114,18 @@ for(i in 1:length(studies)){
                       LatLon = c(Lat = metadata$Lat[metadata$ID==studies[i]],
                                  Lon = metadata$Lon[metadata$ID==studies[i]]),
                       G = signif(Glist[[i]],4), 
+                      Groups=groupList[[i]],
                       Dims=dimList[[i]],
                       Means = MeanList[[i]],
                       Vp = VpList[[i]])
 }
+sp_names = unlist(lapply(EVOBASE, function(x) x$Species))
+pop_names = unlist(lapply(EVOBASE, function(x) x$Population))
+titles = paste0(sp_names,": ", pop_names)
+names(EVOBASE) = gsub("_", " ", titles)
+
+EVOBASE = EVOBASE[order(titles)]
 
 save(EVOBASE, file = "data/EVOBASE.RData")
+
+EVOBASE[1]
