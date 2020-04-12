@@ -5,6 +5,7 @@
 rm(list=ls())
 library(plyr)
 library(evolvability)
+source("code/Gvar2G.R")
 list.files()
 
 indat = read.table("data/gmatdata.txt", header=T)
@@ -29,7 +30,7 @@ isCor = tapply(indat$isCor, indat$ID, mean)>0
 for(s in 1:length(studies)){
   red = indat[indat$ID==studies[s],]
   traits = unique(red$traitX)
-  length(traits)
+  #length(traits)
   
   means = NULL
   for(t in 1:length(traits)){
@@ -70,7 +71,6 @@ for(s in 1:length(studies)){
   colnames(G) = rownames(G) = traits
   Glist[[s]] = G
   
-  
   if(isCor[studies[[s]]]){  
     G = matrix(NA, nrow = length(traits), ncol = length(traits))
     for(i in 1:length(traits)){
@@ -81,14 +81,7 @@ for(s in 1:length(studies)){
       }
     }
     
-    Gvar2G=function(Gvar,Vp){
-      vars=diag(Gvar)*Vp
-      G=Gvar*sqrt(tcrossprod(vars))
-      diag(G)=vars
-      return(G)
-    }
-    
-    G=Gvar2G(G,VpList[[s]])
+    G = Gvar2G(G, VpList[[s]])
     colnames(G) = rownames(G) = traits
     Glist[[s]] = G
     
@@ -96,13 +89,15 @@ for(s in 1:length(studies)){
 }
 
 # Preparing metadata
+names(indat)
 metadata = ddply(indat, .(ID), summarize,
                  Family = family[1],
                  Species = species[1],
                  Population = population[1],
                  Lat = mean(lat, na.rm=T),
-                 Lon = mean(lon, na.rm=T))
-metadata
+                 Lon = mean(lon, na.rm=T),
+                 Environment = environment[1])
+head(metadata)
 
 #### Building the database list ####
 EVOBASE = list()
@@ -113,6 +108,7 @@ for(i in 1:length(studies)){
                       Population = paste(metadata$Population[metadata$ID==studies[i]]),
                       LatLon = c(Lat = metadata$Lat[metadata$ID==studies[i]],
                                  Lon = metadata$Lon[metadata$ID==studies[i]]),
+                      Environment = paste(metadata$Environment[metadata$ID==studies[i]]),
                       G = signif(Glist[[i]],4), 
                       Groups=groupList[[i]],
                       Dims=dimList[[i]],
@@ -122,10 +118,25 @@ for(i in 1:length(studies)){
 sp_names = unlist(lapply(EVOBASE, function(x) x$Species))
 pop_names = unlist(lapply(EVOBASE, function(x) x$Population))
 titles = paste0(sp_names,": ", pop_names)
+
+for(i in 1:length(titles)){
+  if(duplicated(titles)[i]){
+    titles[i] = paste(titles[i], "II", sep=" ")
+  }
+  if(duplicated(titles)[i]){
+    titles[i] = paste0(titles[i], "I")
+  }
+  if(duplicated(titles)[i]){
+    titles[i] = paste0(titles[i], "I")
+  }
+}
+
+titles
+
 names(EVOBASE) = gsub("_", " ", titles)
 
 EVOBASE = EVOBASE[order(titles)]
 
 save(EVOBASE, file = "data/EVOBASE.RData")
 
-EVOBASE[1]
+View(EVOBASE)

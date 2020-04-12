@@ -4,36 +4,54 @@
 
 rm(list=ls())
 library(evolvability)
+library(maps)
 
 # Function to remove NAs from G matrices
-droptraits=function(x){
-  drop=which(colSums(x>-Inf,na.rm=T)<max(colSums(x>-Inf,na.rm=T)))
+droptraits = function(x){
+  drop = which(colSums(x>-Inf, na.rm=T)<max(colSums(x>-Inf, na.rm=T)))
   if(length(drop)>0){
-    x=x[-drop,-drop]
+    x = x[-drop,-drop]
   }
   else{
-    x=x
+    x = x
   }}
 
 load("data/EVOBASE.RData")
 
+# Map of study populations
+coords = na.omit(matrix(unlist(lapply(EVOBASE, function(x) x$LatLon)), ncol=2, byrow=T))
+
+plot=F
+if(plot){
+x11(height=5, width=7)
+map("world", fill=T, col=rgb(0,.8,0,.2), mar=c(2,4,1,1))
+map.axes(bty="l", las=1)
+points(coords[,2], coords[,1], pch=16, col="darkblue")
+}
+
 # List studies in the database
-print(unlist(lapply(EVOBASE, function(x) x$Study_ID)))
+names(EVOBASE)
 
 # Extracting a single species
-s=52
+s="Raphanus raphanistrum: Binghamton III"
+s=19
 View(EVOBASE[[s]])
 
+names(EVOBASE[[s]])
 EVOBASE[[s]]$G
 EVOBASE[[s]]$Means
 
 # Mean-scale the G matrix
+colnames(EVOBASE[[s]]$G)==names(EVOBASE[[s]]$Means)
 mg = meanStdG(EVOBASE[[s]]$G, EVOBASE[[s]]$Means)*100
+mg = droptraits(mg)
 mg
 
 evolvabilityMeans(mg)
-eigen(mg)
+eigen(mg)$values
 signif(cov2cor(mg), 3)
+
+evolvabilityBeta(mg, Beta = c(1,0,0))$a
 
 # Extracting just all the G matrices
 GG = lapply(EVOBASE, function(x) x$G)
@@ -70,8 +88,7 @@ GG = lapply(GG, droptraits)
 
 # Extracting the means
 mm = lapply(EVOBASE, function(x){sel = which(x$Groups=="floral" & x$Dims=="linear") 
-x$Means[sel]})
-
+                                 x$Means[sel]})
 mm = mm[sel]
 
 # Remove trait means for traits not in G
@@ -82,15 +99,18 @@ for(i in 1:length(mm)){
 # Mean-scale all the G matrices
 MG=list()
 for(i in 1:length(GG)){
-  MG[[i]]=GG[[i]]/tcrossprod(mm[[i]],mm[[i]])*100
+  MG[[i]]=GG[[i]]/tcrossprod(mm[[i]], mm[[i]])*100
 }
 
 names(MG) = lapply(EVOBASE, function(x) x$Study_ID)[sel]
 MG
 
-evolvabilityBeta(MG[37][[1]], Beta=c(1,0,0))
+evolvabilityBeta(MG[37][[1]], Beta=c(0,0,1,0))$a
+
 cov2cor(MG[34][[1]])
 
 elist = lapply(MG, evolvabilityMeans)
 elist
 
+lapply(MG, function(x) signif(cov2cor(x), 2))
+table(unlist(lapply(MG, dim)))/2

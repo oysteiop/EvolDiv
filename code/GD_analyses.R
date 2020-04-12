@@ -19,18 +19,19 @@ both_sp
 
 POPBASE = POPBASE[-c(14:15)] #Dropping second M. guttatus study
 
-out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)
-out
+out = computeGD(species = both_sp[9], gmatrix = 5, dmatrix = 1)
+out$gmat
+out$dmat
 
 #### Lobelia ####
-out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)
+out = computeGD(species = both_sp[8], gmatrix = 1, dmatrix = 3)
 out$gmat
 out$dmat
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)$G
-glist[[2]] = computeGD(species = both_sp[1], gmatrix = 2, dmatrix = 3)$G
+glist[[1]] = computeGD(species = both_sp[8], gmatrix = 1, dmatrix = 3)$G
+glist[[2]] = computeGD(species = both_sp[8], gmatrix = 2, dmatrix = 3)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -68,6 +69,10 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G),2)
 signif(cov2cor(out$D),2)
 
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Lobelia siphilitica")
+  
+  
 # Compute eigenvectors etc.
 g_ev = eigen(out$G)$vectors
 var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$c
@@ -113,13 +118,64 @@ for(i in 1:ncol(out$G)){
 }
 points(log10(cvals), log10(diag(out$D)), pch=16, col="red")
 
+#### Aquilegia ####
+both_sp
+out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 2)
+out$gmat
+out$dmat
+
+# Mean G-matrix
+glist = list()
+glist[[1]] = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 2)$G
+glist[[2]] = computeGD(species = both_sp[1], gmatrix = 2, dmatrix = 2)$G
+gmat = apply(simplify2array(glist), 1:2, mean)
+
+# Estimate error-corrected D matrix
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=3 #Herlihy and Eckert 2007 Greenhouse
+s=26 #Bartkowska et al. 2018 Field 
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+eV = POPBASE[[s]]$eV[,-1]
+eV = eV[,match(colnames(out$D), names(eV))]
+c(colnames(out$D)==names(means), colnames(out$D)==names(eV))
+
+source("code/estimateD.R")
+modD = estimateD(means, eV, thin=100)
+
+save(modD, file="analyses/adj_Dmats/Aquilegia.RData")
+
+# Load the error-corrected D matrix
+load(file="analyses/adj_Dmats/Aquilegia.RData")
+
+round(modD, 3)
+eigen(modD)$values
+plot(modD, out$D)
+lines(-1:1, -1:1)
+cor(c(modD), c(out$D))
+
+out$D = modD*100
+out$G = gmat*100
+
+out$G = out$G*100
+
+evolvabilityMeans(out$G)
+evolvabilityMeans(out$D)
+signif(cov2cor(out$G),2)
+signif(cov2cor(out$D),2)
+
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Aquilegia canadensis")
+
 #### Brassica ####
-out = computeGD(species = both_sp[13], gmatrix = 5, dmatrix = 1)
+both_sp
+out = computeGD(species = both_sp[2], gmatrix = 1, dmatrix = 1)
 
 # Mean G matrix
 glist = list()
 for(i in 1:5){
-  glist[[i]] = computeGD(species = both_sp[13], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = computeGD(species = both_sp[2], gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -153,59 +209,22 @@ out$G = out$G*100
 
 evolvabilityMeans(out$G)
 evolvabilityMeans(out$D)
-cov2cor(out$G)
-cov2cor(out$D)
+signif(cov2cor(out$G), 2)
+signif(cov2cor(out$D), 2)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Brassica cretica", xmin=-1, ymin=-2)
 
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
-
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-# Plot
-x11(width=5, height=5)
-xmin=-1
-#xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin=-2
-#ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [%])", 
-     main="Brassica cretica", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
 #### Spergularia ####
-out = computeGD(species = both_sp[7], gmatrix = 4, dmatrix = 1)
+both_sp
+out = computeGD(species = both_sp[14], gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Mean G matrix
-gsp
-EVOBASE[[19]]
-
 glist = list()
 for(i in 1:4){
-  glist[[i]] = computeGD(species = both_sp[7], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = computeGD(species = both_sp[14], gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -228,7 +247,6 @@ save(modD, file="analyses/adj_Dmats/Spergularia.RData")
 load(file="analyses/adj_Dmats/Spergularia.RData")
 
 round(modD, 3)
-
 eigen(modD*100)$values
 plot(modD, out$D)
 lines(-1:1, -1:1)
@@ -245,50 +263,17 @@ evolvabilityMeans(out$D)
 cov2cor(out$G)
 cov2cor(out$D)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
-
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
-
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-# Plot
-x11(width=5, height=5)
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin-2, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [%])", 
-     main="Spergularia marina", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Spergularia marina", ymin=-4)
 
 #### Solanum ####
-out = computeGD(species = both_sp[5], gmatrix = 3, dmatrix = 1)
+both_sp
+out = computeGD(species = both_sp[13], gmatrix = 1, dmatrix = 1)
 
 # Mean G matrix
 glist = list()
 for(i in 1:3){
-  glist[[i]] = computeGD(species = both_sp[5], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = computeGD(species = both_sp[13], gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -311,7 +296,6 @@ save(modD, file="analyses/adj_Dmats/Solanum.RData")
 load(file="analyses/adj_Dmats/Solanum.RData")
 
 round(modD, 3)
-
 eigen(modD)
 plot(modD, out$D)
 lines(-1:1, -1:1)
@@ -327,52 +311,18 @@ evolvabilityMeans(out$D)
 cov2cor(out$G)
 cov2cor(out$D)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
-
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
-
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-# Plot
-x11(width=5, height=5)
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [x100])", 
-     main="Solanum carolinense", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Solanum carolinense", xmin=-1, ymin=-2)
 
 #### Clarkia ####
 both_sp
-out = computeGD(species = both_sp[9], gmatrix = 2, dmatrix = 1)
+out = computeGD(species = both_sp[3], gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Mean G matrix
 glist = list()
 for(i in 1:2){
-  glist[[i]] = computeGD(species = both_sp[9], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = computeGD(species = both_sp[3], gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -395,7 +345,6 @@ save(modD, file="analyses/adj_Dmats/Clarkia.RData")
 load(file="analyses/adj_Dmats/Clarkia.RData")
 
 round(modD, 4)*100
-
 eigen(modD)$values
 plot(modD, out$D)
 lines(-1:1, -1:1)
@@ -411,48 +360,13 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G), 2)
 signif(cov2cor(out$D), 2)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
-
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
-
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-# Plot
-x11(width=5, height=5)
-xmin=-1
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin=-2
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [x100])", 
-     main="Clarkia dudleyana", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Clarkia dudleyana")
 
 #### Ipomopsis ####
 both_sp
-out = computeGD(species = both_sp[6], gmatrix = 1, dmatrix = 4)
+out = computeGD(species = both_sp[7], gmatrix = 1, dmatrix = 1)
+out$dmat
 
 # Estimate error-corrected D matrix
 unlist(lapply(POPBASE, function(x)x$Study_ID))
@@ -477,7 +391,6 @@ load(file="analyses/adj_Dmats/Ipomopsis_Caruso2001.RData")
 load(file="analyses/adj_Dmats/Ipomopsis_Caruso2019.RData")
 
 round(modD, 3)
-
 eigen(modD)
 plot(modD, out$D)
 lines(-1:1, -1:1)
@@ -492,46 +405,12 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G), 2)
 signif(cov2cor(out$D), 2)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
-
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
-
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-# Plot
-x11(width=5, height=5)
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [x100])", 
-     main="Ipomopsis aggregata: Campbell 2019 D", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Ipomopsis aggregata")
 
 #### Turnera ####
 both_sp
-out = computeGD(species = both_sp[14], gmatrix = 1, dmatrix = 1)
+out = computeGD(species = both_sp[15], gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Estimate error-corrected D matrix
@@ -553,7 +432,6 @@ save(modD, file="analyses/adj_Dmats/Turnera.RData")
 load(file="analyses/adj_Dmats/Turnera.RData")
 
 round(modD, 3)
-
 eigen(modD)$values
 plot(modD, out$D)
 lines(-1:1, -1:1)
@@ -567,42 +445,489 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G), 2)
 signif(cov2cor(out$D), 2)
 
-# Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
-var_g_g = evolvabilityBeta(out$G, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(out$D, Beta = g_ev)$e
+source("code/plot_GD.R")
+plot_GD(out$G, out$D, "Turnera ulmifolia")
 
-d_ev = eigen(out$D)$vectors
-var_g_d = evolvabilityBeta(out$G, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(out$D, Beta = d_ev)$e
+#### Divergence vectors among populations ####
 
-# Compute summary stats
-mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
+#### Lobelia ####
+both_sp
+out = computeGD(species = both_sp[8], gmatrix = 1, dmatrix = 3)
+out$gmat
+out$dmat
 
-md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=25 #Lobelia, Caruso 2012 Greenhouse
+s=21 #Caruso 2003 Field 
 
-# Plot
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+means
+
+names(EVOBASE)
+z0 = EVOBASE[[25]]$Means[c(1,3:6)]
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
 x11(width=5, height=5)
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))-1
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
-     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [x100])", 
-     main="Turnera ulmifolia", las=1)
-points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(diag(out$G)), log10(diag(out$D)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,7), las=1,
+     xlab="", ylab="",
+     main="Lobelia siphilitica")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=27.8
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Aquilegia ####
+both_sp
+out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 2)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=3 #Herlihy and Eckert 2007 Greenhouse
+s=26 #Bartkowska et al. 2018 Field 
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = unlist(means[2,]) #First G mat, first D mat
+means = means[-2,]
+
+z0 = unlist(means[3,]) #First G mat, first D mat
+means = means[-3,]
+
+names(EVOBASE)
+z0 = EVOBASE[[1]]$Means #Second D mat
+
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,30), las=1,
+     xlab="", ylab="",
+     main="Aquilegia canadensis")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=13.5
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Ipomopsis ####
+both_sp
+out = computeGD(species = both_sp[7], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=22 #Caruso 2000 field
+s=23 #Caruso 2001 Field 
+s=35 #Campbell 2018
+s=36 #Campbell unpubl.
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+means
+
+names(EVOBASE)
+z0=EVOBASE[[24]]$Means[c(2:5)]
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,3), las=1,
+     xlab="", ylab="",
+     main="Ipomopsis aggregata")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=30.4
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+
+#### Brassica ####
+both_sp
+out = computeGD(species = both_sp[2], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=30
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = unlist(means[1,]) #First G matrix
+means = means[-1,]
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1=unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  #d = c(delta/z0)
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, outdat)
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, las=1, ylim=c(-5, 20),
+     xlab="", ylab="",
+     main="Brassica cretica")
+mtext("Divergence from focal population(%)", 1, line=2.5)
+mtext("Evolvability(%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=52
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Turnera ####
+both_sp
+out = computeGD(species = both_sp[15], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=10
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+means
+
+names(EVOBASE)
+z0 = EVOBASE[[58]]$Means
+
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,.7), las=1,
+     xlab="", ylab="",
+     main="Turnera ulmifolia")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=32
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Clarkia ####
+both_sp
+out = computeGD(species = both_sp[3], gmatrix = 2, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=9
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = unlist(c(means[7,])) #First G-matrix
+means = means[-7,]
+
+z0 = unlist(c(means[4,])) #Second G-matrix
+means = means[-4,]
+
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,3), las=1,
+     xlab="", ylab="",
+     main="Clarkia dudleyana")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=10.8
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Spergularia ####
+both_sp
+out = computeGD(species = both_sp[14], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=8
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = unlist(c(means[1,])) #First G-matrix
+means = means[-1,]
+
+z0 = unlist(c(means[2,])) #Second G-matrix
+means = means[-2,]
+
+z0 = unlist(c(means[3,])) #Third G-matrix
+means = means[-3,]
+
+z0 = unlist(c(means[4,])) #Fourth G-matrix
+means = means[-4,]
+
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,24), las=1,
+     xlab="", ylab="",
+     main="Spergularia marina")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=9.1
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+#### Solanum ####
+both_sp
+out = computeGD(species = both_sp[13], gmatrix = 1, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+unlist(lapply(POPBASE, function(x)x$Study_ID))
+s=5 
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = unlist(c(means[1,])) #First G-matrix
+means = means[-1,]
+
+z0 = unlist(c(means[2,])) #Second G-matrix
+means = means[-2,]
+
+z0 = unlist(c(means[3,])) #Third G-matrix
+means = means[-3,]
+
+colnames(means)==names(z0)
+
+outdat=matrix(NA, nrow=nrow(means), ncol=3)
+for(i in 1:nrow(means)){
+  z1 = unlist(means[i,])
+  delta = log(z1)-log(z0)
+  scale_delta = delta/sqrt(sum(delta^2)) 
+  d = delta
+  div = mean(abs(d))*100
+  
+  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
+  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
+  
+  outdat[i,]=c(div, e_delta, c_delta)
+}
+
+data.frame(means, round(outdat, 2))
+
+x11(width=5, height=5)
+par(mar=c(4,4,5,4))
+plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,20), las=1,
+     xlab="", ylab="",
+     main="Solanum carolinense")
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Evolvability (%)", 2, line=2.5)
+points(outdat[,1], outdat[,3], pch=16, col="grey")
+
+evolvabilityMeans(out$G*100)
+abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
+abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
+abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
+abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
+x=25.4
+text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
+text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+
+legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 
 #### Evolvability along the vector of divergence ####
 
@@ -934,227 +1259,3 @@ colnames(modD) = rownames(modD) = colnames(means)
 modD = meanStdG(modD, colMeans(means))
 round(modD, 3)
 
-#### Divergence vectors multiple populations ####
-
-#### Lobelia ####
-out = computeGD(species = both_sp[1], gmatrix = 1, dmatrix = 3)
-out$gmat
-out$dmat
-
-# Means
-unlist(lapply(POPBASE, function(x)x$Study_ID))
-s=25 #Lobelia, Caruso 2012 Greenhouse
-s=21 #Caruso 2003 Field 
-
-means = POPBASE[[s]]$popmeans[,-1]
-means = means[,match(colnames(out$D), names(means))]
-
-means
-z0=EVOBASE[[1]]$Means[c(1,3:6)]
-
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-z1 = unlist(means[i,])
-delta = log(z1)-log(z0)
-scale_delta = delta/sqrt(sum(delta^2)) 
-d = delta
-div = mean(abs(d))*100
-
-e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
-c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
-
-outdat[i,]=c(div, e_delta, c_delta)
-}
-
-data.frame(means, round(outdat, 2))
-
-x11(width=5, height=5)
-par(mar=c(4,4,5,4))
-plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,7), las=1,
-     xlab="", ylab="",
-     main="Lobelia siphilitica")
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-mtext("Evolvability (%)", 2, line=2.5)
-points(outdat[,1], outdat[,3], pch=16, col="grey")
-
-evolvabilityMeans(out$G*100)
-abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
-abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
-abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
-abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-x=28
-text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
-
-legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
-
-#### Brassica ####
-both_sp
-out = computeGD(species = both_sp[13], gmatrix = 1, dmatrix = 1)
-out$gmat
-out$dmat
-
-# Means
-unlist(lapply(POPBASE, function(x)x$Study_ID))
-s=30
-means = POPBASE[[s]]$popmeans[,-1]
-means = means[,match(colnames(out$D), names(means))]
-
-means=means[-1,] #Focal pop
-
-z0=EVOBASE[[34]]$Means
-
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-
-for(i in 1:nrow(means)){
-  z1=unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  #d = c(delta/z0)
-  d = delta
-  div = mean(abs(d))*100
-  
-  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
-  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
-outdat
-
-x11(width=5, height=5)
-par(mar=c(4,4,5,4))
-plot(outdat[,1], outdat[,2], pch=16, las=1, ylim=c(-5, 20),
-     xlab="", ylab="",
-     main="Brassica cretica")
-mtext("Divergence from focal population(%)", 1, line=2.5)
-mtext("Evolvability(%)", 2, line=2.5)
-points(outdat[,1], outdat[,3], pch=16, col="grey")
-
-evolvabilityMeans(out$G*100)
-abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
-abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
-abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
-abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-x=52
-text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
-
-legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
-
-#### Turnera ####
-both_sp
-out = computeGD(species = both_sp[14], gmatrix = 1, dmatrix = 1)
-out$gmat
-out$dmat
-
-# Means
-unlist(lapply(POPBASE, function(x)x$Study_ID))
-s=10
-
-means = POPBASE[[s]]$popmeans[,-1]
-means = means[,match(colnames(out$D), names(means))]
-
-means
-
-gsp
-z0 = EVOBASE[[44]]$Means
-
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-  z1 = unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  d = delta
-  div = mean(abs(d))*100
-  
-  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
-  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
-
-data.frame(means, round(outdat, 2))
-
-x11(width=5, height=5)
-par(mar=c(4,4,5,4))
-plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,.7), las=1,
-     xlab="", ylab="",
-     main="Turnera ulmifolia")
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-mtext("Evolvability (%)", 2, line=2.5)
-points(outdat[,1], outdat[,3], pch=16, col="grey")
-
-evolvabilityMeans(out$G*100)
-abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
-abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
-abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
-abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-x=33
-text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
-
-legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
-
-#### Clarkia ####
-both_sp
-out = computeGD(species = both_sp[9], gmatrix = 2, dmatrix = 1)
-out$gmat
-out$dmat
-
-# Means
-unlist(lapply(POPBASE, function(x)x$Study_ID))
-s=9
-
-means = POPBASE[[s]]$popmeans[,-1]
-means = means[,match(colnames(out$D), names(means))]
-
-z0 = unlist(c(means[7,])) #First G-matrix
-means = means[-7,]
-
-z0 = unlist(c(means[4,])) #Second G-matrix
-means = means[-4,]
-
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-i=1
-for(i in 1:nrow(means)){
-  z1 = unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  d = delta
-  div = mean(abs(d))*100
-  
-  e_delta = evolvabilityBeta(out$G*100, scale_delta)$e
-  c_delta = evolvabilityBeta(out$G*100, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
-
-data.frame(means, round(outdat, 2))
-
-x11(width=5, height=5)
-par(mar=c(4,4,5,4))
-plot(outdat[,1], outdat[,2], pch=16, ylim=c(0,3), las=1,
-     xlab="", ylab="",
-     main="Clarkia dudleyana")
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-mtext("Evolvability (%)", 2, line=2.5)
-points(outdat[,1], outdat[,3], pch=16, col="grey")
-
-evolvabilityMeans(out$G*100)
-abline(h=evolvabilityMeans(out$G*100)[1], lty=2)
-abline(h=evolvabilityMeans(out$G*100)[4], lty=2, col="grey")
-abline(h=evolvabilityMeans(out$G*100)[2], lty=1)
-abline(h=evolvabilityMeans(out$G*100)[3], lty=1)
-x=10.8
-text(x=x, y=evolvabilityMeans(out$G*100)[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[2], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-text(x=x, y=evolvabilityMeans(out$G*100)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
-
-legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
