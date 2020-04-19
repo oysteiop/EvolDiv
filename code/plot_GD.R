@@ -1,14 +1,17 @@
-plot_GD=function(G=out$G, D=out$D, species="Species", xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
+plot_GD=function(G=out$G, D=out$D, plot=FALSE, species="Species", xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
   
 # Compute eigenvectors etc.
-g_ev = eigen(out$G)$vectors
+g_ev = eigen(G)$vectors
 var_g_g = evolvabilityBeta(G, Beta = g_ev)$e
 var_d_g = evolvabilityBeta(D, Beta = g_ev)$e
   
-d_ev = eigen(out$D)$vectors
+d_ev = eigen(D)$vectors
 var_g_d = evolvabilityBeta(G, Beta = d_ev)$e
 var_d_d = evolvabilityBeta(D, Beta = d_ev)$e
-  
+
+# Theta  
+theta = acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
+
 # Compute summary stats
 mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
 beta_g = summary(mg)$coef[2,1]
@@ -23,6 +26,7 @@ r2_d = summary(md)$r.squared
 #r2_d
   
 # Plot
+if(plot){
 x11(width=5, height=5)
 
 if(is.null(xmin)){xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))}
@@ -37,8 +41,9 @@ plot(log10(var_g_g), log10(var_d_g),
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(diag(G)), log10(diag(D)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+}
 
-outlist=data.frame(c(betaG=beta_g, r2G=r2_g, betaD=beta_d, r2D=r2_d))
+outlist=data.frame(c(betaG=beta_g, r2G=r2_g, betaD=beta_d, r2D=r2_d, theta=theta))
 names(outlist)="value"
 
 return(outlist)

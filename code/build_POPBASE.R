@@ -31,10 +31,10 @@ studies = unique(ddat$ID)
 studies
 length(studies)
 
-meanList=list()
-Dlist=list()
-eVlist=list()
-distmatList=list()
+meanList = list()
+Dlist = list()
+eVlist = list()
+distmatList = list()
 
 for(s in 1:length(studies)){
   
@@ -56,6 +56,10 @@ for(s in 1:length(studies)){
   n = dcast(red, population~trait, value.var="n")
   df2[,-1] = df2[,-1]/n[,-1]
   eVlist[[s]] = df2
+  if(sum(is.na(eVlist[[s]]))>0){
+    df2 = dcast(red, population~trait, value.var="se")
+    eVlist[[s]] = df2[,-1]^2
+  }
   
   #Distance matrices
   require(geosphere)
@@ -71,8 +75,8 @@ for(s in 1:length(studies)){
 }
 
 names(Dlist) = studies
-meanList[39]
-eVlist[[3]]
+meanList[41]
+eVlist[[41]]
 
 # Preparing metadata
 metadata = ddply(ddat, .(ID), summarize,
@@ -95,36 +99,48 @@ for(i in 1:length(studies)){
 }
 
 length(POPBASE)
-POPBASE[[39]]
+
+sp_names = unlist(lapply(POPBASE, function(x) x$Species))
+study_names = unlist(lapply(POPBASE, function(x) x$Study_ID))
+
+for(i in 1:length(study_names)){
+  study_names[i]=gsub(pattern = sp_names[i], rep="", x=study_names[i])
+  study_names[i]=gsub(pattern = "__", rep="_", x=study_names[i])
+}
+study_names
+titles = paste0(sp_names,": ", study_names)
+titles
+
+names(POPBASE) = gsub("_", " ", titles)
+
+POPBASE = POPBASE[order(titles)]
+View(POPBASE)
 
 save(POPBASE, file = "data/POPBASE.RData")
 
 load(file = "data/POPBASE.RData")
 
-map1 <- readOGR("C:/data/Political Map.shp")
-plot(map1)
-points(ddat$lon,ddat$lat,pch=16,col="blue")
-
 maxdists = cbind(print(unlist(lapply(POPBASE, function(x)x$Study_ID))),
       print(unlist(lapply(POPBASE, function(x) max(x$distmat)/1000))))
-View(maxdists)
 
-maxdists[which(maxdists[,1]=="Barrett_&_Shore_1987_Turnera_ulmifolia_greenhouse"),2]=188 #Ca. distance from map in paper
+maxdists[which(maxdists[,1]=="Barrett_and_Shore_1987_Turnera_ulmifolia_greenhouse"),2]=188 #Ca. distance from map in paper
 maxdists[which(maxdists[,1]=="Podolsky_et_al._1997_Clarkia_dudleyana_greenhouse"),2]=11.3 #Ca. distance from map in paper
-maxdists[which(maxdists[,1]=="Carter_&_Murdy_1986_Talinum_mengesii_greenhouse"),2]=214 #Ca. distance from map in paper
+maxdists[which(maxdists[,1]=="Carter_and_Murdy_1986_Talinum_mengesii_greenhouse"),2]=214 #Ca. distance from map in paper
 
-maxdists[which(maxdists[,1]=="Carr_&_Fenster_1994_Mimulus_guttatus_greenhouse"),2]=10 #Description in paper
-maxdists[which(maxdists[,1]=="Fenster_&_Carr_1997_Mimulus_guttatus_greenhouse"),2]=10 #Description in Carr & Fenster 1994
+maxdists[which(maxdists[,1]=="Carr_and_Fenster_1994_Mimulus_guttatus_greenhouse"),2]=10 #Description in paper
+maxdists[which(maxdists[,1]=="Fenster_and_Carr_1997_Mimulus_guttatus_greenhouse"),2]=10 #Description in Carr & Fenster 1994
 maxdists[which(maxdists[,1]=="Caruso_2000_Ipomopsis_aggregata_field"),2]=3.5 #Ca. distance author description/map in paper
 maxdists[which(maxdists[,1]=="Caruso_2001_Ipomopsis_aggregata_field"),2]=3 #Ca. distance ("a few km") from author description
   
 maxdists[which(maxdists[,1]=="Andersson_Crepis_Crepis_tectorum_greenhouse"),2]=2500 #Ca. distance author description, without the Canadian pops
 maxdists[which(maxdists[,1]=="Billington_et_al_1988_Holcus_lanatus_greenhouse"),2]=.5 #Ca. distance from description in paper ("adjacent fields")
-maxdists[which(maxdists[,1]=="Mcgoey_&_Stinchcombe_2018_Ambrosia_artemisiifolia_common_garden"),2]=540 #Ca. distance for North American pops from map in paper. Around 180 km for French pops
-maxdists[which(maxdists[,1]=="Colautti_&_Barrett_2011_Lythrum_salicaria_greenhouse"),2]=1200 #Ca. distance from coordinate range in paper
+maxdists[which(maxdists[,1]=="Mcgoey_and_Stinchcombe_2018_Ambrosia_artemisiifolia_common_garden"),2]=540 #Ca. distance for North American pops from map in paper. Around 180 km for French pops
+maxdists[which(maxdists[,1]=="Colautti_and_Barrett_2011_Lythrum_salicaria_greenhouse"),2]=1200 #Ca. distance from coordinate range in paper
 
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_tenuituba_field"),2]=0.0943 #Author description in Excel file
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_x_tenuituba_field"),2]=0.96 #Author description in Excel file
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_field"),2]=0.199 #Author description in Excel file
+
+View(maxdists)
 
 write.csv(maxdists, file="data/maxdists.csv")

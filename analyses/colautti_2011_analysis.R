@@ -138,6 +138,8 @@ Sys.time() - a
 
 save(mod, file="analyses/colautti/mod75.RData")
 
+#### Divergence analysis ####
+
 # The D matrix
 Gdat = read.table("data/colautti/AllDataFixed2.txt", header=T)
 names(Gdat)
@@ -167,6 +169,30 @@ diag(gmat)/(diag(dmat) + diag(gmat))
 pmatdat = na.omit(subset(Gdat, select=c(traits)))
 #pmatdat = apply(pmatdat, 2, function(x) log(x))
 pmat = cov(pmatdat)
+
+
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, species="Lythrum salicaria", plot=F)
+
+gdDF = data.frame(sp="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops", traits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Lythrum salicaria: All", npops = 20, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals[1,1], r2G = vals[2,1],
+                  betaD = vals[3,1], r2D = vals[4,1],
+                  theta = vals[5,1], row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/colautti/gdDF.RData")
+
+
+
+
+
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
@@ -219,13 +245,9 @@ points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
-
 # Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-# Ellipse plot
-source("GDellipse.R")
-GDellipse(dmat, gmat, xlim=c(-2,2), ylim=c(-2, 2), main="Lythrum salicaria")
 
 
 #### Divergence vectors ####
@@ -250,19 +272,19 @@ dim(means)
 
 z0 = colMeans(means)
 
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-  z1 = unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  div = mean(abs(delta))*100
-  
-  e_delta = evolvabilityBeta(gmat, scale_delta)$e
-  c_delta = evolvabilityBeta(gmat, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
-head(outdat)
+outdat = computeDelta(gmat/100, means, z0)
+
+deltaDF = data.frame(sp="Lythrum_salicaria", g="Lythrum salicaria: 20 pops", traits=ncol(gmat), 
+                     d="Lythrum salicaria: All", pop=rownames(means), 
+                     emean=evolvabilityMeans(gmat)[1],
+                     emin=evolvabilityMeans(gmat)[2],
+                     emax=evolvabilityMeans(gmat)[3],
+                     cmean=evolvabilityMeans(gmat)[4],
+                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                     theta=outdat[,4], row.names=NULL)
+head(deltaDF)
+save(deltaDF, file="analyses/colautti/deltaDF.RData")
+
 
 #x11(width=5, height=5)
 par(mar=c(4,4,5,4))

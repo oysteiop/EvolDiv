@@ -207,6 +207,27 @@ points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
 # Angles
 180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, species="Crepis tectorum", plot=T)
+
+gdDF = data.frame(sp="Crepis_tectorum", g = "Crepis tectorum: Visby", traits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Crepis tectorum: All", npops = 12, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals[1,1], r2G = vals[2,1],
+                  betaD = vals[3,1], r2D = vals[4,1],
+                  theta = vals[5,1], row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/andersson_crepis/gdDF.RData")
+
+
+
+
 #### Divergence vectors ####
 
 # The G matrix
@@ -229,24 +250,20 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="OUTX",]
 z0 = colMeans(dat[,4:8])
 
-outdat=matrix(NA, nrow=nrow(means), ncol=4)
-i=1
-for(i in 1:nrow(means)){
-  z1 = unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  #d = c(delta/z0)
-  div1 = mean((abs(z1-z0)/z0))*100
-  div2 = mean(abs(delta))*100
-  
-  e_delta = evolvabilityBeta(gmat, scale_delta)$e
-  c_delta = evolvabilityBeta(gmat, scale_delta)$c
-  
-  outdat[i,]=c(div2, e_delta, c_delta, div1)
-}
-head(outdat)
-plot(outdat[,1], outdat[,4])
-lines(0:100, 0:100)
+source("code/computeDelta.R")
+outdat = computeDelta(G=gmat/100, means=means, z0=z0)
+
+deltaDF = data.frame(sp="Crepis_tectorum", g="Crepis tectorum: Visby", traits=ncol(gmat), 
+                            d="Crepis tectorum: All", pop=rownames(means), 
+                            emean=evolvabilityMeans(gmat)[1],
+                            emin=evolvabilityMeans(gmat)[2],
+                            emax=evolvabilityMeans(gmat)[3],
+                            cmean=evolvabilityMeans(gmat)[4],
+                            div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                            theta=outdat[,4], row.names=NULL)
+head(deltaDF)
+
+save(deltaDF, file="analyses/andersson_crepis/deltaDF.RData")
 
 #x11(width=5, height=5)
 par(mar=c(4,4,5,4))

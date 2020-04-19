@@ -145,6 +145,7 @@ for(i in 1:length(pops)){
 
 gmat = apply(simplify2array(glist), 1:2, mean)
 
+# Individual Gmatrices
 load(file="analyses/walter2018/Gmat_Dune.RData")
 load(file="analyses/walter2018/Gmat_Head.RData")
 load(file="analyses/walter2018/Gmat_Table.RData")
@@ -158,8 +159,30 @@ gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat)=rownames(gmat)=c("Height", "MSL_W", "SB", "MSD", "Area", "P2A2", "Circularity", "Nindents.Peri", "IndentWidthMean", "IndentDepthMean")
 gmat
 
-evolvabilityMeans(gmat)
-evolvabilityMeans(dmat)
+#evolvabilityMeans(gmat)
+#evolvabilityMeans(dmat)
+
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, species="Senecio pinnatifolius", plot=F)
+
+gdDF = data.frame(sp="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood", traits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Senecio pinnatifolius: All", npops = 16, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals[1,1], r2G = vals[2,1],
+                  betaD = vals[3,1], r2D = vals[4,1],
+                  theta = vals[5,1], row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/walter2018/gdDF_Dune.RData")
+save(gdDF, file="analyses/walter2018/gdDF_Head.RData")
+save(gdDF, file="analyses/walter2018/gdDF_Table.RData")
+save(gdDF, file="analyses/walter2018/gdDF_Wood.RData")
+
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
@@ -203,7 +226,7 @@ plot(log10(var_g_g), log10(var_d_g),
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
      xlab="log10 (Evolvability [%])", 
      ylab="log10 (Divergence [x100])", 
-     main="Senecio pimpinellifolium", las=1)
+     main="Senecio pinnatifolius", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
@@ -230,7 +253,7 @@ load(file="analyses/walter2018/Gmat_Wood.RData")
 n=10
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat)=rownames(gmat)=c("Height", "MSL_W", "SB", "MSD", "Area", "P2A2", "Circularity", "Nindents.Peri", "IndentWidthMean", "IndentDepthMean")
-gmat
+signif(gmat, 2)
 
 #Pop means
 Ddat = read.csv("data/walter/Data_Exp1_Dmatrix.csv")
@@ -240,23 +263,27 @@ ecotype = factor(substr(rownames(popmeans), 1, 1))
 
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
 head(Gdat)
-z0 = apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type,mean,na.rm=T)})
-z0=z0[1,]
+z0 = apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type, mean, na.rm=T)})
+z0 = z0[4,] #Choose reference
 
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-  z1 = unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  #d = c(delta/z0)
-  div = mean(abs(delta))*100
-  
-  e_delta = evolvabilityBeta(gmat, scale_delta)$e
-  c_delta = evolvabilityBeta(gmat, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
-head(outdat)
+source("code/computeDelta.R")
+outdat = computeDelta(gmat/100, means, z0)
+
+deltaDF = data.frame(sp="Senecio_pinnatifolius", g="Senecio pinnatifolius: Wood", traits=ncol(gmat), 
+                     d="Senecio pinnatifolius: All", pop=rownames(means), 
+                     emean=evolvabilityMeans(gmat)[1],
+                     emin=evolvabilityMeans(gmat)[2],
+                     emax=evolvabilityMeans(gmat)[3],
+                     cmean=evolvabilityMeans(gmat)[4],
+                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                     theta=outdat[,4], row.names=NULL)
+head(deltaDF)
+
+save(deltaDF, file="analyses/walter2018/deltaDF_Dune.RData")
+save(deltaDF, file="analyses/walter2018/deltaDF_Head.RData")
+save(deltaDF, file="analyses/walter2018/deltaDF_Table.RData")
+save(deltaDF, file="analyses/walter2018/deltaDF_Wood.RData")
+
 
 #x11(width=5, height=5)
 par(mar=c(4,4,5,4))

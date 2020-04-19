@@ -34,12 +34,14 @@ names(EVOBASE)
 
 # Extracting a single species
 s="Raphanus raphanistrum: Binghamton III"
-s=19
+s=13
 View(EVOBASE[[s]])
 
 names(EVOBASE[[s]])
-EVOBASE[[s]]$G
+signif(EVOBASE[[s]]$G, 2)
 EVOBASE[[s]]$Means
+
+signif(cov2cor(EVOBASE[[s]]$G), 2)
 
 # Mean-scale the G matrix
 colnames(EVOBASE[[s]]$G)==names(EVOBASE[[s]]$Means)
@@ -55,7 +57,6 @@ evolvabilityBeta(mg, Beta = c(1,0,0))$a
 
 # Extracting just all the G matrices
 GG = lapply(EVOBASE, function(x) x$G)
-
 
 GG = lapply(GG, droptraits)
 
@@ -86,10 +87,16 @@ sel = which(unlist(lapply(GG, function(x) dim(as.matrix(x))[1]))>1)
 GG = GG[sel]
 GG = lapply(GG, droptraits)
 
+drop = which(lapply(GG, function(x) sum(is.na(x)))>0)
+GG = GG[-drop]
+
 # Extracting the means
 mm = lapply(EVOBASE, function(x){sel = which(x$Groups=="floral" & x$Dims=="linear") 
                                  x$Means[sel]})
 mm = mm[sel]
+mm = mm[-drop]
+
+names(GG) == names(mm)
 
 # Remove trait means for traits not in G
 for(i in 1:length(mm)){
@@ -102,7 +109,7 @@ for(i in 1:length(GG)){
   MG[[i]]=GG[[i]]/tcrossprod(mm[[i]], mm[[i]])*100
 }
 
-names(MG) = lapply(EVOBASE, function(x) x$Study_ID)[sel]
+names(MG) = lapply(EVOBASE, function(x) x$Study_ID)[sel][-drop]
 MG
 
 evolvabilityBeta(MG[37][[1]], Beta=c(0,0,1,0))$a
@@ -113,4 +120,5 @@ elist = lapply(MG, evolvabilityMeans)
 elist
 
 lapply(MG, function(x) signif(cov2cor(x), 2))
+
 table(unlist(lapply(MG, dim)))/2

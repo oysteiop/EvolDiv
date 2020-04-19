@@ -112,6 +112,25 @@ smat = matrix(apply(mod$VCV, 2, median)[9:12], nrow=n)
 colnames(smat) = rownames(smat) = c("calyx_F", "calyx_M")
 smat
 
+source("code/plot_GD.R")
+vals = plot_GD(gmat, smat, species="Silene latifolia", plot=T)
+
+gdDF = data.frame(sp="Silene_latifolia", g = "Silene latifolia: 3 pops", traits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Silene latifolia: All", npops = 3, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals[1,1], r2G = vals[2,1],
+                  betaD = vals[3,1], r2D = vals[4,1],
+                  theta = vals[5,1], row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/delph_Silene/gdDF.RData")
+
+
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 evolvabilityMeans(smat)
@@ -209,21 +228,18 @@ means = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T
 means
 z0 = colMeans(means)
 
-# Compute divergence etc.
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-  z1=unlist(means[i,])
-  delta = log(z1)-log(z0)
-  scale_delta = delta/sqrt(sum(delta^2)) 
-  d = delta
-  div = mean(abs(d))*100
-  e_delta = evolvabilityBeta(gmat, scale_delta)$e
-  c_delta = evolvabilityBeta(gmat, scale_delta)$c
-  
-  outdat[i,]=c(div, e_delta, c_delta)
-}
+outdat = computeDelta(gmat/100, means, z0)
 
-data.frame(means, outdat)
+deltaDF = data.frame(sp="Silene_latifolia", g="Silene latifolia: Xu 3 pops", traits=ncol(gmat), 
+                     d="Silene latifolia: All", pop=rownames(means), 
+                     emean=evolvabilityMeans(gmat)[1],
+                     emin=evolvabilityMeans(gmat)[2],
+                     emax=evolvabilityMeans(gmat)[3],
+                     cmean=evolvabilityMeans(gmat)[4],
+                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                     theta=outdat[,4], row.names=NULL)
+head(deltaDF)
+save(deltaDF, file="analyses/delph_Silene/deltaDF.RData")
 
 x11(width=5, height=5)
 par(mar=c(4,4,5,4))

@@ -109,7 +109,7 @@ save(mod, file=filename)
 }
 Sys.time()-a
 
-######## - Analyse G vs. D - ########
+######## Analyse G vs. D ########
 
 # The D matrix
 dat = Gdat
@@ -141,11 +141,34 @@ load(file="analyses/puentes2016/Gmat_STUS.RData")
 load(file="analyses/puentes2016/Gmat_VIS.RData")
 
 #plot(mod$VCV[,1])
-summary(mod$VCV)
+#summary(mod$VCV)
 
 gmat = matrix(apply(mod$VCV, 2, median)[1:16], nrow=4)
 colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flowers", "rosette.size.cm")
 gmat
+
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, species="Arabidopsis lyrata", plot=F)
+
+gdDF = data.frame(sp="Arabidopsis_lyrata", g = "Arabidopsis lyrata: STUS", traits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Arabidopsis lyrata: All", npops = 4, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals[1,1], r2G = vals[2,1],
+                  betaD = vals[3,1], r2D = vals[4,1],
+                  theta = vals[5,1], row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/puentes2016/gdDF_SPIT.RData")
+save(gdDF, file="analyses/puentes2016/gdDF_STUC.RData")
+save(gdDF, file="analyses/puentes2016/gdDF_STUS.RData")
+save(gdDF, file="analyses/puentes2016/gdDF_VIS.RData")
+
+
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
@@ -216,28 +239,31 @@ Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
 Gdat$rosette.size.cm = sqrt(Gdat$rosette.size.cm2)
 popmeans = apply(Gdat[,5:13], 2, function(x) tapply(x, Gdat$pop, mean, na.rm = T))
 popmeans = popmeans[,c(2,3,5,9)]
-z0 = popmeans[4,]
+z0 = popmeans[4,] #Select focal pop
 
 # Pop means
-means=popmeans
+means = popmeans[-4, ] #Select focal pop
 head(means)
 dim(means)
 
-# Compute divergence etc.
-outdat=matrix(NA, nrow=nrow(means), ncol=3)
-for(i in 1:nrow(means)){
-        z1=unlist(means[i,])
-        delta = log(z1)-log(z0)
-        scale_delta = delta/sqrt(sum(delta^2)) 
-        d = delta
-        div = mean(abs(d))*100
-        e_delta = evolvabilityBeta(gmat, scale_delta)$e
-        c_delta = evolvabilityBeta(gmat, scale_delta)$c
-        
-        outdat[i,]=c(div, e_delta, c_delta)
-}
+outdat = computeDelta(gmat/100, means, z0)
 
-data.frame(means, outdat)
+deltaDF = data.frame(sp="Arabidopsis_lyrata", g="Arabidopsis lyrata: VIS", traits=ncol(gmat), 
+                     d="Arabidopsis lyrata: All", pop=rownames(means), 
+                     emean=evolvabilityMeans(gmat)[1],
+                     emin=evolvabilityMeans(gmat)[2],
+                     emax=evolvabilityMeans(gmat)[3],
+                     cmean=evolvabilityMeans(gmat)[4],
+                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                     theta=outdat[,4], row.names=NULL)
+head(deltaDF)
+
+save(deltaDF, file="analyses/puentes2016/deltaDF_SPIT.RData")
+save(deltaDF, file="analyses/puentes2016/deltaDF_STUC.RData")
+save(deltaDF, file="analyses/puentes2016/deltaDF_STUS.RData")
+save(deltaDF, file="analyses/puentes2016/deltaDF_VIS.RData")
+
+
 
 x11(width=5, height=5)
 par(mar=c(4,4,5,4))

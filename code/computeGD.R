@@ -32,6 +32,7 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
   gindex = which(unlist(lapply(EVOBASE, function(x) x$Species))==species)[gmatrix]
   gmat = EVOBASE[[gindex]]$G
   gmatname = EVOBASE[[gindex]]$Study_ID
+  gmatname = names(EVOBASE)[gindex]
   
   #Remove NAs
   gmat = droptraits(gmat)
@@ -45,7 +46,8 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
   dindex = which(unlist(lapply(POPBASE, function(x) x$Species))==species)[dmatrix]
   dmat = POPBASE[[dindex]]$D
   dmatname = POPBASE[[dindex]]$Study_ID
-  
+  dmatname = names(POPBASE)[dindex]
+
   #Match the matrices
   m = match(colnames(gmatscaled), colnames(dmat))
   dmat = dmat[m,m]

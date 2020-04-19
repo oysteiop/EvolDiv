@@ -24,9 +24,9 @@ maxdists = read.csv(file="data/maxdists.csv")
 #lines(-10:10, -10:10)
 
 #List of studies
-studies=sort(unique(ddat$ID))
+studies = sort(unique(ddat$ID))
 studies
-splist=tapply(as.character(ddat$species), ddat$ID, function(x) x[1])
+splist = tapply(as.character(ddat$species), ddat$ID, function(x) x[1])
 
 #Compute among-pop variance for each trait in each study
 outlist=list()
