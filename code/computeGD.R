@@ -78,7 +78,8 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
   beta_t = summary(mt)$coef[2,1]
   r2_t = summary(mt)$r.squared
   
-  outlist = list(dmat = dmatname, #Descriptor of D matrix
+  outlist = list(species=species,
+                 dmat = dmatname, #Descriptor of D matrix
                  gmat = gmatname, #Descriptor of G matrix
                  D = dmat, #The D matrix
                  G = gmatscaled, #The G matrix

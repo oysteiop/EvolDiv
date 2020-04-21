@@ -19,8 +19,6 @@ names(dsp)
 both_sp = unique(gsp[which(gsp %in% dsp)])
 both_sp
 
-#POPBASE = POPBASE[-c(31,33)] #Dropping second M. guttatus study
-
 #### Divergence vectors among populations ####
 
 deltaList = list()
@@ -476,7 +474,34 @@ for(gg in 1:3){
 }
 
 #### Fragaria ####
+
+# G = Heterophrodite
 out = computeGD(species = "Fragaria_virginiana", gmatrix = 3, dmatrix = 1)
+out$gmat
+out$dmat
+
+# Means
+s = out$dmat
+
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+
+z0 = apply(means, 2, mean)
+colnames(means)==names(z0)
+
+outdat = computeDelta(out$G, means, z0)
+
+deltaList[[length(deltaList)+1]] = data.frame(sp="Fragaria_virginiana", g=out$gmat, traits=ncol(out$G), 
+                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
+                                              emean=evolvabilityMeans(out$G*100)[1],
+                                              emin=evolvabilityMeans(out$G*100)[2],
+                                              emax=evolvabilityMeans(out$G*100)[3],
+                                              cmean=evolvabilityMeans(out$G*100)[4],
+                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
+                                              theta=outdat[,4], row.names=NULL)
+
+# G = Female
+out = computeGD(species = "Fragaria_virginiana", gmatrix = 4, dmatrix = 1)
 out$gmat
 out$dmat
 
@@ -505,6 +530,7 @@ deltaList[[length(deltaList)+1]] = data.frame(sp="Fragaria_virginiana", g=out$gm
 
 ##### Mimulus guttatus ####
 
+#Carr & Fenster 1994
 m1 = abs(EVOBASE[["Mimulus guttatus: S"]]$Means[c(2,4:9)])
 m2 = abs(EVOBASE[["Mimulus guttatus: T"]]$Means[c(2,4:9)])
 names(m1)==names(m2)
@@ -545,6 +571,33 @@ deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus 
                                               row.names=NULL)
 
 180-acos(t(eigen(g1)$vectors[,1]) %*% eigen(g2)$vectors[,1])*(180/pi) #Angle between the 2 G matrices
+
+# Fenster & Carr 1997
+m1 = EVOBASE[["Mimulus guttatus: S II"]]$Means
+m2 = EVOBASE[["Mimulus guttatus: T II"]]$Means
+names(m1)==names(m2)
+
+#g1 = droptraits(EVOBASE[["Mimulus guttatus: S II"]]$G) #Exclude because a value of 0 precludes calculations
+g2 = droptraits(EVOBASE[["Mimulus guttatus: T II"]]$G)
+#g1 = meanStdG(g1, m1)*100
+g2 = meanStdG(g2, m2)*100
+c(names(m1)==colnames(g1))
+
+delta = log(m1)-log(m2)
+div = mean(abs(delta))*100
+delta = delta/sqrt(sum(delta^2)) #Unit-length
+
+deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus guttatus: T II", traits=ncol(g2), 
+                                              d=s, 
+                                              pop="S", 
+                                              emean=evolvabilityMeans(g2)[1],
+                                              emin=evolvabilityMeans(g2)[2],
+                                              emax=evolvabilityMeans(g2)[3],
+                                              cmean=evolvabilityMeans(g2)[4],
+                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
+                                              cdelta=evolvabilityBeta(g2, delta)$c,
+                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
+                                              row.names=NULL)
 
 ##### Mimulus micranthus ####
 
@@ -770,28 +823,46 @@ for(i in 1: nrow(deltaDat)){
   }
 }
 
-x11(height=4, width=9)
+#save(deltaDat, file="deltaDat.RData")
+
+x11(height=4, width=10)
 par(mfrow=c(1,3))
 plot(deltaDat$edelta, deltaDat$theta, ylim=c(0, 90), las=1, pch=16, col="black",
      ylab="Angle between divergence vector and gmax",
      xlab="Evolvability along divergence vector")
-abline(h=90, lty=2)
 
 plot(deltaDat$edelta/deltaDat$emean, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
      ylab="Angle between divergence vector and gmax",
      xlab="Evolvability_delta/e_mean)")
-abline(h=90, lty=2)
+abline(v=1, lty=2)
 
 plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
      ylab="Angle between divergence vector and gmax",
      xlab="Evolvability_delta/e_max")
-abline(h=90, lty=2)
-abline(h=0,lty=2)
+
+x11(height=4, width=10)
+par(mfrow=c(1,3))
+plot(deltaDat$edelta, deltaDat$theta, ylim=c(0, 90), las=1, pch=16, col="black",
+     ylab="Angle between divergence vector and gmax",
+     xlab="Evolvability along divergence vector")
+
+plot(log(deltaDat$edelta/deltaDat$emean), deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
+     ylab="Angle between divergence vector and gmax",
+     xlab="log(e_delta/e_mean)")
+abline(v=0, lty=2)
+
+plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
+     ylab="Angle between divergence vector and gmax",
+     xlab="Evolvability_delta/e_max")
+
+
 
 deltaDat[which(deltaDat$theta > 75 & (deltaDat$edelta/deltaDat$emax)>0.4),]
 
 meanDat = ddply(deltaDat, .(sp), summarize,
               emean = median(emean),
+              emax = median(emax),
+              emin = median(emin),
               cmean = median(cmean),
               edelta= median(edelta),
               cdelta = median(cdelta),
@@ -822,7 +893,7 @@ plot(meanDat$emean, log(meanDat$edelta/meanDat$emean), pch=16, ylim=c(-2,2))
 abline(h=0, lty=1)
 
 
-deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
+#deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
 
 x11(height=6.5, width=8)
 par(mfrow=c(2,2), mar=c(4,4,2,4))
@@ -922,6 +993,203 @@ text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), x
 
 points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
 
+#### Scaling between mean and max ####
+plot(log10(deltaDat$emean), (deltaDat$edelta-deltaDat$emean)/(deltaDat$emax-deltaDat$emean), pch=16, las=1, main="Evolvability",
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-1, 1.5), ylim=c(0,1))
+#mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Mean evolvability (%)", 1, line=2.5)
+points(log10(meanDat$emean), (meanDat$edelta-meanDat$emean)/(meanDat$emax-meanDat$emean), pch=16)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=1.7
+text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
+
+points(log10(median(meanDat$emean)), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
+
+deltaDat2=deltaDat
+#deltaDat2 = deltaDat[-which(deltaDat$sp=="Mimulus micranthus"),]
+#deltaDat2$cmean[which(deltaDat2$cmean<0.01)]=0.01
+meanDat2=meanDat
+#meanDat2 = meanDat2[-which(meanDat$sp=="Mimulus micranthus"),]
+#deltaDat2$cdelta[which(deltaDat2$cdelta<0.01)]=0.01
+
+plot(log10(deltaDat2$cmean), log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1, main="Conditional evolvability",
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xaxt="n",
+     xlim=c(-2, 1), ylim=c(-2, 4))
+axis(1, at=c(-2:1), labels = c(10^(-2:1)))
+mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
+mtext("Mean evolvability (%)", 1, line=2.5)
+points(log10(meanDat2$cmean), log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=1.2
+text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
+
+points(log10(median(meanDat2$cmean)), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
+
+plot(deltaDat$div, (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean), pch=16, las=1, main="Evolvability",
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(0, 120), ylim=c(-1,1))
+#mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Mean evolvability (%)", 1, line=2.5)
+points(meanDat$div, (meanDat$cdelta-meanDat$cmean)/(meanDat$emax-meanDat$cmean), pch=16)
+
+plot(deltaDat$div, log(deltaDat$edelta/deltaDat$emean), pch=16, las=1,
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-5, 120), ylim=c(-2, 2))
+points(meanDat$div, log(meanDat$edelta/meanDat$emean), pch=16)
+mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=127
+text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
+
+points(median(meanDat$div), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
+
+plot(deltaDat2$div, log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1,
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-5, 120), ylim=c(-2, 4))
+points(meanDat2$div, log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=127
+text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
+
+points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
+
+
+#### Scaling between mein and mean ####
+plot(log10(deltaDat$emean), (deltaDat$edelta-deltaDat$emin)/(deltaDat$emean-deltaDat$emin), pch=16, las=1, main="Evolvability",
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-1, 1.5), ylim=c(0,1))
+#mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Mean evolvability (%)", 1, line=2.5)
+points(log10(meanDat$emean), (meanDat$edelta-meanDat$emin)/(meanDat$emean-meanDat$emin), pch=16)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=1.7
+text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
+
+points(log10(median(meanDat$emean)), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
+
+deltaDat2=deltaDat
+#deltaDat2 = deltaDat[-which(deltaDat$sp=="Mimulus micranthus"),]
+#deltaDat2$cmean[which(deltaDat2$cmean<0.01)]=0.01
+meanDat2=meanDat
+#meanDat2 = meanDat2[-which(meanDat$sp=="Mimulus micranthus"),]
+#deltaDat2$cdelta[which(deltaDat2$cdelta<0.01)]=0.01
+
+plot(log10(deltaDat2$cmean), log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1, main="Conditional evolvability",
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xaxt="n",
+     xlim=c(-2, 1), ylim=c(-2, 4))
+axis(1, at=c(-2:1), labels = c(10^(-2:1)))
+mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
+mtext("Mean evolvability (%)", 1, line=2.5)
+points(log10(meanDat2$cmean), log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=1.2
+text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
+
+points(log10(median(meanDat2$cmean)), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
+
+plot(deltaDat$div, log(deltaDat$edelta/deltaDat$emean), pch=16, las=1,
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-5, 120), ylim=c(-2, 2))
+points(meanDat$div, log(meanDat$edelta/meanDat$emean), pch=16)
+mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=127
+text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
+
+points(median(meanDat$div), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
+
+plot(deltaDat2$div, log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1,
+     col="lightgrey",
+     xlab="",
+     ylab="",
+     xlim=c(-5, 120), ylim=c(-2, 4))
+points(meanDat2$div, log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+abline(h=0, lty=1)
+abline(h=log(1/2), lty=2)
+abline(h=log(1/3), lty=2)
+abline(h=log(2), lty=2)
+abline(h=log(3), lty=2)
+x=127
+text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
+text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
+
+points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
 
 #### Plotting individual studies from deltaList ####
 par(mfrow=c(1,1))

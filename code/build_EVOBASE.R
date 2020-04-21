@@ -96,7 +96,8 @@ metadata = ddply(indat, .(ID), summarize,
                  Population = population[1],
                  Lat = mean(lat, na.rm=T),
                  Lon = mean(lon, na.rm=T),
-                 Environment = environment[1])
+                 Environment = environment[1],
+                 nfam = median(nfam, na.rm=T))
 head(metadata)
 
 #### Building the database list ####
@@ -115,6 +116,7 @@ for(i in 1:length(studies)){
                       Means = MeanList[[i]],
                       Vp = VpList[[i]])
 }
+
 sp_names = unlist(lapply(EVOBASE, function(x) x$Species))
 pop_names = unlist(lapply(EVOBASE, function(x) x$Population))
 titles = paste0(sp_names,": ", pop_names)

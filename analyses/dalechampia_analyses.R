@@ -126,7 +126,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Gmat_Tovar.RData")
 
-###### D matrix for Mexican populations of D. scandensoides ######
+###### D and P matrix for Mexican populations of D. scandensoides ######
 dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 head(dat)
 
@@ -145,10 +145,27 @@ dat$population = factor(dat$population)
 
 nms = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 
-# D matrix
 unique(dat$population)
-dat = dat[dat$population %in% c("BA", "C", "CA", "CC", "CN", "CP", "GS", "LM", "M", "PM", "T", "Tulum51"),]
 
+pdat = dat[dat$population %in% c("BA", "C", "CC", "GS", "LM", "M", "PM"),]
+pdat = na.omit(subset(pdat, select=c(BA, GA, GSD, SW, GAD, ASD, population)))
+table(pdat$population)
+
+# Mean P matrix
+pops = unique(pdat$population)
+length(pops)
+Plist = list()
+for(i in 1:length(pops)){
+  sub = pdat[pdat$population==pops[i],]
+  pm = cov(sub[,1:6])
+  Plist[[i]] = meanStdG(pm, colMeans(sub[,1:6]))
+}
+
+MeanP = apply(simplify2array(Plist), 1:2, mean)
+save(MeanP, file="analyses/dalechampia/MeanP_MX.RData")
+
+# D matrix
+dat = dat[dat$population %in% c("BA", "C", "CA", "CC", "CN", "CP", "GS", "LM", "M", "PM", "T", "Tulum51"),]
 dat = dat[dat$ASD>0,]
 
 X = subset(dat, select=c(BA, GA, GSD, SW, GAD, ASD, population, ind))
@@ -198,6 +215,25 @@ dat$population = factor(dat$population)
 
 nms = c("BA", "GA", "GSD", "SW", "GAD")
 
+unique(dat$population)
+
+pdat = dat[dat$population %in% c("CH", "CO", "E", "HO", "P", "S", "V", "XU"),]
+pdat = na.omit(subset(pdat, select=c(BA, GA, GSD, SW, GAD, population)))
+table(factor(pdat$population))
+
+# Mean P matrix
+pops = unique(pdat$population)
+length(pops)
+Plist = list()
+for(i in 1:length(pops)){
+  sub = pdat[pdat$population==pops[i],]
+  pm = cov(sub[,1:5])
+  Plist[[i]] = meanStdG(pm, colMeans(sub[,1:5]))
+}
+
+MeanP = apply(simplify2array(Plist), 1:2, mean)
+save(MeanP, file="analyses/dalechampia/MeanP_SG.RData")
+
 # D matrix
 unique(dat$population)
 dat = dat[dat$population %in% c("CH", "CO", "D", "E", "HO", "MO", "P", "S", "V", "X", "XU", "Tovar70"),]
@@ -230,7 +266,7 @@ Sys.time() - a
 
 save(mod, file="analyses/dalechampia/Dmat_Mexico_SG_75k.RData")
 
-###### D matrix for Costa Rican populations ######
+###### D and P matrix for Costa Rican populations ######
 dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
 head(dat)
 
@@ -247,8 +283,28 @@ dat$population = factor(dat$Pop)
 
 nms = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 
-# D matrix
 unique(dat$population)
+length(unique(dat$population))
+table(dat$population)
+
+pdat = dat[dat$population %in% c("S1","S2","S6","S7","S8","S9","S11","S12","S20","S21","S22","S26"),]
+pdat = na.omit(subset(pdat, select=c(BA, GA, GSD, SW, GAD, ASD, population)))
+#pdat = pdat[pdat$ASD>0,]
+
+# Mean P matrix
+pops = unique(pdat$population)
+length(pops)
+Plist = list()
+for(i in 1:length(pops)){
+  sub = pdat[pdat$population==pops[i],]
+  pm = cov(sub[,1:6])
+  Plist[[i]] = meanStdG(pm, colMeans(sub[,1:6]))
+}
+
+MeanP = apply(simplify2array(Plist), 1:2, mean)
+save(MeanP, file="analyses/dalechampia/MeanP.RData")
+
+# D matrix
 dat = dat[dat$population %in% c("S1","S2","S3","S6","S7","S8","S9","S11","S12","S13","S16","S18","S19","S20","S21","S22","S26"),]
 dat = dat[dat$ASD>0,]
 
@@ -291,7 +347,7 @@ dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 dmat
 
-plot(mod$VCV[,1])
+#plot(mod$VCV[,1])
 
 #The G matrix
 dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
@@ -310,12 +366,35 @@ gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
 
-pmatdat = subset(dat, select=c("BA", "GA", "GSD", "SW", "GAD", "ASD"))
-#pmatdat = apply(pmatdat, 2, function(x) log(x))
-pmat = cov(pmatdat)
+#The P matrix
+load(file="analyses/dalechampia/MeanP_MX.Rdata")
+pmat = MeanP
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
+evolvabilityMeans(pmat*100)
+
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens A", plot="c")
+
+gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Dalechampia scandens A: MX", npops = 12, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/dalechampia/gdDF_Tulum_MX.RData")
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
@@ -368,24 +447,6 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,1
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, species="Dalechampia scandens A", plot=T)
-
-gdDF = data.frame(sp="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", traits = ncol(gmat), 
-                  emean = evolvabilityMeans(gmat)[1],
-                  emin = evolvabilityMeans(gmat)[2],
-                  emax = evolvabilityMeans(gmat)[3],
-                  cmean = evolvabilityMeans(gmat)[4],
-                  imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: MX", npops = 12, 
-                  dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
-head(gdDF)
-
-save(gdDF, file="analyses/dalechampia/gdDF_Tulum_MX.RData")
-
 ######## Analyse G vs. D: Costa Rica ########
 
 # The D matrix
@@ -422,27 +483,72 @@ gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
 
-pmatdat = subset(dat, select=c("BA", "GA", "GSD", "SW", "GAD", "ASD"))
-#pmatdat = apply(pmatdat, 2, function(x) log(x))
-pmat = cov(pmatdat)
+#The mean P matrix
+load(file="analyses/dalechampia/MeanP.RData")
+pmat = MeanP
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
+evolvabilityMeans(pmat)
+
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens A", plot="c")
+
+gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Dalechampia scandens A: CR", npops = 17, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/dalechampia/gdDF_Tulum_CR.RData")
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
 var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+var_g_g_c = evolvabilityBeta(gmat, Beta = g_ev)$c
 var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
 
 d_ev = eigen(dmat)$vectors
 var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_g_d_c = evolvabilityBeta(gmat, Beta = d_ev)$c
 var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
 
 p_ev = eigen(pmat)$vectors
 var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_g_p_c = evolvabilityBeta(gmat, Beta = p_ev)$c
 var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
 # Compute summary stats
+cvals=NULL
+for(i in 1:ncol(gmat)){
+  b=rep(0,ncol(gmat))
+  b[i]=1
+  cvals[i] = evolvabilityBeta(gmat, b)$c
+}
+
+mt = lm(log(diag(dmat))~log(diag(gmat)))
+beta_t = summary(mt)$coef[2,1]
+beta_t
+r2_t = summary(mt)$r.squared
+r2_t
+
+mtc = lm(log(diag(dmat))~log(cvals))
+beta_tc = summary(mtc)$coef[2,1]
+beta_tc
+r2_tc = summary(mtc)$r.squared
+r2_tc
+
 mg = lm(log(var_d_g)~log(var_g_g))
 beta_g = summary(mg)$coef[2,1]
 beta_g
@@ -455,11 +561,29 @@ beta_d
 r2_d = summary(md)$r.squared
 r2_d
 
+mdc = lm(log(var_d_d)~log(var_g_d_c))
+beta_dc = summary(mdc)$coef[2,1]
+beta_dc
+r2_dc = summary(mdc)$r.squared
+r2_dc
+
 mp = lm(log(var_d_p)~log(var_g_p))
 beta_p = summary(mp)$coef[2,1]
 beta_p
 r2_p = summary(mp)$r.squared
 r2_p
+
+mpc = lm(log(var_d_p)~log(var_g_p_c))
+beta_pc = summary(mpc)$coef[2,1]
+beta_pc
+r2_pc = summary(mpc)$r.squared
+r2_pc
+
+res = data.frame(traits = c("Original", "Original","G eigenvectors", "D eigenvectors", "D eigenvectors", "P eigenvectors", "P eigenvectors"),
+                 evol = c("e","c","e","e","c","e","c"),
+                 slope = round(c(beta_t, beta_tc, beta_g, beta_d, beta_dc, beta_p, beta_pc), 3),
+                 r2 = round(c(r2_t, r2_tc, r2_g, r2_d, r2_dc, r2_p, r2_pc), 3))
+res
 
 # Plot
 x11(width=5, height=5)
@@ -470,40 +594,37 @@ ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(var_g_g), log10(var_d_g), 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
      xlab="log10 (Evolvability [%])", 
-     ylab="log10 (Divergence [%])", 
+     ylab="log10 (Divergence [x100])", 
      main="Dalechampia: Tulum CR", las=1)
 points(log10(var_g_d), log10(var_d_d), pch=16)
-points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
-points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
-legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
+points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
+legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
+       pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
 
-cvals=NULL
-for(i in 1:ncol(gmat)){
-        b=rep(0,ncol(gmat))
-        b[i]=1
-        cvals[i] = evolvabilityBeta(gmat, b)$c
-}
-points(log10(cvals), log10(diag(dmat)), pch=16, col="red")
+# Cond
+xmin = log10(min(c(var_g_g_c, var_g_d_c), na.rm=T))
+xmax = log10(max(c(var_g_g_c, var_g_d_c), na.rm=T))
+ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(var_g_g_c), log10(var_d_g), 
+     xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
+     xlab="log10 (Conditional evolvability [%])", 
+     ylab="log10 (Divergence [x100])", 
+     main="Dalechampia: Tulum CR", las=1)
+points(log10(var_g_d_c), log10(var_d_d), pch=16)
+points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
+#points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="grey")
+legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
+       pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+
+points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
+#arrows(log10(diag(gmat)), log10(diag(dmat)), log10(cvals), log10(diag(dmat)), code=2, length=.05)
+
 
 #Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-vals = plot_GD(gmat, dmat, species="Dalechampia scandens A", plot=T)
-
-gdDF = data.frame(sp="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", traits = ncol(gmat), 
-                  emean = evolvabilityMeans(gmat)[1],
-                  emin = evolvabilityMeans(gmat)[2],
-                  emax = evolvabilityMeans(gmat)[3],
-                  cmean = evolvabilityMeans(gmat)[4],
-                  imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: CR", npops = 17, 
-                  dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
-head(gdDF)
-
-save(gdDF, file="analyses/dalechampia/gdDF_Tulum_CR.RData")
 
 ######## Analyse G vs. D: Mexico D. scandens ########
 
@@ -535,14 +656,37 @@ gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD")
 round(gmat, 2)
 
-pmatdat = na.omit(subset(dat, select=c("BA", "GA", "GSD", "SW", "GAD")))
-#pmatdat = apply(pmatdat, 2, function(x) log(x))
-pmat = cov(pmatdat)
+#The P matrix
+load("analyses/dalechampia/MeanP_SG.RData")
+pmat = MeanP
 
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
+evolvabilityMeans(pmat)
 cov2cor(gmat)
 cov2cor(dmat)
+cov2cor(pmat)
+
+vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens B", plot="e")
+
+gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens: Tovar", ntraits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Dalechampia scandens B: MX", npops = 17, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/dalechampia/gdDF_Tovar_MX.RData")
 
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
@@ -595,22 +739,6 @@ legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,1
 # Angles
 acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-vals = plot_GD(gmat, dmat, species="Dalechampia scandens B", plot=T)
-
-gdDF = data.frame(sp="Dalechampia_scandens_B", g = "Dalechampia scandens: Tovar", traits = ncol(gmat), 
-                  emean = evolvabilityMeans(gmat)[1],
-                  emin = evolvabilityMeans(gmat)[2],
-                  emax = evolvabilityMeans(gmat)[3],
-                  cmean = evolvabilityMeans(gmat)[4],
-                  imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens B: MX", npops = 12, 
-                  dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
-head(gdDF)
-
-save(gdDF, file="analyses/dalechampia/gdDF_Tovar_MX.RData")
 
 #### Divergence vectors Tulum MX ####
 

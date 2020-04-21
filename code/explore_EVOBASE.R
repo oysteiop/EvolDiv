@@ -34,7 +34,7 @@ names(EVOBASE)
 
 # Extracting a single species
 s="Raphanus raphanistrum: Binghamton III"
-s=13
+s="Turnera ulmifolia: A20"
 View(EVOBASE[[s]])
 
 names(EVOBASE[[s]])

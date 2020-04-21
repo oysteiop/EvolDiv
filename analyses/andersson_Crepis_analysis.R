@@ -25,7 +25,7 @@ length(pops)
 Plist = list()
 for(i in 1:length(pops)){
   sub = dat[dat$IDENTITY==pops[i],]
-  Plist[[i]] = cov(sub[,4:8])
+  Plist[[i]] = meanStdG(cov(sub[,4:8]), colMeans(sub[,4:8]))
 }
 
 MeanP = apply(simplify2array(Plist), 1:2, mean)
@@ -147,6 +147,28 @@ evolvabilityMeans(dmat)
 signif(cov2cor(gmat), 2)
 signif(cov2cor(dmat), 2)
 
+source("code/plot_GD.R")
+vals = plot_GD(gmat, dmat, MeanP, species="Crepis tectorum", plot="c")
+
+gdDF = data.frame(species="Crepis_tectorum", g = "Crepis tectorum: Visby", ntraits = ncol(gmat), 
+                  emean = evolvabilityMeans(gmat)[1],
+                  emin = evolvabilityMeans(gmat)[2],
+                  emax = evolvabilityMeans(gmat)[3],
+                  cmean = evolvabilityMeans(gmat)[4],
+                  imean = evolvabilityMeans(gmat)[7],
+                  d = "Crepis tectorum: All", npops = 54, 
+                  dmean = evolvabilityMeans(dmat)[1],
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
+head(gdDF)
+
+save(gdDF, file="analyses/andersson_crepis/gdDF.RData")
+
 # Compute eigenvectors etc.
 g_ev = eigen(gmat)$vectors
 var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
@@ -207,23 +229,6 @@ points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
 # Angles
 180-acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, species="Crepis tectorum", plot=T)
-
-gdDF = data.frame(sp="Crepis_tectorum", g = "Crepis tectorum: Visby", traits = ncol(gmat), 
-                  emean = evolvabilityMeans(gmat)[1],
-                  emin = evolvabilityMeans(gmat)[2],
-                  emax = evolvabilityMeans(gmat)[3],
-                  cmean = evolvabilityMeans(gmat)[4],
-                  imean = evolvabilityMeans(gmat)[7],
-                  d = "Crepis tectorum: All", npops = 12, 
-                  dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
-head(gdDF)
-
-save(gdDF, file="analyses/andersson_crepis/gdDF.RData")
 
 
 

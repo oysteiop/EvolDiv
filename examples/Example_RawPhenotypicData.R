@@ -108,7 +108,7 @@ popmeans[,2:5]=apply(popmeans[,2:5],2,function(x)x*100)
 mev=c(popse2$z1se, popse2$z2se, popse2$z3se, popse2$z4se)*10000
 
 samples = 1000
-thin = 200
+thin = 20
 burnin = samples*thin*.5
 nitt = (samples*thin)+burnin
 

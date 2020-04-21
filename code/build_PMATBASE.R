@@ -6,19 +6,18 @@ library(plyr)
 library(evolvability)
 list.files()
 
-indat=read.table("data/pmatdata.txt", header=T)
-indat$morph=as.character(indat$morph)
-indat$morph[which(is.na(indat$morph))]="all"
-indat$ID=paste(indat$reference,indat$population,indat$environment,indat$morph, sep="_")
-studies=unique(indat$ID)
+indat = read.table("data/pmatdata.txt", header=T)
+indat$morph = as.character(indat$morph)
+indat$morph[which(is.na(indat$morph))] = "all"
+indat$ID = paste(indat$reference,indat$population,indat$environment,indat$morph, sep="_")
+studies = unique(indat$ID)
 studies
 
-
 #Compile P matrices and trait means
-Plist=list()
-MeanList=list()
-VpList=list()
-isCor=tapply(indat$isCor,indat$ID,mean)>0
+Plist = list()
+MeanList = list()
+VpList = list()
+isCor = tapply(indat$isCor, indat$ID, mean)>0
 
 for(s in 1:length(studies)){
   red = indat[indat$ID==studies[s],]
@@ -99,4 +98,28 @@ for(i in 1:length(studies)){
                       Vp = VpList[[i]])
 }
 
+sp_names = unlist(lapply(PMATBASE, function(x) x$Species))
+pop_names = unlist(lapply(PMATBASE, function(x) x$Population))
+titles = paste0(sp_names,": ", pop_names)
+
+for(i in 1:length(titles)){
+  if(duplicated(titles)[i]){
+    titles[i] = paste(titles[i], "II", sep=" ")
+  }
+  if(duplicated(titles)[i]){
+    titles[i] = paste0(titles[i], "I")
+  }
+  if(duplicated(titles)[i]){
+    titles[i] = paste0(titles[i], "I")
+  }
+}
+
+titles
+
+names(PMATBASE) = gsub("_", " ", titles)
+
+PMATBASE = PMATBASE[order(titles)]
+
 save(PMATBASE, file = "data/PMATBASE.RData")
+
+View(PMATBASE)

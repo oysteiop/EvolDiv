@@ -28,7 +28,7 @@ length(pops)
 Plist = list()
 for(i in 1:length(pops)){
         sub = dat[dat$pop==pops[i],]
-        Plist[[i]] = cov(sub[,c(6,7,9,13)])
+        Plist[[i]] = meanStdG(cov(sub[,c(6,7,9,13)]), colMeans(sub[,c(6,7,9,13)]))
 }
 
 MeanP = apply(simplify2array(Plist), 1:2, mean)
@@ -148,9 +148,9 @@ colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flower
 gmat
 
 source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, species="Arabidopsis lyrata", plot=F)
+vals = plot_GD(gmat, dmat, MeanP, species="Arabidopsis lyrata", plot=F)
 
-gdDF = data.frame(sp="Arabidopsis_lyrata", g = "Arabidopsis lyrata: STUS", traits = ncol(gmat), 
+gdDF = data.frame(species="Arabidopsis_lyrata", g = "Arabidopsis lyrata: VIS", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
@@ -158,9 +158,13 @@ gdDF = data.frame(sp="Arabidopsis_lyrata", g = "Arabidopsis lyrata: STUS", trait
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Arabidopsis lyrata: All", npops = 4, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
 head(gdDF)
 
 save(gdDF, file="analyses/puentes2016/gdDF_SPIT.RData")

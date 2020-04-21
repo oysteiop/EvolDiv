@@ -138,15 +138,17 @@ both_sp
 
 x11()
 par(mfrow=c(1,2))
-plotGD(species=both_sp[11], gmatrix=1, dmatrix=2, nbeta=1000, log=F, betacol="white")
+plotGD(species=both_sp[1], gmatrix=1, dmatrix=2, nbeta=1000, log=F, betacol="white")
 plotGD(species=both_sp[11], gmatrix=1, dmatrix=3, nbeta=1000, log=F, betacol="white")
 
 #plotGD(species=both_sp[11], gmatrix="mean", dmatrix=4, nbeta=1000,log=F)
 
+names(POPBASE)
+POPBASE = POPBASE[-c(32,34)] #Dropping second M. guttatus study
+names(EVOBASE)
+EVOBASE = EVOBASE[-c(23,24)]
 
-POPBASE = POPBASE[-c(14:15)] #Dropping second M. guttatus study
-
-pdf("figs/GvsDplots.pdf", width=8, height=4.5)
+pdf("figs/GvsDplots2.pdf", width=8, height=4.5)
 for(s in c(1:length(both_sp))){
   species = both_sp[s]  
   nG = length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])

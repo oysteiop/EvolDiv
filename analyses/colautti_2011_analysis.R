@@ -61,6 +61,27 @@ ev = c((vars[23]*0.088*4)/(means[23]^2)*100, #Leaf area at transplant, area
 
 ev
 
+#### Mean P matrix ####
+dat = Gdat
+head(dat)
+
+traits = c("TLeafArea","THeight", "Height2wk", "Height4wk",
+           "FStemWidth", "FVeg", "FInf")
+
+pops = unique(dat$Pop)
+length(pops)
+
+Plist = list()
+for(i in 1:length(pops)){
+  sub = dat[dat$Pop==pops[i],]
+  sub = na.omit(subset(sub, select=c(traits, "Pop", "TrueFam")))
+  
+  Plist[[i]] = meanStdG(cov(sub[,1:7]), colMeans(sub[,c(1:7)]))
+}
+
+MeanP = apply(simplify2array(Plist), 1:2, mean)
+MeanP
+
 #### Genetic variance for one population #### 
 library(lme4)
 one = subset(Gdat, Pop=="ONTI")
@@ -166,32 +187,28 @@ round(rmat, 2)
 
 diag(gmat)/(diag(dmat) + diag(gmat))
 
-pmatdat = na.omit(subset(Gdat, select=c(traits)))
-#pmatdat = apply(pmatdat, 2, function(x) log(x))
-pmat = cov(pmatdat)
-
+pmat = MeanP
 
 source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, species="Lythrum salicaria", plot=F)
+vals = plot_GD(gmat, dmat, pmat, species="Lythrum salicaria", plot="c")
 
-gdDF = data.frame(sp="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops", traits = ncol(gmat), 
+gdDF = data.frame(species="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Lythrum salicaria: All", npops = 20, 
-                  dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  theta = vals[5,1], row.names = NULL)
+                  betaG = vals$res[3,3], r2G = vals$res[3,4],
+                  betaD = vals$res[4,3], r2D = vals$res[4,4],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
+                  betaP = vals$res[6,3], r2P = vals$res[6,4],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
+                  r2All = vals$res[8,4],
+                  theta = vals$theta, row.names = NULL)
 head(gdDF)
 
 save(gdDF, file="analyses/colautti/gdDF.RData")
-
-
-
-
 
 
 evolvabilityMeans(gmat)

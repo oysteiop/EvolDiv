@@ -125,7 +125,7 @@ colnames(dmat) = rownames(dmat) = colnames(dat)[3:12]
 dmat = dmat*100
 dmat
 
-plot(mod$VCV[,1])
+#plot(mod$VCV[,1])
 
 # The G matrix
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
@@ -165,7 +165,7 @@ gmat
 source("code/plot_GD.R")
 vals = plot_GD(gmat, dmat, species="Senecio pinnatifolius", plot=F)
 
-gdDF = data.frame(sp="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood", traits = ncol(gmat), 
+gdDF = data.frame(species="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
@@ -175,6 +175,8 @@ gdDF = data.frame(sp="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood",
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals[1,1], r2G = vals[2,1],
                   betaD = vals[3,1], r2D = vals[4,1],
+                  betaD_cond = vals[8,1], r2D_cond = vals[9,1],
+                  r2All = vals[10,1],
                   theta = vals[5,1], row.names = NULL)
 head(gdDF)
 

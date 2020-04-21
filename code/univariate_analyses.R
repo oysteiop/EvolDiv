@@ -108,8 +108,12 @@ length(unique(ddf$study_ID))
 length(unique(ddf$species))
 
 tapply(ddf$d*100, ddf$tg1, median)
+round(sqrt(tapply(ddf$d, ddf$tg1, median))*sqrt(2/pi)*100, 1) #dL
+
 tapply(ddf$d>-Inf, ddf$tg1, sum)
+
 tapply(ddf$d*100, list(ddf$tg1, ddf$tg2), median)
+round(sqrt(tapply(ddf$d, list(ddf$tg1, ddf$tg2), median))*sqrt(2/pi)*100, 1) #dL
 tapply(ddf$d>-Inf, ddf$tg2, sum)
 
 tapply(ddf$d*100, list(ddf$tg1, ddf$dimension), median)
@@ -118,6 +122,7 @@ tapply(ddf$d*100, list(ddf$ms, ddf$tg1), median, na.rm=T)
 tapply(ddf$d>-Inf, list(ddf$ms, ddf$tg1), sum, na.rm=T)
 
 lin = ddf[ddf$dimension=="linear",]
+tapply(lin$d*100, lin$tg1, median)
 t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
 
 are = ddf[ddf$dimension=="area",]
@@ -242,28 +247,34 @@ ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
 ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
 
-m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
+m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
 summary(m0)
 
-m = lmer(log(d)~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), data=ddf)
-summary(m)
+m0b = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (log(evals)|species/study_ID), REML=F, data=ddf)
+summary(m0b)
+AIC(m0,m0b)
 
-m = lmer(log(d)~ log(evals)*ms + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
+m = lmer(log(d)~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), REML=F, data=ddf)
+summary(m)
+AIC(m0, m)
+
+m = lmer(log(d)~ log(evals)*ms + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
 AIC(m0, m)
 summary(m)
 
-m = lmer(log(d)~ log(evals)*dimension + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
+m = lmer(log(d)~ log(evals)*dimension + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
 AIC(m0, m)
 summary(m)
 
-m = lmer(log(d)~ log(evals)*environment + log(npop) + log(maxdist) + (1|species/study_ID), data=ddf)
+m = lmer(log(d)~ log(evals)*environment + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
 AIC(m0, m)
 summary(m)
 
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
-m0 = lmer(log(d) ~ log(evals)+ log(npop) +log(maxdist) + (1|species/study_ID), data=floveg)
-m = lmer(log(d) ~ log(evals)*tg1 + log(npop) + log(maxdist) + (1|species/study_ID), data=floveg)
+m0 = lmer(log(d) ~ log(evals)+ log(npop) +log(maxdist) + (1|species/study_ID), REML=F, data=floveg)
+m = lmer(log(d) ~ log(evals)*tg1 + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=floveg)
+m = lmer(log(d) ~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), REML=F, data=floveg)
 
 AIC(m0, m)
 AIC(m0, m)[2,2]-AIC(m0, m)[1,2]
@@ -524,7 +535,7 @@ legend("topleft", pch=15, col=c("darkblue", "darkgreen", "darkred"), cex=1, pt.c
        bty="n", legend=c("Greenhouse", "Garden", "Field"))
 
 # Function to plot e vs. d with subset highlighted ####
-plotSubset=function(category, subset, xlim=c(-2.5,2), ylim=c(-4,3), ...){
+plotSubset = function(category, subset, xlim=c(-2.5,2), ylim=c(-4,3), ...){
 plot(log10(ddf$evals),log10(ddf$d*100),
      xlab="Evolvability (%)",
      ylab="Among-population variance (%)",
@@ -599,8 +610,8 @@ prior<-list(R=list(V=1, nu=0.002), G=list(G1=list(V=1, nu=0.002),
                                           G3=list(V = diag(1), fix = 1)))
 
 #Compute mean-scaled measurement error variances
-mev=moddat$d_se^2
-moddat$SE=sqrt(mev)  
+mev = moddat$d_se^2
+moddat$SE = sqrt(mev)  
 
 #To log-normal
 moddat$test=(-2*log(moddat$d)) + log(mev+(moddat$d^2))
