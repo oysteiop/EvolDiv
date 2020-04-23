@@ -15,13 +15,14 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 head(dat)
 str(dat)
 
-#### - Estimating the P mean matrix - ####
+#### - Estimating the mean P matrix - ####
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 dat = dat[dat$TYPE=="POP",]
 head(dat)
 
 pops = unique(dat$IDENTITY)
 length(pops)
+
 Plist = list()
 for(i in 1:length(pops)){
   sub = dat[dat$IDENTITY==pops[i],]

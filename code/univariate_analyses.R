@@ -121,6 +121,7 @@ tapply(ddf$d*100, list(ddf$tg1, ddf$dimension), median)
 tapply(ddf$d*100, list(ddf$ms, ddf$tg1), median, na.rm=T)
 tapply(ddf$d>-Inf, list(ddf$ms, ddf$tg1), sum, na.rm=T)
 
+
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d*100, lin$tg1, median)
 t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
@@ -133,6 +134,22 @@ t(tapply(mvo$d*100, list(mvo$tg1,mvo$species), median))
 
 cou = ddf[ddf$dimension=="count",]
 t(tapply(cou$d*100, list(cou$tg1, cou$species), median))
+
+# Dimensions plot
+medians = tapply(log(ddf$evals), ddf$dimension, median, na.rm=T)
+ddf$dimension = factor(ddf$dimension, levels=names(sort(medians, decreasing=F)))
+
+x11(height=4.5, width=4.5)
+plot(ddf$dimension, log10(ddf$d*100), at=c(1,4,7,10,13,16), xlim=c(0,17), ylim=c(-3, 5.5), col="grey", xaxt="n", las=1, yaxt="n")
+par(new=T)
+plot(ddf$dimension, log10(ddf$evals), at=c(2,5,8,11,14,17), xlim=c(0,17), ylim=c(-3, 5.5), xaxt="n", yaxt="n")
+axis(1, at=c(1.5, 4.5, 7.5, 10.5, 13.5, 16.5), labels=rep("", 6))
+text(c(1.5, 4.5, 7.5, 10.5, 13.5, 16.5), par("usr")[3] - .5, srt = 45, adj = 1,cex=1,
+     labels = levels(ddf$dimension), xpd = TRUE)
+legend("topleft", pch=c(15, 0), col=c("grey", "white"), legend=c("Evolvability (%)", "Divergence (x100)"), bty="n", pt.cex = 1.2)
+legend("topleft", pch=c(22, 0), col=c("black", "black"), legend=c("", ""), bty="n", pt.cex=1.4)
+axis(2, at=c(-2:3), signif(10^(-2:3),1), las=1)
+
 
 # Boxplots ####
 ddf$logd = log10(ddf$d*100)
@@ -238,6 +255,16 @@ lin = ddf[ddf$dimension=="linear",]
 t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
 
 #### Informal meta-analysis ####
+mdat = na.omit(subset(lin[lin$d>0,], select=c("d","evals","npop","maxdist","species","study_ID")))
+names(mdat)
+m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), REML=T, data=mdat)
+summary(m0)
+
+mdat = mdat[mdat$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
+mdat = mdat[mdat$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
+m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), REML=T, data=mdat)
+summary(m0)
+
 
 #Remove some of the repeated D. scandens studies?
 ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
@@ -264,6 +291,9 @@ summary(m)
 
 m = lmer(log(d)~ log(evals)*dimension + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
 AIC(m0, m)
+logLik(m0)
+logLik(m)
+
 summary(m)
 
 m = lmer(log(d)~ log(evals)*environment + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
@@ -279,9 +309,12 @@ m = lmer(log(d) ~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), RE
 AIC(m0, m)
 AIC(m0, m)[2,2]-AIC(m0, m)[1,2]
 
-
 m = lmer(log(d) ~ -1+ tg1 + log(evals):tg1 + log(npop) + log(maxdist) + (1|species/study_ID), data=floveg)
 summary(m)
+
+
+
+
 
 # Formal meta-analysis using Almer_SE
 SE = sqrt((ddf$d_se^2)/(ddf$d^2))
@@ -533,6 +566,142 @@ points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkred")
 
 legend("topleft", pch=15, col=c("darkblue", "darkgreen", "darkred"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Greenhouse", "Garden", "Field"))
+
+
+# Dimensions
+library(fBasics)
+m = lmer(log(d*100) ~ -1 + dimension + log(evals):dimension + scale_npop+ scale_maxdist 
+         + (1|species/study_ID), data=ddf)
+cols = c("blue3", "firebrick", "green3", "yellow3","cyan", "black") 
+
+x11(height=4.5, width=6.5)
+par(mfrow=c(1,1), mar=c(4,4,2,7))
+plot(log10(ddf$evals), log10(ddf$d*100),
+     xlab="Evolvability (%)",
+     ylab="Divergence (x100)",
+     pch=1, cex=1*sqrt(ddf$npop),
+     col=cols[as.numeric(ddf$dimension)],
+     xlim=c(-2.5, 2),ylim=c(-4,3),xaxt="n", yaxt="n")
+axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
+axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="ratio"])),
+       max(log(ddf$evals[ddf$dimension=="ratio"])), .1)
+y = summary(m)$coef[1,1] + summary(m)$coef[9,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="ratio"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="ratio"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[1], lwd=2)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="linear"])),
+       max(log(ddf$evals[ddf$dimension=="linear"])), .1)
+y = summary(m)$coef[2,1] + summary(m)$coef[10,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="linear"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="linear"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[2], lwd=2)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="time"])),
+       max(log(ddf$evals[ddf$dimension=="time"])), .1)
+y = summary(m)$coef[3,1] + summary(m)$coef[11,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="time"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="time"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[3], lwd=2)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="mass_volume"])),
+       max(log(ddf$evals[ddf$dimension=="mass_volume"])), .1)
+y = summary(m)$coef[4,1] + summary(m)$coef[12,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="mass_volume"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="mass_volume"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[4], lwd=2)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="area"])),
+       max(log(ddf$evals[ddf$dimension=="area"])), .1)
+y = summary(m)$coef[5,1] + summary(m)$coef[13,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="area"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="area"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[5], lwd=2)
+
+x1=seq(min(log(ddf$evals[ddf$dimension=="count"])),
+       max(log(ddf$evals[ddf$dimension=="count"])), .1)
+y = summary(m)$coef[6,1] + summary(m)$coef[14,1]*x1 + 
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="count"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="count"])
+lines(log10(exp(x1)), log10(exp(y)), col=cols[6], lwd=2)
+
+me_e = log(median(ddf$evals[dimension=="ratio"]))
+y = summary(m)$coef[1,1] + summary(m)$coef[9,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="ratio"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="ratio"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+me_e = log(median(ddf$evals[dimension=="linear"]))
+y = summary(m)$coef[2,1] + summary(m)$coef[10,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="linear"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="linear"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+me_e = log(median(ddf$evals[dimension=="time"]))
+y = summary(m)$coef[3,1] + summary(m)$coef[11,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="time"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="time"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+me_e = log(median(ddf$evals[dimension=="mass_volume"]))
+y = summary(m)$coef[4,1] + summary(m)$coef[12,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="mass_volume"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="mass_volume"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+me_e = log(median(ddf$evals[dimension=="area"]))
+y = summary(m)$coef[5,1] + summary(m)$coef[13,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="area"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="area"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+me_e = log(median(ddf$evals[dimension=="count"]))
+y = summary(m)$coef[6,1] + summary(m)$coef[14,1]*me_e +
+  summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="count"]) +
+  summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="count"])
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
+
+legend(x=2.2, y = 2, pch=15, col=cols, cex=1, pt.cex=1.5, 
+       bty="n", legend=levels(ddf$dimension), xpd=T)
+
+
+# Contextual model
+dimmeans = tapply(log(ddf$evals), ddf$dimension, mean)
+
+meanvals=NULL
+for(i in 1:nrow(ddf)){
+ meanvals[i]=dimmeans[which(names(dimmeans)==ddf$dimension[i])] 
+}
+data.frame(meanvals, ddf$dimension)
+
+m = lmer(log(d*100) ~ log(evals) + meanvals + scale_npop + scale_maxdist
+         + (1|species/study_ID), data=ddf)
+summary(m)
+
+
+# Removing the dimension effect
+resd = summary(lm(log10(ddf$d*100)~ddf$dimension))$residuals
+rese = summary(lm(log10(ddf$evals)~ddf$dimension))$residuals
+
+plot(rese, resd)
+m = lmer(resd ~ rese + scale_npop + scale_maxdist
+         + (1|species/study_ID), data=ddf)
+summary(m)
+
+x11(height = 4.5, width=6.5)
+par(mfrow=c(1,1), mar=c(4,4,2,7))
+plot(rese, resd, las=1,
+     xlab="Residual evolvability (%)",
+     ylab="Residual divergence (x100)",
+     pch=1, cex=1*sqrt(ddf$npop),
+     col=cols[as.numeric(ddf$dimension)])
+
+#axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
+#axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+legend(x=2.4, y = 2, pch=15, col=cols, cex=1, pt.cex=1.5, 
+       bty="n", legend=levels(ddf$dimension), xpd=T)
 
 # Function to plot e vs. d with subset highlighted ####
 plotSubset = function(category, subset, xlim=c(-2.5,2), ylim=c(-4,3), ...){

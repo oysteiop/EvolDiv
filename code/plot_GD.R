@@ -1,11 +1,12 @@
-
-
-
-plot_GD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species", xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
+plot_GD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species",
+                 nFam=out$nFam, nPop=out$nPop, SE=FALSE, nSample=100, bendD=FALSE,
+                 xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
 
   res = data.frame(traits = c("Original", "Original","G eigenvectors", "D eigenvectors", "D eigenvectors", "P eigenvectors", "P eigenvectors", "All"),
                    measure = c("e","c","e","e","c","e","c","e"),
                    slope = NA,
+                   slope_MC = NA,
+                   SE = NA,
                    r2 = NA)
   
   # Compute eigenvectors etc.
@@ -84,6 +85,75 @@ plot_GD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species
     res$r2 = round(c(r2_t, r2_tc, r2_g, r2_d, r2_dc, r2_p, r2_pc, r2_a), 3)
   }
   
+# Generating standard errors by resampling
+if(SE){
+print("Computing standard errors by resampling")
+require(mvtnorm)
+source("code/bendMat.R")
+sbeta_g = sbeta_t = sbeta_tc = sbeta_d = sbeta_dc = sbeta_p = sbeta_pc = sbeta_a = NULL
+for(i in 1:nSample){
+  if(i==nSample/2){print("Halfways done!")}
+  sgmat = round(cov(rmvnorm(nFam, mean=rep(1, ncol(gmat)), sigma=gmat)), 8)
+  sdmat = round(cov(rmvnorm(nPop, mean=rep(1, ncol(dmat)), sigma=dmat)), 8)
+  if(bendD){sdmat = round(bendMat(sdmat), 8)}
+  
+  smt = lm(log(diag(sdmat))~log(diag(sgmat)))
+  sbeta_t[i] = summary(smt)$coef[2,1]
+
+  scvals = NULL
+  for(ci in 1:ncol(sgmat)){
+    b = rep(0, ncol(sgmat))
+    b[ci] = 1
+    scvals[ci] = evolvabilityBeta(sgmat, b)$c
+  }
+  
+  smtc = lm(log(diag(sdmat))~log(scvals))
+  sbeta_tc[i] = summary(smtc)$coef[2,1]
+
+  sg_ev = eigen(sgmat)$vectors
+  svar_g_g = evolvabilityBeta(sgmat, Beta = sg_ev)$e
+  svar_g_g_c = evolvabilityBeta(sgmat, Beta = sg_ev)$c
+  svar_d_g = evolvabilityBeta(sdmat, Beta = sg_ev)$e
+  smg = lm(log(svar_d_g)~log(svar_g_g))
+  sbeta_g[i] = summary(smg)$coef[2,1]
+  
+  sd_ev = eigen(sdmat)$vectors
+  svar_g_d = evolvabilityBeta(sgmat, Beta = sd_ev)$e
+  svar_g_d_c = evolvabilityBeta(sgmat, Beta = sd_ev)$c
+  svar_d_d = evolvabilityBeta(sdmat, Beta = sd_ev)$e
+  
+  smd = lm(log(svar_d_d)~log(svar_g_d))
+  sbeta_d[i] = summary(smd)$coef[2,1]
+  
+  smdc = lm(log(svar_d_d)~log(svar_g_d_c))
+  sbeta_dc[i] = summary(smdc)$coef[2,1]
+  
+  sma = lm(log(c(diag(sdmat), svar_d_g, svar_d_d))~log(c(diag(sgmat), svar_g_g, svar_g_d)))
+  sbeta_a[i] = summary(sma)$coef[2,1]
+
+  if(!is.null(pmat)){
+    p_ev = eigen(pmat)$vectors
+    svar_g_p = evolvabilityBeta(sgmat, Beta = p_ev)$e
+    svar_g_p_c = evolvabilityBeta(sgmat, Beta = p_ev)$c
+    svar_d_p = evolvabilityBeta(sdmat, Beta = p_ev)$e
+    
+    smp = lm(log(svar_d_p)~log(svar_g_p))
+    sbeta_p[i] = summary(smp)$coef[2,1]
+
+    smpc = lm(log(svar_d_p)~log(svar_g_p_c))
+    sbeta_pc[i] = summary(smpc)$coef[2,1]
+  }
+}
+if(is.null(pmat)){
+    res$slope_MC[c(1:5, 8)] = round(c(median(sbeta_t), median(sbeta_tc), median(sbeta_g), median(sbeta_d), median(sbeta_dc), median(sbeta_a)), 3)
+    res$SE[c(1:5, 8)] = round(c(sd(sbeta_t), sd(sbeta_tc), sd(sbeta_g), sd(sbeta_d), sd(sbeta_dc), sd(sbeta_a)), 3)
+}
+if(!is.null(pmat)){
+  res$slope_MC[c(1:8)] = round(c(median(sbeta_t), median(sbeta_tc), median(sbeta_g), median(sbeta_d), median(sbeta_dc), median(sbeta_p), median(sbeta_pc), median(sbeta_a)), 3)
+  res$SE[1:8] = round(c(sd(sbeta_t), sd(sbeta_tc), sd(sbeta_g), sd(sbeta_d), sd(sbeta_dc), sd(sbeta_p), sd(sbeta_pc), sd(sbeta_a)), 3)
+}
+}
+
 # Plot
 if(plot=="e"){
 x11(width=5, height=5)

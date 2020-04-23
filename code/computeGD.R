@@ -1,71 +1,65 @@
-###########################################################
-#### - Computing statistics for scaling of D with G - #####
-###########################################################
-computeMeanG = function(species){
-  sp = unlist(lapply(EVOBASE, function(x) x$Species))
-  gMats = lapply(EVOBASE[which(sp==species)], function(x) x$G)
-  MeanG = apply(simplify2array(gMats), 1:2, mean)
-  return(MeanG)
-}
+#gmat=out$G 
+#dmat=out$D 
+#pmat=NULL 
+#plot=FALSE 
+#species="Species"
+#nFam=out$nFam 
+#nPop=out$nPop 
+#SE=TRUE
+#nSample=10 
+#bendD=TRUE 
+#bendG=TRUE
 
-droptraits = function(x){
-  drop = which(colSums(x>-Inf, na.rm=T)<max(colSums(x>-Inf, na.rm=T)))
-  if(length(drop)>0){
-    x = x[-drop,-drop]
-  }
-  else{
-    x = x
-  }}
 
-computeGD = function(species, gmatrix=1, dmatrix=1){
-  require(evolvability)
-  nG = length(EVOBASE[which(unlist(lapply(EVOBASE, function(x) x$Species))==species)])
-  nD = length(POPBASE[which(unlist(lapply(POPBASE, function(x) x$Species))==species)])
-  
-  if(is.numeric(gmatrix) & gmatrix>nG){ 
-    stop(paste("Sorry, only", nG, "G matrices available for", species))
-  }
-  if(is.numeric(dmatrix) & dmatrix>nD){ 
-    stop(paste("Sorry, only", nD, "D matrices available for", species))
-  }
-  
-  gindex = which(unlist(lapply(EVOBASE, function(x) x$Species))==species)[gmatrix]
-  gmat = EVOBASE[[gindex]]$G
-  gmatname = EVOBASE[[gindex]]$Study_ID
-  gmatname = names(EVOBASE)[gindex]
-  
-  #Remove NAs
-  gmat = droptraits(gmat)
-  
-  #Extract means
-  means = EVOBASE[[gindex]]$Means
-  means = means[which(names(means) %in% colnames(gmat))]
-  
-  gmatscaled = meanStdG(gmat, means)
-  
-  dindex = which(unlist(lapply(POPBASE, function(x) x$Species))==species)[dmatrix]
-  dmat = POPBASE[[dindex]]$D
-  dmatname = POPBASE[[dindex]]$Study_ID
-  dmatname = names(POPBASE)[dindex]
 
-  #Match the matrices
-  m = match(colnames(gmatscaled), colnames(dmat))
-  dmat = dmat[m,m]
-  dmat = droptraits(dmat)
+computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species",
+                 nFam=out$nFam, nPop=out$nPop, SE=FALSE, nSample=100, bendD=FALSE, bendG=FALSE, fixD=FALSE,
+                 xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
+
+  res = data.frame(traits = c("Original", "Original","G eigenvectors", "D eigenvectors", "D eigenvectors", "P eigenvectors", "P eigenvectors", "All"),
+                   measure = c("e","c","e","e","c","e","c","e"),
+                   slope = NA,
+                   slope_MC = NA,
+                   SE = NA,
+                   r2 = NA)
   
-  m2 = match(colnames(dmat), colnames(gmatscaled))
-  gmatscaled = gmatscaled[m2, m2]
-  
-  #Compute eigenvectors etc.
-  g_ev = eigen(gmatscaled)$vectors
-  var_g_g = evolvabilityBeta(gmatscaled, Beta = g_ev)$e
+  # Compute eigenvectors etc.
+  g_ev = eigen(gmat)$vectors
+  var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+  var_g_g_c = evolvabilityBeta(gmat, Beta = g_ev)$c
   var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
   
   d_ev = eigen(dmat)$vectors
-  var_g_d = evolvabilityBeta(gmatscaled, Beta = d_ev)$e
+  var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+  var_g_d_c = evolvabilityBeta(gmat, Beta = d_ev)$c
   var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
   
-  #Compute summary stats
+  if(!is.null(pmat)){
+  p_ev = eigen(pmat)$vectors
+  var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+  var_g_p_c = evolvabilityBeta(gmat, Beta = p_ev)$c
+  var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
+  }
+  
+  # Theta  
+  theta = acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi)
+  
+  # Compute summary stats
+  cvals = NULL
+  for(i in 1:ncol(gmat)){
+    b = rep(0, ncol(gmat))
+    b[i] = 1
+    cvals[i] = evolvabilityBeta(gmat, b)$c
+  }
+  
+  mt = lm(log(diag(dmat))~log(diag(gmat)))
+  beta_t = summary(mt)$coef[2,1]
+  r2_t = summary(mt)$r.squared
+  
+  mtc = lm(log(diag(dmat))~log(cvals))
+  beta_tc = summary(mtc)$coef[2,1]
+  r2_tc = summary(mtc)$r.squared
+  
   mg = lm(log(var_d_g)~log(var_g_g))
   beta_g = summary(mg)$coef[2,1]
   r2_g = summary(mg)$r.squared
@@ -74,30 +68,161 @@ computeGD = function(species, gmatrix=1, dmatrix=1){
   beta_d = summary(md)$coef[2,1]
   r2_d = summary(md)$r.squared
   
-  mt = lm(log(diag(dmat))~log(diag(gmatscaled)))
-  beta_t = summary(mt)$coef[2,1]
-  r2_t = summary(mt)$r.squared
+  mdc = lm(log(var_d_d)~log(var_g_d_c))
+  beta_dc = summary(mdc)$coef[2,1]
+  r2_dc = summary(mdc)$r.squared
   
-  outlist = list(species=species,
-                 dmat = dmatname, #Descriptor of D matrix
-                 gmat = gmatname, #Descriptor of G matrix
-                 D = dmat, #The D matrix
-                 G = gmatscaled, #The G matrix
-                 nPop = as.numeric(POPBASE[[dindex]]$nPop), #Number of populations included in D
-                 theta = acos(t(g_ev[,1]) %*% d_ev[,1])*(180/pi), #Angle between leading eigenvectors of G and D
-                 betaG = beta_g, #Slope of D on G for eigenvectors of G
-                 r2G = r2_g, #r^2 for betaG
-                 betaD = beta_d, #Slope for D on G for eigenvectors of D
-                 r2D = r2_d, #r^2 for betaD
-                 betaT = beta_t, #Slope for traits
-                 r2T = r2_t, #r^2 for traits
-                 iG = evolvabilityMeans(gmatscaled)[7], #Hansen-Houle integration index for G
-                 emean = evolvabilityMeans(gmatscaled)[1]*100, #Mean evolvability
-                 dmean = evolvabilityMeans(dmat)[1]*100, #Mean divergence
-                 nBetaG = length(mg$residuals), #Number of positive eigenvalues compared for G eigenvectors
-                 nBetaD = length(md$residuals), #Number of positive eigenvalues compared for D eigenvectors
-                 nBetaT = length(mt$residuals)) #Number of traits compared
+  ma = lm(log(c(diag(dmat), var_d_g, var_d_d))~log(c(diag(gmat), var_g_g, var_g_d)))
+  beta_a = summary(ma)$coef[2,1]
+  r2_a = summary(ma)$r.squared
   
-  return(outlist)
+  if(!is.null(pmat)){
+  mp = lm(log(var_d_p)~log(var_g_p))
+  beta_p = summary(mp)$coef[2,1]
+  r2_p = summary(mp)$r.squared
   
+  mpc = lm(log(var_d_p)~log(var_g_p_c))
+  beta_pc = summary(mpc)$coef[2,1]
+  r2_pc = summary(mpc)$r.squared
+  
+  #ma = lm(log(c(diag(dmat), var_d_g, var_d_d, var_d_p))~log(c(diag(gmat), var_g_g, var_g_d, var_g_p)))
+  #beta_a = summary(ma)$coef[2,1]
+  #r2_a = summary(ma)$r.squared
+  }
+  
+  if(is.null(pmat)){
+  res$slope[c(1:5, 8)] = round(c(beta_t, beta_tc, beta_g, beta_d, beta_dc, beta_a), 3)
+  res$r2[c(1:5, 8)] = round(c(r2_t, r2_tc, r2_g, r2_d, r2_dc, r2_a), 3)
+  }
+  if(!is.null(pmat)){
+    res$slope = round(c(beta_t, beta_tc, beta_g, beta_d, beta_dc, beta_p, beta_pc, beta_a), 3)
+    res$r2 = round(c(r2_t, r2_tc, r2_g, r2_d, r2_dc, r2_p, r2_pc, r2_a), 3)
+  }
+  
+# Generating standard errors by resampling
+if(SE){
+print("Computing standard errors by resampling")
+require(mvtnorm)
+source("code/bendMat.R")
+sbeta_g = sbeta_t = sbeta_tc = sbeta_d = sbeta_dc = sbeta_p = sbeta_pc = sbeta_a = NULL
+for(i in 1:nSample){
+  if(i==nSample/2){print("Halfways done!")}
+  sgmat = round(cov(rmvnorm(nFam, mean=rep(1, ncol(gmat)), sigma=gmat)), 8)
+  sdmat = round(cov(rmvnorm(nPop, mean=rep(1, ncol(dmat)), sigma=dmat)), 8)
+  if(bendD){sdmat = round(bendMat(sdmat), 8)}
+  if(bendG){sgmat = round(bendMat(sgmat), 8)}
+  if(fixD){sdmat = dmat} 
+  
+  smt = lm(log(diag(sdmat))~log(diag(sgmat)))
+  sbeta_t[i] = summary(smt)$coef[2,1]
+
+  scvals = NULL
+  for(ci in 1:ncol(sgmat)){
+    b = rep(0, ncol(sgmat))
+    b[ci] = 1
+    scvals[ci] = evolvabilityBeta(sgmat, b)$c
+  }
+  
+  smtc = lm(log(diag(sdmat))~log(scvals))
+  sbeta_tc[i] = summary(smtc)$coef[2,1]
+
+  sg_ev = eigen(sgmat)$vectors
+  svar_g_g = evolvabilityBeta(sgmat, Beta = sg_ev)$e
+  svar_g_g_c = evolvabilityBeta(sgmat, Beta = sg_ev)$c
+  svar_d_g = evolvabilityBeta(sdmat, Beta = sg_ev)$e
+  smg = lm(log(svar_d_g)~log(svar_g_g))
+  sbeta_g[i] = summary(smg)$coef[2,1]
+  
+  sd_ev = eigen(sdmat)$vectors
+  svar_g_d = evolvabilityBeta(sgmat, Beta = sd_ev)$e
+  svar_g_d_c = evolvabilityBeta(sgmat, Beta = sd_ev)$c
+  svar_d_d = evolvabilityBeta(sdmat, Beta = sd_ev)$e
+  
+  smd = lm(log(svar_d_d)~log(svar_g_d))
+  sbeta_d[i] = summary(smd)$coef[2,1]
+  
+  smdc = lm(log(svar_d_d)~log(svar_g_d_c))
+  sbeta_dc[i] = summary(smdc)$coef[2,1]
+  
+  sma = lm(log(c(diag(sdmat), svar_d_g, svar_d_d))~log(c(diag(sgmat), svar_g_g, svar_g_d)))
+  sbeta_a[i] = summary(sma)$coef[2,1]
+
+  if(!is.null(pmat)){
+    p_ev = eigen(pmat)$vectors
+    svar_g_p = evolvabilityBeta(sgmat, Beta = p_ev)$e
+    svar_g_p_c = evolvabilityBeta(sgmat, Beta = p_ev)$c
+    svar_d_p = evolvabilityBeta(sdmat, Beta = p_ev)$e
+    
+    smp = lm(log(svar_d_p)~log(svar_g_p))
+    sbeta_p[i] = summary(smp)$coef[2,1]
+
+    smpc = lm(log(svar_d_p)~log(svar_g_p_c))
+    sbeta_pc[i] = summary(smpc)$coef[2,1]
+  }
+}
+if(is.null(pmat)){
+    res$slope_MC[c(1:5, 8)] = round(c(median(sbeta_t), median(sbeta_tc), median(sbeta_g), median(sbeta_d), median(sbeta_dc), median(sbeta_a)), 3)
+    res$SE[c(1:5, 8)] = round(c(sd(sbeta_t), sd(sbeta_tc), sd(sbeta_g), sd(sbeta_d), sd(sbeta_dc), sd(sbeta_a)), 3)
+}
+if(!is.null(pmat)){
+  res$slope_MC[c(1:8)] = round(c(median(sbeta_t), median(sbeta_tc), median(sbeta_g), median(sbeta_d), median(sbeta_dc), median(sbeta_p), median(sbeta_pc), median(sbeta_a)), 3)
+  res$SE[1:8] = round(c(sd(sbeta_t), sd(sbeta_tc), sd(sbeta_g), sd(sbeta_d), sd(sbeta_dc), sd(sbeta_p), sd(sbeta_pc), sd(sbeta_a)), 3)
+}
+}
+
+# Plot
+if(plot=="e"){
+x11(width=5, height=5)
+
+if(is.null(xmin)){xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))}
+if(is.null(xmax)){xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))}
+if(is.null(ymin)){ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))}
+if(is.null(ymax)){ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))}
+plot(log10(var_g_g), log10(var_d_g), 
+     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
+     xlab="log10 (Evolvability [%])", 
+     ylab="log10 (Divergence [x100])", 
+     main=species, las=1)
+points(log10(var_g_d), log10(var_d_d), pch=16)
+points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
+if(!is.null(pmat)){
+  points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
+  legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
+         pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+}
+if(is.null(pmat)){
+  legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors"), 
+         pch=c(16, 1, 16), col=c("blue3", "black", "black"))
+}
+}
+
+if(plot=="c"){
+  x11(width=5, height=5)
+  
+  if(is.null(xmin)){xmin = log10(min(c(var_g_g_c, var_g_d_c), na.rm=T))}
+  if(is.null(xmax)){xmax = log10(max(c(var_g_g_c, var_g_d_c), na.rm=T))}
+  if(is.null(ymin)){ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))}
+  if(is.null(ymax)){ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))}
+  plot(log10(var_g_g_c), log10(var_d_g), 
+       xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
+       xlab="log10 (Conditional evolvability [%])", 
+       ylab="log10 (Divergence [x100])", 
+       main=species, las=1)
+  points(log10(var_g_d_c), log10(var_d_d), pch=16)
+  
+  points(log10(cvals), log10(diag(dmat)), pch=16, col="blue3")
+  if(!is.null(pmat)){
+    points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
+    legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
+           pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+  }
+  if(is.null(pmat)){
+    legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors"), 
+           pch=c(16, 1, 16), col=c("blue3", "black", "black"))
+  }
+}
+
+outlist = list(res=res, theta = theta)
+
+return(outlist)
 }

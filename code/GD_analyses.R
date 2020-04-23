@@ -5,7 +5,8 @@
 rm(list=ls())
 
 add2gdList=function(){
-  data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G), 
+  data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
+             nPop = out$nPop, nFam = out$nFam,
              emean = evolvabilityMeans(out$G)[1],
              emin = evolvabilityMeans(out$G)[2],
              emax = evolvabilityMeans(out$G)[3],
@@ -13,12 +14,12 @@ add2gdList=function(){
              imean = evolvabilityMeans(out$G)[7],
              d = out$dmat, npops = out$nPop, 
              dmean = evolvabilityMeans(out$D)[1],
-             betaG = vals$res[3,3], r2G = vals$res[3,4],
-             betaD = vals$res[4,3], r2D = vals$res[4,4],
-             betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
-             betaP = vals$res[6,3], r2P = vals$res[6,4],
-             betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
-             r2All = vals$res[8,4],
+             betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+             betaD = vals$res[4,3], r2D = vals$res[4,6],
+             betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+             betaP = vals$res[6,3], r2P = vals$res[6,6],
+             betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+             r2All = vals$res[8,6],
              theta = vals$theta, row.names = NULL)
 }
 
@@ -26,10 +27,12 @@ library(reshape2)
 library(plyr)
 library(MCMCglmm)
 library(evolvability)
+source("code/prepareGD.R")
 source("code/computeGD.R")
-source("code/plot_GD.R")
-source("code/estimateD.R")
+#source("code/estimateD.R")
 source("code/estimateDlog.R")
+source("code/bendMat.R")
+source("code/bendMat2.R")
 
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
@@ -47,14 +50,16 @@ estD = FALSE #Reestimating the error-corrected D matrices?
 #### Lobelia ####
 
 # G = CERA, D = Caruso 2012
-out = computeGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
+out$nFam
+out$nPop
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)$G
-glist[[2]] = computeGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)$G
+glist[[1]] = prepareGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)$G
+glist[[2]] = prepareGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -87,27 +92,29 @@ out$G = out$G*100 #Individual G
 colnames(out$G)
 names(PMATBASE)
 plist = list()
-plist[[1]] = meanStdG(PMATBASE[["Lobelia siphilitica: CERA"]]$P[c(7,3,4,1,2), c(7,3,4,1,2)], 
-                      PMATBASE[["Lobelia siphilitica: CERA"]]$Means[c(7,3,4,1,2)])
-plist[[2]] = meanStdG(PMATBASE[["Lobelia siphilitica: Krumm"]]$P[c(7,3,4,1,2), c(7,3,4,1,2)], 
-                      PMATBASE[["Lobelia siphilitica: Krumm"]]$Means[c(7,3,4,1,2)])
-plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[c(7,3,4,1,2), c(7,3,4,1,2)], 
-                      PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[c(7,3,4,1,2)])
+ma = match(colnames(out$G), names(PMATBASE[["Lobelia siphilitica: CERA"]]$Means))
+
+plist[[1]] = meanStdG(PMATBASE[["Lobelia siphilitica: CERA"]]$P[ma, ma], 
+                      PMATBASE[["Lobelia siphilitica: CERA"]]$Means[ma])
+plist[[2]] = meanStdG(PMATBASE[["Lobelia siphilitica: Krumm"]]$P[ma, ma], 
+                      PMATBASE[["Lobelia siphilitica: Krumm"]]$Means[ma])
+plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma], 
+                      PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Lobelia siphilitica", plot="e")
+vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
 
 # G = CERA, D = Caruso 2003
-out = computeGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
+out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
 out$gmat
 out$dmat
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)$G
-glist[[2]] = computeGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)$G
+glist[[1]] = prepareGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)$G
+glist[[2]] = prepareGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -149,12 +156,12 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Lobelia siphilitica", plot="e")
+vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
 
 # G = Krumm, D = Caruso 2012
-out = computeGD(species="Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)
+out = prepareGD(species="Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)
 out$gmat
 out$dmat
 
@@ -178,12 +185,12 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Lobelia siphilitica", plot=F)
+vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 # G = Krumm, D = Caruso 2003
-out = computeGD(species="Lobelia_siphilitica", gmatrix = 2, dmatrix = 3)
+out = prepareGD(species="Lobelia_siphilitica", gmatrix = 2, dmatrix = 3)
 out$gmat
 out$dmat
 
@@ -207,21 +214,21 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = plot_GD(out$G, out$D, species="Lobelia siphilitica", plot=F)
+vals = computeGD(out$G, out$D, species="Lobelia siphilitica", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #### Aquilegia ####
 
 # G = QFP1, D = Bartkowska 2018
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)$G
-glist[[2]] = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)$G
+glist[[1]] = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)$G
+glist[[2]] = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -271,12 +278,12 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G),2)
 signif(cov2cor(out$D),2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Aquilegia canadensis", plot="c")
+vals = computeGD(out$G, out$D, MeanP, species="Aquilegia canadensis", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #G = QLL3, D = Bartkowska 2018
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)
 out$gmat
 out$dmat
 
@@ -292,19 +299,19 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Aquilegia canadensis")
+vals = computeGD(out$G, out$D, MeanP, species="Aquilegia canadensis", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #G = QFP1, D = Herlihy and Eckert 2007
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
 
 # Mean G-matrix
 glist = list()
-glist[[1]] = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)$G
-glist[[2]] = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)$G
+glist[[1]] = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)$G
+glist[[2]] = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)$G
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Estimate error-corrected D matrix
@@ -338,12 +345,12 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G),2)
 signif(cov2cor(out$D),2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Aquilegia canadensis", plot="e")
+vals = computeGD(out$G, out$D, MeanP, species="Aquilegia canadensis", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #G = QLL3, D = Herlihy and Eckert 2007
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 2)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 2)
 out$gmat
 out$dmat
 
@@ -359,19 +366,19 @@ evolvabilityMeans(out$D)
 signif(cov2cor(out$G),2)
 signif(cov2cor(out$D),2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Aquilegia canadensis")
+vals = computeGD(out$G, out$D, MeanP, species="Aquilegia canadensis", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #### Brassica ####
-out = computeGD(species="Brassica_cretica", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species="Brassica_cretica", gmatrix = 1, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Mean G matrix
 glist = list()
 for(i in 1:5){
-  glist[[i]] = computeGD(species="Brassica_cretica", gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = prepareGD(species="Brassica_cretica", gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -399,26 +406,26 @@ load(file="analyses/adj_Dmats/Brassica.RData")
 
 # Loop
 for(gg in 1:5){
-out = computeGD(species="Brassica_cretica", gmatrix = gg, dmatrix = 1)
+out = prepareGD(species="Brassica_cretica", gmatrix = gg, dmatrix = 1)
 
 load(file="analyses/adj_Dmats/Brassica.RData")
 
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = plot_GD(out$G, out$D, species="Brassica cretica", xmin=-3, ymin=-2, plot=T)
+vals = computeGD(out$G, out$D, species="Brassica cretica", SE=F, fixD=T, nSample=100, plot=F, xmin=-3, ymin=-2)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
 
 #### Spergularia ####
-out = computeGD(species="Spergularia_marina", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species="Spergularia_marina", gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Mean G matrix
 glist = list()
 for(i in 1:4){
-  glist[[i]] = computeGD(species = both_sp[14], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = prepareGD(species = both_sp[14], gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -445,27 +452,28 @@ save(modD, file="analyses/adj_Dmats/Spergularia.RData")
 load(file="analyses/adj_Dmats/Spergularia.RData")
 
 # Loop
+gg=1
 for(gg in 1:4){
-out = computeGD(species="Spergularia_marina", gmatrix = gg, dmatrix = 1)
+out = prepareGD(species="Spergularia_marina", gmatrix = gg, dmatrix = 1)
 
 load(file="analyses/adj_Dmats/Spergularia.RData")
 
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = plot_GD(out$G, out$D, species="Spergularia marina", ymin=-4, plot=F)
+vals = computeGD(out$G, out$D, species="Spergularia marina", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
 
 #### Solanum ####
-out = computeGD(species = "Solanum_carolinense", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Solanum_carolinense", gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Mean G matrix
 glist = list()
 for(i in 1:3){
-  glist[[i]] = computeGD(species = "Solanum_carolinense", gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = prepareGD(species = "Solanum_carolinense", gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -491,29 +499,28 @@ save(modD, file="analyses/adj_Dmats/Solanum.RData")
 # Load the error-corrected D matrix
 load(file="analyses/adj_Dmats/Solanum.RData")
 
-
 # Loop
 for(gg in 1:3){
-out = computeGD(species = "Solanum_carolinense", gmatrix = gg, dmatrix = 1)
+out = prepareGD(species = "Solanum_carolinense", gmatrix = gg, dmatrix = 1)
 
 load(file="analyses/adj_Dmats/Solanum.RData")
 
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = plot_GD(out$G, out$D, species="Solanum carolinense", xmin=-1, ymin=-2)
+vals = computeGD(out$G, out$D, species="Solanum carolinense", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
 
 #### Clarkia ####
-out = computeGD(species = "Clarkia_dudleyana", gmatrix = 2, dmatrix = 1)
+out = prepareGD(species = "Clarkia_dudleyana", gmatrix = 2, dmatrix = 1)
 out$gmat
 
 # Mean G matrix
 glist = list()
 for(i in 1:2){
-  glist[[i]] = computeGD(species = "Clarkia_dudleyana", gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = prepareGD(species = "Clarkia_dudleyana", gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -548,14 +555,14 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, species="Clarkia dudleyana", plot=F)
+vals = computeGD(out$G, out$D, species="Clarkia dudleyana", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #### Ipomopsis ####
 
 # D = Campbell 2019 unpubl.
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 2)
 out$dmat
 
 # Estimate error-corrected D matrix
@@ -589,12 +596,12 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, species="Ipomopsis aggregata", plot=F)
+vals = computeGD(out$G, out$D, species="Ipomopsis aggregata", SE=F, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 # D = Caruso 2000
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 3)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 3)
 out$dmat
 
 # Estimate error-corrected D matrix
@@ -638,12 +645,12 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Ipomopsis aggregata", plot="e")
+vals = computeGD(out$G, out$D, MeanP, species="Ipomopsis aggregata", SE=F, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 # D = Caruso 2001
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 4)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 4)
 out$dmat
 
 # Estimate error-corrected D matrix
@@ -688,12 +695,12 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 signif(cov2cor(out$G), 2)
 signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, MeanP, species="Ipomopsis aggregata", plot=F)
+vals = computeGD(out$G, out$D, MeanP, species="Ipomopsis aggregata", SE=F, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 #### Turnera ####
-out = computeGD(species = "Turnera_ulmifolia", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Turnera_ulmifolia", gmatrix = 1, dmatrix = 1)
 out$gmat
 
 # Estimate error-corrected D matrix
@@ -726,7 +733,7 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, species="Turnera ulmifolia", plot=T)
+vals = computeGD(out$G, out$D, species="Turnera ulmifolia", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -735,7 +742,7 @@ gdList[[length(gdList)+1]] = add2gdList()
 #NB: G-matrices are for females and hermaphrodites separately, D is for overall means
 
 # Hermaphrodite G
-out = computeGD(species = "Fragaria_virginiana", gmatrix = 3, dmatrix = 1)
+out = prepareGD(species = "Fragaria_virginiana", gmatrix = 3, dmatrix = 1)
 out$gmat
 
 # Estimate error-corrected D matrix
@@ -768,12 +775,12 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, species="Fragaria virginiana", plot=F)
+vals = computeGD(out$G, out$D, species="Fragaria virginiana", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
 # Female G
-out = computeGD(species = "Fragaria_virginiana", gmatrix = 4, dmatrix = 1)
+out = prepareGD(species = "Fragaria_virginiana", gmatrix = 4, dmatrix = 1)
 out$gmat
 
 # Estimate error-corrected D matrix
@@ -806,7 +813,7 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = plot_GD(out$G, out$D, species="Fragaria virginiana", plot=F)
+vals = computeGD(out$G, out$D, species="Fragaria virginiana", SE=T, fixD=T, nSample=100, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -848,9 +855,6 @@ gdList[[length(gdList)+1]] = gdDF
 load(file="analyses/colautti/gdDF.RData")
 gdList[[length(gdList)+1]] = gdDF
 
-#load(file="analyses/delph_Silene/gdDF.RData")
-#gdList[[length(gdList)+1]] = gdDF
-
 gdDat = rbind.fill(gdList)
 dim(gdDat)
 tail(gdDat)
@@ -888,6 +892,9 @@ gdDat$traitgroup = traitgroup
 median(gdDat$betaG)
 median(gdDat$betaD)
 median(gdDat$betaD_cond)
+median(gdDat$betaP, na.rm=T)
+median(gdDat$betaP_cond, na.rm=T)
+sum(gdDat$betaP>0, na.rm=T)
 
 meanDat = ddply(gdDat, .(species, traitgroup), summarize,
                 emean = median(emean),
@@ -943,7 +950,6 @@ abline(v=1, lty=2)
 mtext("Slope of G eigenvectors", 1, line=2.5)
 mtext("Slope of D eigenvectors", 2, line=2.5)
 
-
 par(mfrow=c(1,1))
 plot(gdDat$r2G, gdDat$betaG, pch=16, las=1, ylim=c(0,3), ylab="Slope", xlab="R2 for G eigenvectors")
 points(gdDat$r2G, gdDat$betaD)
@@ -960,7 +966,6 @@ plot(gdDat$r2All, gdDat$betaG, pch=16, las=1, ylim=c(0,4), ylab="Slope", xlab="O
 points(gdDat$r2All, gdDat$betaD, pch=16, col="grey")
 legend("topright", pch=c(16,16), col=c("black", "grey"), legend=c("G", "D"))
 abline(h=1)
-
 
 par(mfrow=c(2,2))
 plot(gdDat$theta, gdDat$betaG, pch=16, ylim=c(0, 1.6), xlim=c(0,90),las=1)
@@ -1008,7 +1013,7 @@ reslist = list()
 for(s in 1:length(both_sp)){
   for(g in 1:nG[s]){
     for(d in 1:nD[s]){
-      res = computeGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:18)]
+      res = prepareGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:18)]
       reslist[length(reslist)+1] = as.data.frame(unlist(res)[c(1:16)])
     }
   }
@@ -1142,4 +1147,20 @@ for(i in 1:ncol(out$G)){
   cvals[i] = evolvabilityBeta(out$G, b)$c
 }
 points(log10(cvals), log10(diag(out$D)), pch=16, col="red")
+
+#### Generating standard errors by resampling ####
+library(mvtnorm)
+source("code/bendMat.R")
+ss=NULL
+for(i in 1:100){
+  sg = cov(rmvnorm(out$nFam, mean=rep(1, ncol(out$G)), sigma=out$G))
+  sd = round(cov(rmvnorm(out$nPop, mean=rep(1, ncol(out$D)), sigma=out$D)), 10)
+  #sd=out$D
+  
+  ss[i]=summary(lm(log(evolvabilityBeta(sd, eigen(sg)$vectors)$e) ~ log(eigen(sg)$values)))$coef[2,1]
+}
+mean(ss, na.rm=T)
+sd(ss, na.rm=T)
+
+summary(lm(log(evolvabilityBeta(out$D, eigen(out$G)$vectors)$e) ~ log(eigen(out$G)$values)))$coef
 

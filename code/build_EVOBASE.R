@@ -111,8 +111,9 @@ for(i in 1:length(studies)){
                                  Lon = metadata$Lon[metadata$ID==studies[i]]),
                       Environment = paste(metadata$Environment[metadata$ID==studies[i]]),
                       G = signif(Glist[[i]],4), 
-                      Groups=groupList[[i]],
-                      Dims=dimList[[i]],
+                      nFam = metadata$nfam[metadata$ID==studies[i]],
+                      Groups = groupList[[i]],
+                      Dims = dimList[[i]],
                       Means = MeanList[[i]],
                       Vp = VpList[[i]])
 }

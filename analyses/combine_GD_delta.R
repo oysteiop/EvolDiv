@@ -9,8 +9,7 @@ load(file="gdDat.RData")
 load(file="deltaDat.RData")
 
 names(gdDat)
-gdMeans= ddply(gdDat, .(sp), summarize,
-                        traitgroup=unique(traitgroup),
+gdMeans= ddply(gdDat, .(species), summarize,
                         emean = median(emean),
                         emax = median(emax),
                         cmean = median(cmean),
@@ -20,7 +19,8 @@ gdMeans= ddply(gdDat, .(sp), summarize,
                         betaD = median(betaD),
                         r2D = median(r2D),
                         thetaGD = median(theta),
-                        r2All = median(r2All))
+                        r2All = median(r2All),
+                        ntraits = median(ntraits))
 
 deltaMeans = ddply(deltaDat, .(sp), summarize,
                 emean = median(emean),
@@ -30,7 +30,8 @@ deltaMeans = ddply(deltaDat, .(sp), summarize,
                 div = median(div),
                 theta_delta=median(theta))
 
-comb = merge(gdMeans, deltaMeans, by="sp", all=T)
+deltaMeans$species = deltaMeans$sp
+comb = merge(gdMeans, deltaMeans, by="species", all=T)
 
 #comb[,-1] = apply(comb[,-1], 2, signif, 2)
 #View(comb)
@@ -38,8 +39,7 @@ comb = merge(gdMeans, deltaMeans, by="sp", all=T)
 gdDat$ID = paste(gdDat$g, gdDat$d, sep="_")
 deltaDat$ID = paste(deltaDat$g, deltaDat$d, sep="_")
 
-gdMeans2= ddply(gdDat, .(sp, ID), summarize,
-               traitgroup=unique(traitgroup),
+gdMeans2= ddply(gdDat, .(species, ID), summarize,
                emean = median(emean),
                emax = median(emax),
                cmean = median(cmean),
@@ -49,7 +49,9 @@ gdMeans2= ddply(gdDat, .(sp, ID), summarize,
                betaD = median(betaD),
                r2D = median(r2D),
                thetaGD = median(theta),
-               r2All = median(r2All))
+               r2All = median(r2All),
+               ntraits = median(ntraits),
+               traitgroup = unique(traitgroup)[1])
 
 deltaMeans2 = ddply(deltaDat, .(sp, ID), summarize,
                    emean = median(emean),
@@ -108,7 +110,12 @@ plot(comb2$edelta/comb2$emax, comb2$thetaGD, pch=16, col="lightgrey", las=1,
 points(comb$edelta/comb$emax, comb$thetaGD, pch=16)
 #abline(v=0, lty=2)
 
+plot(comb2$r2All, comb2$thetaGD, pch=16, col="lightgrey", las=1, xlim=c(0,1), ylim=c(0,90),
+     xlab="Overall R2", ylab="Angle between gmax and dmax")
+points(comb$r2All, comb$thetaGD, pch=16)
+#abline(v=0, lty=2)
 
+plot(comb2$r2All, comb2$thetaGD, pch=16)
 
 
 plot(log(comb2$cdelta/comb2$cmean.x), comb2$thetaGD, pch=16, col="lightgrey", las=1,
