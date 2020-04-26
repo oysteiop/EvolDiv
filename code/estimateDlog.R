@@ -34,5 +34,5 @@ estimateDlog = function(means, eV, samples=1000, thin=100){
   modD = matrix(apply(mod$VCV, 2, median)[2:(1+(ncol(means))^2)], nrow=n)/10000
   colnames(modD) = rownames(modD) = colnames(means)
   #modD = meanStdG(modD, colMeans(means))
-  return(modD)
+  return(mod$VCV[, 2:(1+(ncol(means))^2)]/10000)
 }

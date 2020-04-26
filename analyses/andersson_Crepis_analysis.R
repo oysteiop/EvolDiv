@@ -84,9 +84,74 @@ Sys.time()-a
 
 save(mod, file="./analyses/andersson_crepis/Gmat75k.RData")
 
+# Simpler model
+n = 5
+alpha.mu <- rep(0, n)
+alpha.V <- diag(n)*400
+prior <- list(R=list(V=diag(n), nu=n+0.002-1), 
+              G=list(G1=list(V=diag(n), nu=n, alpha.mu = alpha.mu, alpha.V = alpha.V)))
+
+samples = 1000
+thin = 25
+burnin = samples*thin*.5
+nitt = (samples*thin)+burnin
+
+a=Sys.time()
+mod<-MCMCglmm(c(LEN,TIP,MAX,MIN,TEETH) ~ -1+trait,
+              random = ~us(trait):IDENTITY,
+              rcov = ~us(trait):units,
+              data = dat,
+              family = rep("gaussian", n), prior = prior, 
+              nitt = nitt, burnin = burnin, thin = thin)
+Sys.time()-a
+
+save(mod, file="./analyses/andersson_crepis/Gmat75k_FS.RData")
+
 # Check convergence
 summary(mod$VCV)
 plot(mod$VCV[,1])
+
+# HMSC
+library(Hmsc)
+names(dat)
+Y = data.frame(dat[,4:8])
+dfPi = data.frame(dat[,2])
+names(dfPi)="IDENTITY"
+dfPi$IDENTITY=factor(dfPi$IDENTITY)
+
+rL1 = HmscRandomLevel(units=unique(dfPi$IDENTITY))
+
+rL1$nfMin=5
+rL1$nfMax=5
+
+m = Hmsc(Y = as.matrix(Y), XData=data.frame(rep(1, nrow(Y))), XFormula = ~1,  dist = "normal", 
+         studyDesign = dfPi, ranLevels=list(IDENTITY=rL1))
+
+# RUN MCMC
+samples = 1000
+thin = 1
+transient = .5*(thin*samples)
+adaptNf = 0.4*(thin*samples)
+nChains = 1
+
+a1 = Sys.time()
+m = sampleMcmc(m, samples = samples, thin = thin, adaptNf=rep(adaptNf, m$nr), 
+               transient = transient, nChains = nChains, updater=list(GammaEta=FALSE))
+b1 = Sys.time()
+
+#2*300k in 7.4 days
+b1-a1 #15k in 22 min
+
+save(m, file="./analyses/andersson_crepis/Gmat15k_Hmsc.RData")
+
+# Check convergence
+post = convertToCodaObject(m)
+str(post$Lambda)
+plot(post$Lambda[[1]][,1:2])
+
+Omegapost = getPostEstimate(m, "Omega")
+gest = Omegapost$mean*2
+gest
 
 #### - Estimating the D matrix - ####
 dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
@@ -129,6 +194,7 @@ dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 # The G matrix
 load(file="./analyses/andersson_crepis/Gmat75k.RData")
 n = 5
+gpost = mod$VCV[, 1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat) = rownames(gmat) = colnames(dat)[4:8]
 gmat
@@ -136,6 +202,7 @@ gmat
 # The D matrix
 load(file="./analyses/andersson_crepis/Dmat75k.RData")
 
+dpost = mod$VCV[,1:(n*n)]*100
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = colnames(dat)[4:8]
 dmat = dmat*100
@@ -148,8 +215,27 @@ evolvabilityMeans(dmat)
 signif(cov2cor(gmat), 2)
 signif(cov2cor(dmat), 2)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, MeanP, species="Crepis tectorum", plot="c")
+source("code/computeGD.R")
+source("code/alignMat.R")
+vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot="c")
+
+#Uncertainty over the posterior
+out = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)
+  sdmat = matrix(dpost[i,], nrow=n)
+  #sdmat = dmat
+  out[[i]] = computeGD(sgmat, sdmat, MeanP, species="")   
+}
+
+slopes = lapply(out, function(x) x$res$slope)
+slopemean = apply(simplify2array(slopes), 1, median)
+slopeSE = apply(simplify2array(slopes), 1, sd)
+
+vals$res$slope_MC = slopemean
+vals$res$SE = slopeSE
+
+vals
 
 gdDF = data.frame(species="Crepis_tectorum", g = "Crepis tectorum: Visby", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -157,14 +243,14 @@ gdDF = data.frame(species="Crepis_tectorum", g = "Crepis tectorum: Visby", ntrai
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Crepis tectorum: All", npops = 54, 
+                  d = "Crepis tectorum: All", nPop = 54, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals$res[3,3], r2G = vals$res[3,4],
-                  betaD = vals$res[4,3], r2D = vals$res[4,4],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
-                  betaP = vals$res[6,3], r2P = vals$res[6,4],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
-                  r2All = vals$res[8,4],
+                  betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+                  betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
 
@@ -235,6 +321,7 @@ points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
 
 
 #### Divergence vectors ####
+dat = read.csv2("./data/andersson/Crepis_leaf_data.csv", dec=".")
 
 # The G matrix
 load(file="./analyses/andersson_crepis/Gmat75k.RData")
@@ -257,16 +344,17 @@ dat = dat[dat$TYPE=="OUTX",]
 z0 = colMeans(dat[,4:8])
 
 source("code/computeDelta.R")
-outdat = computeDelta(G=gmat/100, means=means, z0=z0)
+outdat = computeDelta2(G=gmat/100, means=means, z0=z0)
 
-deltaDF = data.frame(sp="Crepis_tectorum", g="Crepis tectorum: Visby", traits=ncol(gmat), 
+deltaDF = data.frame(species="Crepis_tectorum", g="Crepis tectorum: Visby", ntraits=ncol(gmat), 
                             d="Crepis tectorum: All", pop=rownames(means), 
-                            emean=evolvabilityMeans(gmat)[1],
-                            emin=evolvabilityMeans(gmat)[2],
-                            emax=evolvabilityMeans(gmat)[3],
-                            cmean=evolvabilityMeans(gmat)[4],
-                            div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                            theta=outdat[,4], row.names=NULL)
+                            emean=outdat$emean,
+                            emin=outdat$emin,
+                            emax=outdat$emax,
+                            cmean=outdat$cmean,
+                            div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                            theta=outdat$theta, row.names=NULL)
+
 head(deltaDF)
 
 save(deltaDF, file="analyses/andersson_crepis/deltaDF.RData")

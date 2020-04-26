@@ -1,7 +1,7 @@
 check=F
 if(check){
-  gmat=out$G
-  dmat=modDpost
+  gmat=out$G 
+  dmat=out$D 
   pmat=NULL
   plot=FALSE 
   species="Species"
@@ -9,6 +9,8 @@ if(check){
   nPop=out$nPop 
   SE=TRUE
   nSample=10 
+  bendD=TRUE 
+  bendG=TRUE
   fixD=TRUE
   xmin=NULL 
   xmax=NULL 
@@ -17,7 +19,7 @@ if(check){
 }
 
 
-computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species",
+computeGD2=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species",
                    nFam=out$nFam, nPop=out$nPop, SE=FALSE, nSample=100, fixD=TRUE,
                    xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
   
@@ -27,12 +29,6 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
                    slope_MC = NA,
                    SE = NA,
                    r2 = NA)
-  
-  dpost = dmat
-  
-  if(!isSymmetric.matrix(dmat)){
-    dmat = matrix(apply(dpost, 2, median), nrow=sqrt(ncol(as.matrix(dpost))))
-  }
   
   a = alignMat(gmat, dmat)
   
@@ -63,39 +59,38 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     b = rep(0, ncol(gmat))
     b[i] = 1
     cvals[i] = evolvabilityBeta(gmat, b)$c
-    #cvals[i] = evolvabilityBeta(bendMat(gmat), b)$c
   }
   
-  mt = lm(log(diag(dmat))~log(diag(gmat)), na=na.exclude)
+  mt = lm(log(diag(dmat))~log(diag(gmat)))
   beta_t = summary(mt)$coef[2,1]
   r2_t = summary(mt)$r.squared
   
-  mtc = lm(log(diag(dmat))~log(cvals), na=na.exclude)
+  mtc = lm(log(diag(dmat))~log(cvals))
   beta_tc = summary(mtc)$coef[2,1]
   r2_tc = summary(mtc)$r.squared
   
-  mg = lm(log(var_d_g)~log(var_g_g), na=na.exclude)
+  mg = lm(log(var_d_g)~log(var_g_g))
   beta_g = summary(mg)$coef[2,1]
   r2_g = summary(mg)$r.squared
   
-  md = lm(log(var_d_d)~log(var_g_d), na=na.exclude)
+  md = lm(log(var_d_d)~log(var_g_d))
   beta_d = summary(md)$coef[2,1]
   r2_d = summary(md)$r.squared
   
-  mdc = lm(log(var_d_d)~log(var_g_d_c), na=na.exclude)
+  mdc = lm(log(var_d_d)~log(var_g_d_c))
   beta_dc = summary(mdc)$coef[2,1]
   r2_dc = summary(mdc)$r.squared
   
-  ma = lm(log(c(diag(dmat), var_d_g, var_d_d))~log(c(diag(gmat), var_g_g, var_g_d)), na=na.exclude)
+  ma = lm(log(c(diag(dmat), var_d_g, var_d_d))~log(c(diag(gmat), var_g_g, var_g_d)))
   beta_a = summary(ma)$coef[2,1]
   r2_a = summary(ma)$r.squared
   
   if(!is.null(pmat)){
-    mp = lm(log(var_d_p)~log(var_g_p), na=na.exclude)
+    mp = lm(log(var_d_p)~log(var_g_p))
     beta_p = summary(mp)$coef[2,1]
     r2_p = summary(mp)$r.squared
     
-    mpc = lm(log(var_d_p)~log(var_g_p_c), na=na.exclude)
+    mpc = lm(log(var_d_p)~log(var_g_p_c))
     beta_pc = summary(mpc)$coef[2,1]
     r2_pc = summary(mpc)$r.squared
     
@@ -122,13 +117,12 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     for(i in 1:nSample){
       if(i==nSample/2){print("Halfways done!")}
       sgmat = round(cov(rmvnorm(nFam, mean=rep(1, ncol(gmat)), sigma=gmat)), 10)
-      #sdmat = round(cov(rmvnorm(nPop, mean=rep(1, ncol(dmat)), sigma=dmat)), 10)
-      sdmat = matrix(dpost[sample(1:nSample, 1),], nrow=ncol(dmat))
+      sdmat = round(cov(rmvnorm(nPop, mean=rep(1, ncol(dmat)), sigma=dmat)), 10)
       if(fixD){sdmat = dmat} 
       
       sa = alignMat(sgmat, sdmat)
       
-      smt = lm(log(diag(sdmat))~log(diag(sgmat)), na=na.exclude)
+      smt = lm(log(diag(sdmat))~log(diag(sgmat)))
       sbeta_t[i] = summary(smt)$coef[2,1]
       
       scvals = NULL
@@ -139,7 +133,7 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
       }
       
       if(sum(scvals>0)>0){
-      smtc = lm(log(diag(sdmat))~log(scvals), na=na.exclude)
+      smtc = lm(log(diag(sdmat))~log(scvals))
       sbeta_tc[i] = summary(smtc)$coef[2,1]
       }
       
@@ -147,8 +141,7 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
       svar_g_g = evolvabilityBeta(sa$G_ge, Beta = sg_ev)$e
       svar_g_g_c = evolvabilityBeta(sa$G_ge, Beta = sg_ev)$c
       svar_d_g = evolvabilityBeta(sa$D_ge, Beta = sg_ev)$e
-      
-      smg = lm(log(svar_d_g)~log(svar_g_g), na=na.exclude)
+      smg = lm(log(svar_d_g)~log(svar_g_g))
       sbeta_g[i] = summary(smg)$coef[2,1]
       
       sd_ev = eigen(sa$D_de)$vectors
@@ -156,13 +149,13 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
       svar_g_d_c = evolvabilityBeta(sa$G_de, Beta = sd_ev)$c
       svar_d_d = evolvabilityBeta(sa$D_de, Beta = sd_ev)$e
       
-      smd = lm(log(svar_d_d)~log(svar_g_d), na=na.exclude)
+      smd = lm(log(svar_d_d)~log(svar_g_d))
       sbeta_d[i] = summary(smd)$coef[2,1]
       
-      smdc = lm(log(svar_d_d)~log(svar_g_d_c), na=na.exclude)
+      smdc = lm(log(svar_d_d)~log(svar_g_d_c))
       sbeta_dc[i] = summary(smdc)$coef[2,1]
       
-      sma = lm(log(c(diag(sdmat), svar_d_g, svar_d_d))~log(c(diag(sgmat), svar_g_g, svar_g_d)), na=na.exclude)
+      sma = lm(log(c(diag(sdmat), svar_d_g, svar_d_d))~log(c(diag(sgmat), svar_g_g, svar_g_d)))
       sbeta_a[i] = summary(sma)$coef[2,1]
       
       if(!is.null(pmat)){
@@ -171,10 +164,10 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
         svar_g_p_c = evolvabilityBeta(sgmat, Beta = p_ev)$c
         svar_d_p = evolvabilityBeta(sdmat, Beta = p_ev)$e
         
-        smp = lm(log(svar_d_p)~log(svar_g_p), na=na.exclude)
+        smp = lm(log(svar_d_p)~log(svar_g_p))
         sbeta_p[i] = summary(smp)$coef[2,1]
         
-        smpc = lm(log(svar_d_p)~log(svar_g_p_c), na=na.exclude)
+        smpc = lm(log(svar_d_p)~log(svar_g_p_c))
         sbeta_pc[i] = summary(smpc)$coef[2,1]
       }
     }

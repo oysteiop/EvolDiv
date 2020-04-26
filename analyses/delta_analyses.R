@@ -3,10 +3,22 @@
 ############################################################
 
 rm(list=ls())
+
+add2deltaList=function(pop=POPBASE[[s]]$popmeans[,1]){
+  data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
+             d=out$dmat, pop=pop, 
+             emean=outdat$emean,
+             emin=outdat$emin,
+             emax=outdat$emax,
+             cmean=outdat$cmean,
+             div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+             theta=outdat$theta, row.names=NULL)
+}
+
 library(reshape2)
 library(MCMCglmm)
 library(evolvability)
-source("code/computeGD.R")
+source("code/prepareGD.R")
 source("code/computeDelta.R")
 
 load("data/EVOBASE.RData")
@@ -19,92 +31,46 @@ names(dsp)
 both_sp = unique(gsp[which(gsp %in% dsp)])
 both_sp
 
-#### Divergence vectors among populations ####
-
 deltaList = list()
 
 #### Lobelia ####
 
 # CERA G matrix, D = Caruso 2003 field
-out = computeGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
+out = prepareGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-outdat = computeDelta(G=out$G, means=means, z0=z0)
+#outdat = computeDelta(G=out$G, means=means, z0=z0)
+#evolvabilityMeans(out$G)
+outdat = computeDelta2(G=out$G, means=means, z0=z0)
 
-deltaList[[1]] = data.frame(sp="Lobelia_siphilitica", g=out$gmat, traits=ncol(out$G), 
-                            d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                            emean=evolvabilityMeans(out$G*100)[1],
-                            emin=evolvabilityMeans(out$G*100)[2],
-                            emax=evolvabilityMeans(out$G*100)[3],
-                            cmean=evolvabilityMeans(out$G*100)[4],
-                            div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                            theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList()
 
 # CERA G matrix, D=Caruso 2012 
-out = computeGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species = "Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
 
 # Means
-names(POPBASE)
 s=out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means[c(1,3:6)] #Caruso 2012
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Lobelia_siphilitica", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                                              theta = outdat[,4], row.names=NULL)
-
+deltaList[[length(deltaList)+1]] = add2deltaList()
 
 # Krumm G matrix, D=Caruso 2003
-out = computeGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 3)
-out$gmat
-out$dmat
-
-# Means
-s=out$dmat
-
-means = POPBASE[[s]]$popmeans[,-1]
-means = means[,match(colnames(out$D), names(means))]
-
-z0 = EVOBASE[[out$gmat]]$Means #Caruso 2003
-colnames(means)==names(z0)
-
-outdat = computeDelta(out$G, means, z0)
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Lobelia_siphilitica", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names = NULL)
-
-
-# Krumm G matrix, D=Caruso 2012 
-out = computeGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)
+out = prepareGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 3)
 out$gmat
 out$dmat
 
@@ -112,52 +78,50 @@ out$dmat
 s = out$dmat
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
+z0 = EVOBASE[[out$gmat]]$Means #Caruso 2003
+colnames(means)==names(z0)
 
+outdat = computeDelta2(out$G, means, z0)
+
+deltaList[[length(deltaList)+1]] = add2deltaList()
+
+# Krumm G matrix, D=Caruso 2012 
+out = prepareGD(species = "Lobelia_siphilitica", gmatrix = 2, dmatrix = 2)
+out$gmat
+out$dmat
+
+# Means
+s = out$dmat
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(1,3:6)] #Caruso 2012
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Lobelia_siphilitica", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList()
 
 #### Aquilegia ####
 
 # G = QFP1, D = Herlihy and Eckert 2007
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
 
 # Means
-s=out$dmat
-
+s = out$dmat
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = unlist(means[2,])
 means = means[-2,]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Aquilegia_canadensis", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[-2,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
-
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-2,1])
 
 # G = QFP1, D = Bartkowska et al. 2018
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 1, dmatrix = 1)
 out$gmat
 out$dmat
 
@@ -165,610 +129,318 @@ out$dmat
 s = out$dmat
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Aquilegia_canadensis", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta = outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 # G = QLL3, D = Herlihy and Eckert 2007
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 2)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 2)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = unlist(means[3,]) #Second G mat, first D mat
 means = means[-3,]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Aquilegia_canadensis", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[-3,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-3,1])
 
 # G = QLL3, D = Bartkowska et al. 2018
-out = computeGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)
+out = prepareGD(species = "Aquilegia_canadensis", gmatrix = 2, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means #Second D mat
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Aquilegia_canadensis", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 #### Ipomopsis ####
 # D = Caruso 2000
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 3)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 3)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-means
-
 z0=EVOBASE[[out$gmat]]$Means[c(2:5)]
 colnames(means)==names(z0)
 
-outdat=computeDelta(out$G, means, z0)
+outdat=computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Ipomopsis_aggregata", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
-
-
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 # D = Caruso 2001
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 4)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 4)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
-z0=EVOBASE[[out$gmat]]$Means[c(2,3,5)]
+z0 = EVOBASE[[out$gmat]]$Means[c(2,3,5)]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Ipomopsis_aggregata", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names = NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 # D = Campbell 2018
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-means
-
 z0 = EVOBASE[[out$gmat]]$Means[c(1:3)]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Ipomopsis_aggregata", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 # D = Campbell 2019 unpubl.
-out = computeGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 2)
+out = prepareGD(species = "Ipomopsis_aggregata", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means[c(1:3, 5)]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Ipomopsis_aggregata", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 #### Brassica ####
+gg=1
 for(gg in 1:5){
-  out = computeGD(species = "Brassica_cretica", gmatrix = gg, dmatrix = 1)
+  out = prepareGD(species = "Brassica_cretica", gmatrix = gg, dmatrix = 1)
   out$gmat
   out$dmat
   
   # Means
   s = out$dmat
-  
   means = POPBASE[[s]]$popmeans[,-1]
   means = means[,match(colnames(out$D), names(means))]
-  
   z0 = unlist(means[gg,])
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta(out$G, means, z0)
+  outdat = computeDelta2(G=out$G, means=means, z0=z0)
   
-  deltaList[[length(deltaList)+1]] = data.frame(sp="Brassica_cretica", g=out$gmat, traits=ncol(out$G), 
-                                                d=out$dmat, pop=POPBASE[[s]]$popmeans[-gg,1], 
-                                                emean=evolvabilityMeans(out$G*100)[1],
-                                                emin=evolvabilityMeans(out$G*100)[2],
-                                                emax=evolvabilityMeans(out$G*100)[3],
-                                                cmean=evolvabilityMeans(out$G*100)[4],
-                                                div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                                theta=outdat[,4], row.names=NULL)
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
 
 #### Turnera ####
-out = computeGD(species = "Turnera_ulmifolia", gmatrix = 1, dmatrix = 1)
+out = prepareGD(species = "Turnera_ulmifolia", gmatrix = 1, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Turnera_ulmifolia", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
-
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 #### Clarkia ####
-out = computeGD(species = "Clarkia_dudleyana", gmatrix = 2, dmatrix = 1)
+out = prepareGD(species = "Clarkia_dudleyana", gmatrix = 2, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = unlist(c(means[4,])) #Second G-matrix
 means = means[-4,]
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Clarkia_dudleyana", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[-4,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-4,1])
 
 #### Spergularia ####
 for(gg in 1:4){
-  out = computeGD(species = "Spergularia_marina", gmatrix = gg, dmatrix = 1)
+  out = prepareGD(species = "Spergularia_marina", gmatrix = gg, dmatrix = 1)
   out$gmat
   out$dmat
   
   # Means
   s=out$dmat
-  
   means = POPBASE[[s]]$popmeans[,-1]
   means = means[,match(colnames(out$D), names(means))]
-  
-  z0 = unlist(c(means[gg,])) #First G-ma○trix
+  z0 = unlist(c(means[gg,])) #First G-matrix
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta(out$G, means, z0)
+  outdat = computeDelta2(out$G, means, z0)
   
-  deltaList[[length(deltaList)+1]] = data.frame(sp="Spergularia_marina", g=out$gmat, traits=ncol(out$G), 
-                                                d=out$dmat, pop=POPBASE[[s]]$popmeans[-gg,1], 
-                                                emean=evolvabilityMeans(out$G*100)[1],
-                                                emin=evolvabilityMeans(out$G*100)[2],
-                                                emax=evolvabilityMeans(out$G*100)[3],
-                                                cmean=evolvabilityMeans(out$G*100)[4],
-                                                div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                                theta=outdat[,4], row.names=NULL)
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
 
 #### Solanum ####
 for(gg in 1:3){
-  out = computeGD(species = "Solanum_carolinense", gmatrix = gg, dmatrix = 1)
+  out = prepareGD(species = "Solanum_carolinense", gmatrix = gg, dmatrix = 1)
   out$gmat
   out$dmat
   
   # Means
   s=out$dmat
-  
   means = POPBASE[[s]]$popmeans[,-1]
   means = means[,match(colnames(out$D), names(means))]
-  
   z0 = unlist(c(means[gg,])) #First G-matrix
   means = means[-gg,]
   
   colnames(means)==names(z0)
   
-  outdat=computeDelta(out$G, means, z0)
+  outdat=computeDelta2(out$G, means, z0)
   
-  deltaList[[length(deltaList)+1]] = data.frame(sp="Solanum_carolinense", g=out$gmat, traits=ncol(out$G), 
-                                                d=out$dmat, pop=POPBASE[[s]]$popmeans[-gg,1], 
-                                                emean=evolvabilityMeans(out$G*100)[1],
-                                                emin=evolvabilityMeans(out$G*100)[2],
-                                                emax=evolvabilityMeans(out$G*100)[3],
-                                                cmean=evolvabilityMeans(out$G*100)[4],
-                                                div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                                theta=outdat[,4], row.names=NULL)
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
 
 #### Fragaria ####
 
 # G = Heterophrodite
-out = computeGD(species = "Fragaria_virginiana", gmatrix = 3, dmatrix = 1)
+out = prepareGD(species = "Fragaria_virginiana", gmatrix = 3, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = apply(means, 2, mean)
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Fragaria_virginiana", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 # G = Female
-out = computeGD(species = "Fragaria_virginiana", gmatrix = 4, dmatrix = 1)
+out = prepareGD(species = "Fragaria_virginiana", gmatrix = 4, dmatrix = 1)
 out$gmat
 out$dmat
 
 # Means
 s = out$dmat
-
 means = POPBASE[[s]]$popmeans[,-1]
 means = means[,match(colnames(out$D), names(means))]
-
 z0 = apply(means, 2, mean)
 colnames(means)==names(z0)
 
-outdat = computeDelta(out$G, means, z0)
+outdat = computeDelta2(out$G, means, z0)
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Fragaria_virginiana", g=out$gmat, traits=ncol(out$G), 
-                                              d=out$dmat, pop=POPBASE[[s]]$popmeans[,1], 
-                                              emean=evolvabilityMeans(out$G*100)[1],
-                                              emin=evolvabilityMeans(out$G*100)[2],
-                                              emax=evolvabilityMeans(out$G*100)[3],
-                                              cmean=evolvabilityMeans(out$G*100)[4],
-                                              div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3],
-                                              theta=outdat[,4], row.names=NULL)
-
-
-#### Evolvability along the vector of divergence ####
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 ##### Mimulus guttatus ####
+gmats = c(5,7)
 
-#Carr & Fenster 1994
-m1 = abs(EVOBASE[["Mimulus guttatus: S"]]$Means[c(2,4:9)])
-m2 = abs(EVOBASE[["Mimulus guttatus: T"]]$Means[c(2,4:9)])
-names(m1)==names(m2)
+for(gg in 1:2){
+out = prepareGD(species = "Mimulus_guttatus", gmatrix = gmats[gg], dmatrix = 1)
+out$gmat
+out$dmat
 
-g1 = droptraits(EVOBASE[["Mimulus guttatus: S"]]$G)
-g2 = droptraits(EVOBASE[["Mimulus guttatus: T"]]$G)
-g1 = meanStdG(g1, m1)*100
-g2 = meanStdG(g2, m2)*100
-c(names(m1)==colnames(g1), names(m2)==colnames(g2))
+# Means
+names(POPBASE)
+s = out$dmat
+means = POPBASE[[s]]$popmeans[,-1]
+means = means[,match(colnames(out$D), names(means))]
+z0 = unlist(c(means[gg,])) #First G-matrix
+means = means[-gg,]
+colnames(means)==names(z0)
 
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit-length
+outdat = computeDelta2(out$G, means, z0)
 
-s = "Mimulus guttatus: Carr & Fenster 1994 greenhouse"
-deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus guttatus: S", traits=ncol(g1), 
-                                              d=s, 
-                                              pop="T", 
-                                              emean=evolvabilityMeans(g1)[1],
-                                              emin=evolvabilityMeans(g1)[2],
-                                              emax=evolvabilityMeans(g1)[3],
-                                              cmean=evolvabilityMeans(g1)[4],
-                                              div=div, edelta=evolvabilityBeta(g1, delta)$e, 
-                                              cdelta=evolvabilityBeta(g1, delta)$c,
-                                              theta=acos(t(eigen(g1)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
+deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
+}
 
-deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus guttatus: T", traits=ncol(g2), 
-                                              d=s, 
-                                              pop="S", 
-                                              emean=evolvabilityMeans(g2)[1],
-                                              emin=evolvabilityMeans(g2)[2],
-                                              emax=evolvabilityMeans(g2)[3],
-                                              cmean=evolvabilityMeans(g2)[4],
-                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
-                                              cdelta=evolvabilityBeta(g2, delta)$c,
-                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
-
-180-acos(t(eigen(g1)$vectors[,1]) %*% eigen(g2)$vectors[,1])*(180/pi) #Angle between the 2 G matrices
-
-# Fenster & Carr 1997
-m1 = EVOBASE[["Mimulus guttatus: S II"]]$Means
-m2 = EVOBASE[["Mimulus guttatus: T II"]]$Means
-names(m1)==names(m2)
-
-#g1 = droptraits(EVOBASE[["Mimulus guttatus: S II"]]$G) #Exclude because a value of 0 precludes calculations
-g2 = droptraits(EVOBASE[["Mimulus guttatus: T II"]]$G)
-#g1 = meanStdG(g1, m1)*100
-g2 = meanStdG(g2, m2)*100
-c(names(m1)==colnames(g1))
-
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit-length
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus guttatus: T II", traits=ncol(g2), 
-                                              d=s, 
-                                              pop="S", 
-                                              emean=evolvabilityMeans(g2)[1],
-                                              emin=evolvabilityMeans(g2)[2],
-                                              emax=evolvabilityMeans(g2)[3],
-                                              cmean=evolvabilityMeans(g2)[4],
-                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
-                                              cdelta=evolvabilityBeta(g2, delta)$c,
-                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
 
 ##### Mimulus micranthus ####
-
-m1 = abs(EVOBASE[["Mimulus micranthus: 301"]]$Means[c(2,4:9)])
-m2 = abs(EVOBASE[["Mimulus micranthus: 305"]]$Means[c(2,4:9)])
-names(m1)==names(m2)
-
-g1 = droptraits(EVOBASE[["Mimulus micranthus: 301"]]$G)
-g2 = droptraits(EVOBASE[["Mimulus micranthus: 305"]]$G)
-g1 = meanStdG(g1, m1)*100
-g2 = meanStdG(g2, m2)*100
-c(names(m1)==colnames(g1), names(m2)==colnames(g2))
-
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit-length
-
-s = "Mimulus micranthus: Carr & Fenster 1994 greenhouse"
-deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus micranthus", g="Mimulus micranthus: 301", traits=ncol(g1), 
-                                              d=s, 
-                                              pop="305", 
-                                              emean=evolvabilityMeans(g1)[1],
-                                              emin=evolvabilityMeans(g1)[2],
-                                              emax=evolvabilityMeans(g1)[3],
-                                              cmean=evolvabilityMeans(g1)[4],
-                                              div=div, edelta=evolvabilityBeta(g1, delta)$e, 
-                                              cdelta=evolvabilityBeta(g1, delta)$c,
-                                              theta=acos(t(eigen(g1)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus micranthus", g="Mimulus micranthus: 305", traits=ncol(g2), 
-                                              d=s, 
-                                              pop="301", 
-                                              emean=evolvabilityMeans(g2)[1],
-                                              emin=evolvabilityMeans(g2)[2],
-                                              emax=evolvabilityMeans(g2)[3],
-                                              cmean=evolvabilityMeans(g2)[4],
-                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
-                                              cdelta=evolvabilityBeta(g2, delta)$c,
-                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
-
-acos(t(eigen(g1)$vectors[,1]) %*% eigen(g2)$vectors[,1])*(180/pi) #Angle between the 2 G matrices
-
-##### Holcus lanatus ####
-
-# G matrices very poorly estimated, excluded
-names(EVOBASE)
-m1 = EVOBASE[["Holcus lanatus: Improved"]]$Means[c(2,5,6,7)]
-m2 = EVOBASE[["Holcus lanatus: Traditional"]]$Means[c(1,4,5,6)]
-names(m1)==names(m2)
-
-g1 = droptraits(EVOBASE[["Holcus lanatus: Improved"]]$G)
-g1 = meanStdG(g1, m1)*100
-c(names(m1)==colnames(g1))
-
-delta = log(m2)-log(m1)
-delta = delta/sqrt(sum(delta^2)) #Unit-length
-
-evolvabilityMeans(g1)
-cov2cor(g1)
-evolvabilityBeta(g1, delta)$e
-evolvabilityBeta(g1, delta)$c
-evolvabilityBeta(g1, delta)$e/evolvabilityMeans(g1)[1]
-
-m1 = EVOBASE[["Holcus lanatus: Improved"]]$Means[c(3,5,6,7)]
-m2 = EVOBASE[["Holcus lanatus: Traditional"]]$Means[c(2,4,5,6)]
-names(m1)==names(m2)
-
-g2 = droptraits(EVOBASE[["Holcus lanatus: Traditional"]]$G)
-g2 = meanStdG(g2, m2)*100
-c(names(m1)==colnames(g2))
-
-delta = log(m2)-log(m1)
-delta = delta/sqrt(sum(delta^2)) #Unit-length
-
-cov2cor(g2)
-evolvabilityMeans(g2)
-evolvabilityBeta(g2, delta)$e
-evolvabilityBeta(g2, delta)$e/evolvabilityMeans(g2)[1]
+for(gg in 1:2){
+  out = prepareGD(species = "Mimulus_micranthus", gmatrix = gg, dmatrix = 1)
+  out$gmat
+  out$dmat
+  
+  # Meangg
+  s = out$dmat
+  means = abs(POPBASE[[s]]$popmeans[,-1])
+  means = means[,match(colnames(out$D), names(means))]
+  z0 = unlist(c(means[gg,])) #First G-matrix
+  means = means[-gg,]
+  colnames(means)==names(z0)
+  
+  outdat = computeDelta2(out$G, means, z0)
+  
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
+}
 
 ##### Nigella degenii ####
-g1 = droptraits(EVOBASE[["Nigella degenii: Mikonos"]]$G)
-
-m1 = EVOBASE[["Nigella degenii: Mikonos"]]$Means[c(1:3,6)]
-m2 = EVOBASE[["Nigella degenii: Siros"]]$Means[c(1:3,6)]
-names(m1)==names(m2)
-
-g1=meanStdG(g1, m1)*100
-c(names(m1)==colnames(g1))
-
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit length
-
-s = "Nigella degenii: Andersson 1997 greenhouse"
-deltaList[[length(deltaList)+1]] = data.frame(sp="Nigella_degenii", g="Nigella degenii: Mikonos", traits=ncol(g1), 
-                                              d=s, 
-                                              pop="Siros", 
-                                              emean=evolvabilityMeans(g1)[1],
-                                              emin=evolvabilityMeans(g1)[2],
-                                              emax=evolvabilityMeans(g1)[3],
-                                              cmean=evolvabilityMeans(g1)[4],
-                                              div=div, edelta=evolvabilityBeta(g1, delta)$e, 
-                                              cdelta=evolvabilityBeta(g1, delta)$c,
-                                              theta=acos(t(eigen(g1)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
-
-g2 = droptraits(EVOBASE[["Nigella degenii: Siros"]]$G)
-
-m1 = EVOBASE[["Nigella degenii: Mikonos"]]$Means[c(1:3,5:6)]
-m2 = EVOBASE[["Nigella degenii: Siros"]]$Means[c(1:3,5:6)]
-names(m1)==names(m2)
-
-g2 = meanStdG(g2, m2)*100
-c(names(m2)==colnames(g2))
-
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit length
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Nigella_degenii", g="Nigella degenii: Siros", traits=ncol(g2), 
-                                              d=s, 
-                                              pop="Mikonos",
-                                              emean=evolvabilityMeans(g2)[1],
-                                              emin=evolvabilityMeans(g2)[2],
-                                              emax=evolvabilityMeans(g2)[3],
-                                              cmean=evolvabilityMeans(g2)[4],
-                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
-                                              cdelta=evolvabilityBeta(g2, delta)$c,
-                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
+gg=1
+for(gg in 1:2){
+  out = prepareGD(species = "Nigella_degenii", gmatrix = gg, dmatrix = 1)
+  out$gmat
+  out$dmat
+  
+  # Means
+  s = out$dmat
+  means = POPBASE[[s]]$popmeans[,-1]
+  means = means[,match(colnames(out$D), names(means))]
+  z0 = unlist(c(means[gg,])) #First G-matrix
+  means = means[-gg,]
+  colnames(means)==names(z0)
+  
+  outdat = computeDelta2(out$G, means, z0)
+  
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
+}
 
 #### Lobelia ####
-g1 = droptraits(EVOBASE[["Lobelia siphilitica: CERA"]]$G)
-g1 = meanStdG(g1, EVOBASE[["Lobelia siphilitica: CERA"]]$Means)*100
-g2 = droptraits(EVOBASE[["Lobelia siphilitica: Krumm"]]$G)
-g2 = meanStdG(g2, EVOBASE[["Lobelia siphilitica: Krumm"]]$Means)*100
+for(gg in 1:2){
+  out = prepareGD(species = "Lobelia_siphilitica", gmatrix = gg, dmatrix = 1)
+  out$gmat
+  out$dmat
+  
+  # Means
+  s = out$dmat
+  means = POPBASE[[s]]$popmeans[,-1]
+  means = means[,match(colnames(out$D), names(means))]
+  z0 = unlist(c(means[gg,])) #First G-matrix
+  means = means[-gg,]
+  colnames(means)==names(z0)
+  
+  outdat = computeDelta2(out$G, means, z0)
+  
+  deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
+}
 
-s = "Lobelia siphilitica: Caruso 2004 greenhouse"
-m1 = unlist(POPBASE[[s]]$popmeans[1,c(6,7,4,5,2,3)])
-m2 = unlist(POPBASE[[s]]$popmeans[2,c(6,7,4,5,2,3)])
-c(names(m1)==colnames(g1))
-
-delta = log(m1)-log(m2)
-div = mean(abs(delta))*100
-delta = delta/sqrt(sum(delta^2)) #Unit length
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Lobelia_siphilitica", g="Lobelia siphilitica: CERA", traits=ncol(g1), 
-                                              d=s, 
-                                              pop="Krumm", 
-                                              emean=evolvabilityMeans(g1)[1],
-                                              emin=evolvabilityMeans(g1)[2],
-                                              emax=evolvabilityMeans(g1)[3],
-                                              cmean=evolvabilityMeans(g1)[4],
-                                              div=div, edelta=evolvabilityBeta(g1, delta)$e, 
-                                              cdelta=evolvabilityBeta(g1, delta)$c,
-                                              theta=acos(t(eigen(g1)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
-
-deltaList[[length(deltaList)+1]] = data.frame(sp="Lobelia_siphilitica", g="Lobelia siphilitica: Krumm", traits=ncol(g2), 
-                                              d=s, 
-                                              pop="CERA", 
-                                              emean=evolvabilityMeans(g2)[1],
-                                              emin=evolvabilityMeans(g2)[2],
-                                              emax=evolvabilityMeans(g2)[3],
-                                              cmean=evolvabilityMeans(g2)[4],
-                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
-                                              cdelta=evolvabilityBeta(g2, delta)$c,
-                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
-                                              row.names=NULL)
 
 #### Plotting deltaList ####
 
@@ -823,7 +495,7 @@ for(i in 1: nrow(deltaDat)){
   }
 }
 
-#save(deltaDat, file="deltaDat.RData")
+save(deltaDat, file="deltaDat.RData")
 
 x11(height=4, width=10)
 par(mfrow=c(1,3))
@@ -858,7 +530,7 @@ plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16,
 
 deltaDat[which(deltaDat$theta > 75 & (deltaDat$edelta/deltaDat$emax)>0.4),]
 
-meanDat = ddply(deltaDat, .(sp), summarize,
+meanDat = ddply(deltaDat, .(species), summarize,
               emean = median(emean),
               emax = median(emax),
               emin = median(emin),
@@ -867,8 +539,7 @@ meanDat = ddply(deltaDat, .(sp), summarize,
               cdelta = median(cdelta),
               div = median(div))
 
-
-#deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
+deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
 
 x11(height=6.5, width=8)
 par(mfrow=c(2,2), mar=c(4,4,2,4))
@@ -896,14 +567,7 @@ text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), x
 
 points(log10(median(meanDat$emean)), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
 
-deltaDat2=deltaDat
-#deltaDat2 = deltaDat[-which(deltaDat$sp=="Mimulus micranthus"),]
-#deltaDat2$cmean[which(deltaDat2$cmean<0.01)]=0.01
-meanDat2=meanDat
-#meanDat2 = meanDat2[-which(meanDat$sp=="Mimulus micranthus"),]
-#deltaDat2$cdelta[which(deltaDat2$cdelta<0.01)]=0.01
-
-plot(log10(deltaDat2$cmean), log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1, main="Conditional evolvability",
+plot(log10(deltaDat$cmean), log(deltaDat$cdelta/deltaDat$cmean), pch=16, las=1, main="Conditional evolvability",
      col="lightgrey",
      xlab="",
      ylab="",
@@ -912,7 +576,7 @@ plot(log10(deltaDat2$cmean), log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=
 axis(1, at=c(-2:1), labels = c(10^(-2:1)))
 mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
 mtext("Mean evolvability (%)", 1, line=2.5)
-points(log10(meanDat2$cmean), log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+points(log10(meanDat$cmean), log(meanDat$cdelta/meanDat$cmean), pch=16)
 abline(h=0, lty=1)
 abline(h=log(1/2), lty=2)
 abline(h=log(1/3), lty=2)
@@ -924,7 +588,7 @@ text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.
 text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
 text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
 
-points(log10(median(meanDat2$cmean)), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
+points(log10(median(meanDat$cmean)), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, col="blue")
 
 plot(deltaDat$div, log(deltaDat$edelta/deltaDat$emean), pch=16, las=1,
      col="lightgrey",
@@ -947,12 +611,12 @@ text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), x
 
 points(median(meanDat$div), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
 
-plot(deltaDat2$div, log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1,
+plot(deltaDat$div, log(deltaDat$cdelta/deltaDat$cmean), pch=16, las=1,
      col="lightgrey",
      xlab="",
      ylab="",
      xlim=c(-5, 120), ylim=c(-2, 4))
-points(meanDat2$div, log(meanDat2$cdelta/meanDat2$cmean), pch=16)
+points(meanDat$div, log(meanDat$cdelta/meanDat$cmean), pch=16)
 mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
 abline(h=0, lty=1)
@@ -966,7 +630,7 @@ text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.
 text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
 text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
 
-points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
+points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, col="blue")
 
 #### Scaling between mean and max ####
 plot(log10(deltaDat$emean), (deltaDat$edelta-deltaDat$emean)/(deltaDat$emax-deltaDat$emean), pch=16, las=1, main="Evolvability",
@@ -1074,13 +738,10 @@ points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16
 
 
 
-emin = deltaDat$emin
-emin[which(deltaDat$emin<0)]=0
-
 newe = (deltaDat$edelta-deltaDat$emean)/(deltaDat$emax-deltaDat$emean)
 for(i in 1:nrow(deltaDat)){
   if(newe[i]<0){
-    newe[i] = ((deltaDat$edelta[i]-emin[i])/(deltaDat$emean[i]-emin[i]))-1
+    newe[i] = ((deltaDat$edelta[i]-deltaDat$emin[i])/(deltaDat$emean[i]-deltaDat$emin[i]))-1
   }
 }
 
@@ -1292,7 +953,7 @@ reslist = list()
 for(s in 1:length(both_sp)){
   for(g in 1:nG[s]){
     for(d in 1:nD[s]){
-      res = computeGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:18)]
+      res = prepareGD(species = both_sp[s], gmatrix = g, dmatrix = d)[c(1:2, 5:18)]
       reslist[length(reslist)+1] = as.data.frame(unlist(res)[c(1:16)])
     }
   }
@@ -1381,4 +1042,72 @@ modD = meanStdG(modD, colMeans(means))
 round(modD, 3)
 
 index=1
+
+
+
+
+##### Holcus lanatus ####
+
+# G matrices very poorly estimated, excluded
+names(EVOBASE)
+m1 = EVOBASE[["Holcus lanatus: Improved"]]$Means[c(2,5,6,7)]
+m2 = EVOBASE[["Holcus lanatus: Traditional"]]$Means[c(1,4,5,6)]
+names(m1)==names(m2)
+
+g1 = droptraits(EVOBASE[["Holcus lanatus: Improved"]]$G)
+g1 = meanStdG(g1, m1)*100
+c(names(m1)==colnames(g1))
+
+delta = log(m2)-log(m1)
+delta = delta/sqrt(sum(delta^2)) #Unit-length
+
+evolvabilityMeans(g1)
+cov2cor(g1)
+evolvabilityBeta(g1, delta)$e
+evolvabilityBeta(g1, delta)$c
+evolvabilityBeta(g1, delta)$e/evolvabilityMeans(g1)[1]
+
+m1 = EVOBASE[["Holcus lanatus: Improved"]]$Means[c(3,5,6,7)]
+m2 = EVOBASE[["Holcus lanatus: Traditional"]]$Means[c(2,4,5,6)]
+names(m1)==names(m2)
+
+g2 = droptraits(EVOBASE[["Holcus lanatus: Traditional"]]$G)
+g2 = meanStdG(g2, m2)*100
+c(names(m1)==colnames(g2))
+
+delta = log(m2)-log(m1)
+delta = delta/sqrt(sum(delta^2)) #Unit-length
+
+cov2cor(g2)
+evolvabilityMeans(g2)
+evolvabilityBeta(g2, delta)$e
+evolvabilityBeta(g2, delta)$e/evolvabilityMeans(g2)[1]
+
+# Fenster & Carr 1997
+m1 = EVOBASE[["Mimulus guttatus: S II"]]$Means
+m2 = EVOBASE[["Mimulus guttatus: T II"]]$Means
+names(m1)==names(m2)
+
+#g1 = droptraits(EVOBASE[["Mimulus guttatus: S II"]]$G) #Exclude because a value of 0 precludes calculations
+g2 = droptraits(EVOBASE[["Mimulus guttatus: T II"]]$G)
+#g1 = meanStdG(g1, m1)*100
+g2 = meanStdG(g2, m2)*100
+c(names(m1)==colnames(g1))
+
+delta = log(m1)-log(m2)
+div = mean(abs(delta))*100
+delta = delta/sqrt(sum(delta^2)) #Unit-length
+
+deltaList[[length(deltaList)+1]] = data.frame(sp="Mimulus guttatus", g="Mimulus guttatus: T II", traits=ncol(g2), 
+                                              d=s, 
+                                              pop="S", 
+                                              emean=evolvabilityMeans(g2)[1],
+                                              emin=evolvabilityMeans(g2)[2],
+                                              emax=evolvabilityMeans(g2)[3],
+                                              cmean=evolvabilityMeans(g2)[4],
+                                              div=div, edelta=evolvabilityBeta(g2, delta)$e, 
+                                              cdelta=evolvabilityBeta(g2, delta)$c,
+                                              theta=acos(t(eigen(g2)$vectors[,1]) %*% delta)*(180/pi),
+                                              row.names=NULL)
+
 

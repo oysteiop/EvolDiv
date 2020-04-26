@@ -228,16 +228,16 @@ means = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T
 means
 z0 = colMeans(means)
 
-outdat = computeDelta(gmat/100, means, z0)
+outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(sp="Silene_latifolia", g="Silene latifolia: Xu 3 pops", traits=ncol(gmat), 
+deltaDF = data.frame(species="Silene_latifolia", g="Silene latifolia: Xu 3 pops", ntraits=ncol(gmat), 
                      d="Silene latifolia: All", pop=rownames(means), 
-                     emean=evolvabilityMeans(gmat)[1],
-                     emin=evolvabilityMeans(gmat)[2],
-                     emax=evolvabilityMeans(gmat)[3],
-                     cmean=evolvabilityMeans(gmat)[4],
-                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                     theta=outdat[,4], row.names=NULL)
+                     emean=outdat$emean,
+                     emin=outdat$emin,
+                     emax=outdat$emax,
+                     cmean=outdat$cmean,
+                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     theta=outdat$theta, row.names=NULL)
 head(deltaDF)
 save(deltaDF, file="analyses/delph_Silene/deltaDF.RData")
 

@@ -82,7 +82,8 @@ eVlist[[41]]
 metadata = ddply(ddat, .(ID), summarize,
                  Family=family[1],
                  Species=species[1],
-                 nPop=length(unique(population)))
+                 nPop=length(unique(population)),
+                 Env = unique(environment))
 metadata
 
 #### - Building the database list - ####
@@ -93,6 +94,7 @@ for(i in 1:length(studies)){
                       Species = paste(metadata$Species[metadata$ID==studies[i]]), 
                       nPop = paste(metadata$nPop[metadata$ID==studies[i]]),
                       distmat=round(distmatList[[i]],0),
+                      Env = paste(metadata$Env[metadata$ID==studies[i]]),
                       popmeans=meanList[[i]],
                       eV = eVlist[[i]],
                       D = signif(Dlist[[i]],4)) 

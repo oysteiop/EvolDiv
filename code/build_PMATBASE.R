@@ -56,18 +56,18 @@ for(s in 1:length(studies)){
       for(j in 1:length(traits)){
         w = max(which(red$traitX==traits[i] & red$traitY==traits[j]),
                 which(red$traitX==traits[j] & red$traitY==traits[i]))
-        G[i,j] = ifelse(max(c(red$corA[w],red$h2[w]),na.rm=T)>-2,max(c(red$corA[w],red$h2[w]),na.rm=T),NA)
+        G[i,j] = ifelse(max(c(red$corA[w], red$Vp[w]), na.rm=T)>-2, max(c(red$corA[w], red$Vp[w]), na.rm=T), NA)
       }
     }
     
-    Gvar2G=function(Gvar,Vp){
-      vars=diag(Gvar)*Vp
-      G=Gvar*sqrt(tcrossprod(vars))
-      diag(G)=vars
-      return(G)
+    corPtoP=function(corP){
+      vars = diag(corP)
+      P = corP*sqrt(tcrossprod(vars))
+      diag(P) = vars
+      return(P)
     }
     
-    G=Gvar2G(G,VpList[[s]])
+    G = corPtoP(G)
     colnames(G) = rownames(G) = traits
     Plist[[s]] = G
     

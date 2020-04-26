@@ -120,9 +120,9 @@ dat = read.csv("data/walter/Data_Exp1_Dmatrix.csv")
 
 load(file="./analyses/walter2018/Dmat150k.RData")
 n=10
-dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
+dpost = mod$VCV[,1:(n*n)]*100
+dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)*100
 colnames(dmat) = rownames(dmat) = colnames(dat)[3:12]
-dmat = dmat*100
 dmat
 
 #plot(mod$VCV[,1])
@@ -155,6 +155,7 @@ load(file="analyses/walter2018/Gmat_Wood.RData")
 #summary(mod$VCV)
 
 n=10
+gpost = mod$VCV[,1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(gmat)=rownames(gmat)=c("Height", "MSL_W", "SB", "MSD", "Area", "P2A2", "Circularity", "Nindents.Peri", "IndentWidthMean", "IndentDepthMean")
 gmat
@@ -162,8 +163,26 @@ gmat
 #evolvabilityMeans(gmat)
 #evolvabilityMeans(dmat)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, species="Senecio pinnatifolius", plot=F)
+source("code/computeGD.R")
+vals = computeGD(gmat, dmat, MeanP, species="Senecio pinnatifolius", plot=F)
+
+#Uncertainty over the posterior
+out = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)
+  sdmat = matrix(dpost[i,], nrow=n)
+  #sdmat = dmat
+  out[[i]] = computeGD(sgmat, sdmat, MeanP, species="")   
+}
+
+slopes = lapply(out, function(x) x$res$slope)
+slopemean = apply(simplify2array(slopes), 1, median)
+slopeSE = apply(simplify2array(slopes), 1, sd)
+
+vals$res$slope_MC = slopemean
+vals$res$SE = slopeSE
+
+vals
 
 gdDF = data.frame(species="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -171,13 +190,15 @@ gdDF = data.frame(species="Senecio_pinnatifolius", g = "Senecio pinnatifolius: W
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Senecio pinnatifolius: All", npops = 16, 
+                  d = "Senecio pinnatifolius: All", nPop = 16, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals[1,1], r2G = vals[2,1],
-                  betaD = vals[3,1], r2D = vals[4,1],
-                  betaD_cond = vals[8,1], r2D_cond = vals[9,1],
-                  r2All = vals[10,1],
-                  theta = vals[5,1], row.names = NULL)
+                  betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+                  betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  r2All = vals$res[8,6],
+                  theta = vals$theta, row.names = NULL)
 head(gdDF)
 
 save(gdDF, file="analyses/walter2018/gdDF_Dune.RData")
@@ -244,13 +265,16 @@ GDellipse(dmat, gmat, xlim=c(-7,7), ylim=c(-7, 7), main="Senecio: Dune")
 
 
 #### Divergence vectors ####
-
-# The G matrix
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
-load(file="analyses/walter2018/Gmat_Dune.RData")
-load(file="analyses/walter2018/Gmat_Head.RData")
-load(file="analyses/walter2018/Gmat_Table.RData")
-load(file="analyses/walter2018/Gmat_Wood.RData")
+
+pops = c("Dune", "Head", "Table", "Wood")
+p=1
+for(p in 1:length(pops)){
+  pop = pops[p]
+  
+# The G matrix
+filename = paste0("analyses/walter2018/Gmat_", pop,".RData")
+load(filename)
 
 n=10
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
@@ -266,20 +290,26 @@ ecotype = factor(substr(rownames(popmeans), 1, 1))
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
 head(Gdat)
 z0 = apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type, mean, na.rm=T)})
-z0 = z0[4,] #Choose reference
+z0 = z0[p,] #Choose reference
 
 source("code/computeDelta.R")
-outdat = computeDelta(gmat/100, means, z0)
+outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(sp="Senecio_pinnatifolius", g="Senecio pinnatifolius: Wood", traits=ncol(gmat), 
+name = paste0("Senecio pinnatifolius: ", pop)
+deltaDF = data.frame(species="Senecio_pinnatifolius", g=name, ntraits=ncol(gmat), 
                      d="Senecio pinnatifolius: All", pop=rownames(means), 
-                     emean=evolvabilityMeans(gmat)[1],
-                     emin=evolvabilityMeans(gmat)[2],
-                     emax=evolvabilityMeans(gmat)[3],
-                     cmean=evolvabilityMeans(gmat)[4],
-                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                     theta=outdat[,4], row.names=NULL)
+                     emean=outdat$emean,
+                     emin=outdat$emin,
+                     emax=outdat$emax,
+                     cmean=outdat$cmean,
+                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     theta=outdat$theta, row.names=NULL)
 head(deltaDF)
+
+filename=paste0("analyses/walter2018/deltaDF_", pop,".RData")
+
+save(deltaDF, file=filename)
+}
 
 save(deltaDF, file="analyses/walter2018/deltaDF_Dune.RData")
 save(deltaDF, file="analyses/walter2018/deltaDF_Head.RData")

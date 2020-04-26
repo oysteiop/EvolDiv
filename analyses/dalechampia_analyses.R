@@ -343,6 +343,7 @@ dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 
 load(file="analyses/dalechampia/Dmat_Mexico_75k.RData")
 n=6
+dpost = mod$VCV[,1:(n*n)]
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 dmat
@@ -362,6 +363,7 @@ dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
 load("analyses/dalechampia/Gmat_Tulum.RData")
 
 n = 6
+gpost = mod$VCV[,1:(n*n)]/100
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
@@ -374,8 +376,27 @@ evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 evolvabilityMeans(pmat*100)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens A", plot="c")
+source("code/computeGD.R")
+source("code/alignMat.R")
+vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", plot=F)
+
+#Uncertainty over the posterior
+out = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)
+  sdmat = matrix(dpost[i,], nrow=n)
+  #sdmat = dmat
+  out[[i]] = computeGD(sgmat, sdmat, pmat, species="Dalechampia scandens A")   
+}
+
+slopes = lapply(out, function(x) x$res$slope)
+slopemean = apply(simplify2array(slopes), 1, median)
+slopeSE = apply(simplify2array(slopes), 1, sd)
+
+vals$res$slope_MC = slopemean
+vals$res$SE = slopeSE
+
+vals
 
 gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -383,14 +404,14 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: T
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: MX", npops = 12, 
+                  d = "Dalechampia scandens A: MX", nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals$res[3,3], r2G = vals$res[3,4],
-                  betaD = vals$res[4,3], r2D = vals$res[4,4],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
-                  betaP = vals$res[6,3], r2P = vals$res[6,4],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
-                  r2All = vals$res[8,4],
+                  betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+                  betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
 
@@ -460,6 +481,7 @@ dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 
 load(file="analyses/dalechampia/Dmat_CostaRica_75k.RData")
 n=6
+dpost = mod$VCV[,1:(n*n)]
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 dmat
@@ -479,6 +501,7 @@ dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
 load("analyses/dalechampia/Gmat_Tulum.RData")
 
 n = 6
+gpost = mod$VCV[,1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
@@ -491,8 +514,25 @@ evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 evolvabilityMeans(pmat)
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens A", plot="c")
+vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", plot=F)
+
+#Uncertainty over the posterior
+out = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)
+  sdmat = matrix(dpost[i,], nrow=n)
+  #sdmat = dmat
+  out[[i]] = computeGD(sgmat, sdmat, pmat, species="Dalechampia scandens A")   
+}
+
+slopes = lapply(out, function(x) x$res$slope)
+slopemean = apply(simplify2array(slopes), 1, median)
+slopeSE = apply(simplify2array(slopes), 1, sd)
+
+vals$res$slope_MC = slopemean
+vals$res$SE = slopeSE
+
+vals
 
 gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -500,14 +540,14 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: T
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: CR", npops = 17, 
+                  d = "Dalechampia scandens A: CR", nPop = 17, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals$res[3,3], r2G = vals$res[3,4],
-                  betaD = vals$res[4,3], r2D = vals$res[4,4],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
-                  betaP = vals$res[6,3], r2P = vals$res[6,4],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
-                  r2All = vals$res[8,4],
+                  betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+                  betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
 
@@ -633,6 +673,7 @@ dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
 
 load(file="analyses/dalechampia/Dmat_Mexico_SG_75k.RData")
 n=5
+dpost = mod$VCV[, 1:(n*n)]
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = c("BA", "GA", "GSD", "SW", "GAD")
 dmat
@@ -652,6 +693,7 @@ dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
 load("analyses/dalechampia/Gmat_Tovar.RData")
 
 n = 5
+gpost = mod$VCV[, 1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD")
 round(gmat, 2)
@@ -667,7 +709,25 @@ cov2cor(gmat)
 cov2cor(dmat)
 cov2cor(pmat)
 
-vals = plot_GD(gmat, dmat, pmat, species="Dalechampia scandens B", plot="e")
+vals = computeGD(gmat, dmat, pmat, nPop=12, nFam = 45, species="Dalechampia scandens B", SE=F, plot=F)
+
+#Uncertainty over the posterior
+out = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)
+  sdmat = matrix(dpost[i,], nrow=n)
+  #sdmat = dmat
+  out[[i]] = computeGD(sgmat, sdmat, pmat, species="Dalechampia scandens A")   
+}
+
+slopes = lapply(out, function(x) x$res$slope)
+slopemean = apply(simplify2array(slopes), 1, median)
+slopeSE = apply(simplify2array(slopes), 1, sd)
+
+vals$res$slope_MC = slopemean
+vals$res$SE = slopeSE
+
+vals
 
 gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens: Tovar", ntraits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -675,14 +735,14 @@ gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens: T
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens B: MX", npops = 17, 
+                  d = "Dalechampia scandens B: MX", nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
-                  betaG = vals$res[3,3], r2G = vals$res[3,4],
-                  betaD = vals$res[4,3], r2D = vals$res[4,4],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,4],
-                  betaP = vals$res[6,3], r2P = vals$res[6,4],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,4],
-                  r2All = vals$res[8,4],
+                  betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
+                  betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
+                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
 
@@ -784,16 +844,17 @@ means = means[,c(6,5,3,4,1,2)]
 head(means)
 dim(means)
 
-outdat = computeDelta(gmat/100, means, z0)
+outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(sp="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", traits=ncol(gmat), 
+deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", ntraits=ncol(gmat), 
                      d="Dalechampia scandens A: MX", pop=rownames(means), 
-                     emean=evolvabilityMeans(gmat)[1],
-                     emin=evolvabilityMeans(gmat)[2],
-                     emax=evolvabilityMeans(gmat)[3],
-                     cmean=evolvabilityMeans(gmat)[4],
-                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                     theta=outdat[,4], row.names=NULL)
+                     emean=outdat$emean,
+                     emin=outdat$emin,
+                     emax=outdat$emax,
+                     cmean=outdat$cmean,
+                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     theta=outdat$theta, row.names=NULL)
+
 head(deltaDF)
 save(deltaDF, file="analyses/dalechampia/deltaDF_Tulum_MX.RData")
 
@@ -832,6 +893,7 @@ dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
 
 load("analyses/dalechampia/Gmat_Tulum.RData")
 n = 6
+gpost = mod$VCV[, 1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
 colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
 round(gmat, 2)
@@ -861,16 +923,34 @@ colnames(means)==colnames(gmat)
 head(means)
 dim(means)
 
-outdat = computeDelta(gmat/100, means, z0)
+source("code/computeDelta.R")
+outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(sp="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", traits=ncol(gmat), 
+outlist = list()
+for(i in 1:100){
+  sgmat = matrix(gpost[i,], nrow=n)/100
+  outlist[[i]] = computeDelta2(sgmat/100, means, z0)
+}
+meanmat = data.frame(apply(simplify2array(lapply(outlist, as.matrix)), 1:2, mean))
+semat = data.frame(apply(simplify2array(lapply(outlist, as.matrix)), 1:2, sd))
+
+rele = lapply(outlist, function(x) mean(x$edelta/x$emean))
+mean(unlist(rele))
+sd(unlist(rele))
+relec = lapply(outlist, function(x) mean(x$cdelta/x$cmean))
+mean(unlist(relec))
+sd(unlist(relec))
+
+
+deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", ntraits=ncol(gmat), 
                      d="Dalechampia scandens A: CR", pop=rownames(means), 
-                     emean=evolvabilityMeans(gmat)[1],
-                     emin=evolvabilityMeans(gmat)[2],
-                     emax=evolvabilityMeans(gmat)[3],
-                     cmean=evolvabilityMeans(gmat)[4],
-                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
-                     theta=outdat[,4], row.names=NULL)
+                     emean=outdat$emean,
+                     emin=outdat$emin,
+                     emax=outdat$emax,
+                     cmean=outdat$cmean,
+                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     theta=outdat$theta, row.names=NULL)
+
 head(deltaDF)
 save(deltaDF, file="analyses/dalechampia/deltaDF_Tulum_CR.RData")
 
@@ -941,9 +1021,9 @@ means = means[,c(5,4,2,3,1)]
 head(means)
 dim(means)
 
-outdat = computeDelta(gmat/100, means, z0)
+outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(sp="Dalechampia_scandens_B", g="Dalechampia scandens: Tovar", traits=ncol(gmat), 
+deltaDF = data.frame(species="Dalechampia_scandens_B", g="Dalechampia scandens: Tovar", ntraits=ncol(gmat), 
                      d="Dalechampia scandens B: MX", pop=rownames(means), 
                      emean=evolvabilityMeans(gmat)[1],
                      emin=evolvabilityMeans(gmat)[2],
