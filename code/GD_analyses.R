@@ -7,6 +7,9 @@ rm(list=ls())
 add2gdList=function(){
   data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
              nPop = out$nPop, nFam = out$nFam,
+             dims = paste0(substr(sort(unique(EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])), 1, 4), collapse="+"),
+             ndims = length(unique(EVOBASE[[as.character(out$g)]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])),
+             traitgroups = paste0(substr(sort(unique(EVOBASE[[out$g]]$Groups[match(colnames(out$G), names(EVOBASE[[out$g]]$Groups))])), 1, 3), collapse="+"),
              emean = evolvabilityMeans(out$G)[1],
              emin = evolvabilityMeans(out$G)[2],
              emax = evolvabilityMeans(out$G)[3],
@@ -48,7 +51,7 @@ estD = FALSE #Reestimating the error-corrected D matrices?
 thin = 100 # Thinning interval for the models estimating error-correcting D
 
 fixD = TRUE #Hold D fixed when assessing uncertainty
-nSample = 100 #Number of resamples
+nSample = 10 #Number of resamples for SE
 
 gdList = list()
 
@@ -58,8 +61,6 @@ gdList = list()
 out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 2)
 out$gmat
 out$dmat
-out$nFam
-out$nPop
 
 # Mean G-matrix
 glist = list()
@@ -896,7 +897,7 @@ gdList[[length(gdList)+1]] = add2gdList()
 
 #### dgList output ####
 
-#save(gdList, file="gdList.RData")
+save(gdList, file="gdList.RData")
 
 load(file="gdList.RData")
 
@@ -934,36 +935,13 @@ gdList[[length(gdList)+1]] = gdDF
 
 gdDat = rbind.fill(gdList)
 dim(gdDat)
-tail(gdDat)
+head(gdDat)
 
 for(i in 1: nrow(gdDat)){
   if(gdDat$theta[i]>90){
     gdDat$theta[i]=180-gdDat$theta[i]
   }
 }
-
-sort(as.character(unique(gdDat$species)))
-traitgroup = rep(NA, nrow(gdDat))
-traitgroup[which(gdDat$species=="Aquilegia_canadensis")] = "floral"
-traitgroup[which(gdDat$species=="Arabidopsis_lyrata")] = "floral+veg"
-traitgroup[which(gdDat$species=="Brassica_cretica")] = "mix"
-traitgroup[which(gdDat$species=="Clarkia_dudleyana")] = "floral"
-traitgroup[which(gdDat$species=="Crepis_tectorum")] = "veg"
-traitgroup[which(gdDat$species=="Dalechampia_scandens_A")] = "floral"
-traitgroup[which(gdDat$species=="Dalechampia_scandens_B")] = "floral"
-traitgroup[which(gdDat$species=="Fragaria_virginiana")] = "floral"
-traitgroup[which(gdDat$species=="Ipomopsis_aggregata")] = "floral"
-traitgroup[which(gdDat$species=="Lobelia_siphilitica")] = "floral"
-traitgroup[which(gdDat$species=="Lythrum_salicaria")] = "mix"
-traitgroup[which(gdDat$species=="Senecio_pinnatifolius")] = "veg"
-traitgroup[which(gdDat$species=="Solanum_carolinense")] = "floral"
-traitgroup[which(gdDat$species=="Spergularia_marina")] = "floral"
-traitgroup[which(gdDat$species=="Turnera_ulmifolia")] = "floral"
-traitgroup
-
-gdDat$traitgroup = traitgroup
-
-gdDat=gdDat[,-which(colnames(gdDat)=="dmean.1")]
 
 save(gdDat, file="gdDat.RData")
 

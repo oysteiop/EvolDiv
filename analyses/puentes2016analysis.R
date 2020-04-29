@@ -112,6 +112,7 @@ Sys.time()-a
 ######## Analyse G vs. D ########
 
 # The D matrix
+Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
 dat = Gdat
 
 load(file="./analyses/puentes2016/Dmat150k.RData")
@@ -147,7 +148,8 @@ gpost = mod$VCV[, 1:(n*n)]
 gmat = matrix(apply(mod$VCV, 2, median)[1:16], nrow=4)
 colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flowers", "rosette.size.cm")
 
-#source("code/computeGD.R")
+source("code/computeGD.R")
+source("code/alignMat.R")
 vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot=F)
 
 #Uncertainty over the posterior
@@ -171,12 +173,15 @@ vals
 name = paste0("Arabidopsis lyrata: ", pop)
 
 gdDF = data.frame(species="Arabidopsis_lyrata", g = name, ntraits = ncol(gmat), 
+                  dims = "line+coun",
+                  ndims = 2,
+                  traitgroups = "flo+veg",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Arabidopsis lyrata: All", nPop = 4, 
+                  d = "Arabidopsis lyrata: Puentes et al. 2016 common garden", nPop = 4, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -282,7 +287,7 @@ outdat = computeDelta2(gmat/100, means, z0)
 
 name = paste0("Arabidopsis lyrata: ", pop)
 deltaDF = data.frame(species="Arabidopsis_lyrata", g=name, ntraits=ncol(gmat), 
-                     d="Arabidopsis lyrata: All", pop=rownames(means), 
+                     d="Arabidopsis lyrata: Puentes et al. 2016 common garden", pop=rownames(means), 
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,

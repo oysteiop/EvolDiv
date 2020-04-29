@@ -146,11 +146,12 @@ for(i in 1:length(pops)){
 gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Individual Gmatrices
-load(file="analyses/walter2018/Gmat_Dune.RData")
-load(file="analyses/walter2018/Gmat_Head.RData")
-load(file="analyses/walter2018/Gmat_Table.RData")
-load(file="analyses/walter2018/Gmat_Wood.RData")
-
+pops=c("Dune", "Head", "Table", "Wood")
+#p=1
+for(p in 1:length(pops)){
+  pop = pops[p]
+  filename=paste0("analyses/walter2018/Gmat_", pop, ".RData")
+  load(filename)
 #plot(mod$VCV[,21])
 #summary(mod$VCV)
 
@@ -164,6 +165,7 @@ gmat
 #evolvabilityMeans(dmat)
 
 source("code/computeGD.R")
+source("code/alignMat.R")
 vals = computeGD(gmat, dmat, MeanP, species="Senecio pinnatifolius", plot=F)
 
 #Uncertainty over the posterior
@@ -184,13 +186,17 @@ vals$res$SE = slopeSE
 
 vals
 
-gdDF = data.frame(species="Senecio_pinnatifolius", g = "Senecio pinnatifolius: Wood", ntraits = ncol(gmat), 
+name = paste0("Senecio pinnatifolius: ", pop)
+gdDF = data.frame(species="Senecio_pinnatifolius", g = name, ntraits = ncol(gmat), 
+                  dims = "area+coun+line+rati",
+                  ndims = 4,
+                  traitgroups = "veg",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Senecio pinnatifolius: All", nPop = 16, 
+                  d = "Senecio pinnatifolius: Walter et al 2018 greenhouse", nPop = 16, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -201,10 +207,9 @@ gdDF = data.frame(species="Senecio_pinnatifolius", g = "Senecio pinnatifolius: W
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
 
-save(gdDF, file="analyses/walter2018/gdDF_Dune.RData")
-save(gdDF, file="analyses/walter2018/gdDF_Head.RData")
-save(gdDF, file="analyses/walter2018/gdDF_Table.RData")
-save(gdDF, file="analyses/walter2018/gdDF_Wood.RData")
+filename = paste0("analyses/walter2018/gdDF_", pop, ".RData")
+save(gdDF, file=filename)
+}
 
 
 # Compute eigenvectors etc.
@@ -297,7 +302,7 @@ outdat = computeDelta2(gmat/100, means, z0)
 
 name = paste0("Senecio pinnatifolius: ", pop)
 deltaDF = data.frame(species="Senecio_pinnatifolius", g=name, ntraits=ncol(gmat), 
-                     d="Senecio pinnatifolius: All", pop=rownames(means), 
+                     d= "Senecio pinnatifolius: Walter et al 2018 greenhouse", pop=rownames(means), 
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,

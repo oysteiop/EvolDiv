@@ -10,6 +10,7 @@ library(evolvability)
 library(rgdal)
 
 list.files()
+#ddat = read.csv2("data/dmatdata.csv", dec=".")
 ddat = read.table("data/dmatdata.txt", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
 ddat$upop = paste(ddat$species, ddat$population, sep="_")
@@ -116,9 +117,10 @@ titles
 names(POPBASE) = gsub("_", " ", titles)
 
 POPBASE = POPBASE[order(titles)]
-View(POPBASE)
 
 save(POPBASE, file = "data/POPBASE.RData")
+
+View(POPBASE)
 
 load(file = "data/POPBASE.RData")
 
@@ -128,6 +130,7 @@ maxdists = cbind(print(unlist(lapply(POPBASE, function(x)x$Study_ID))),
 maxdists[which(maxdists[,1]=="Barrett_and_Shore_1987_Turnera_ulmifolia_greenhouse"),2]=188 #Ca. distance from map in paper
 maxdists[which(maxdists[,1]=="Podolsky_et_al._1997_Clarkia_dudleyana_greenhouse"),2]=11.3 #Ca. distance from map in paper
 maxdists[which(maxdists[,1]=="Carter_and_Murdy_1986_Talinum_mengesii_greenhouse"),2]=214 #Ca. distance from map in paper
+maxdists[which(maxdists[,1]=="Carter_and_Murdy_1986_Talinum_teretifolium_greenhouse"),2]=110 #Ca. distance from map in paper
 
 maxdists[which(maxdists[,1]=="Carr_and_Fenster_1994_Mimulus_guttatus_greenhouse"),2]=10 #Description in paper
 maxdists[which(maxdists[,1]=="Fenster_and_Carr_1997_Mimulus_guttatus_greenhouse"),2]=10 #Description in Carr & Fenster 1994
@@ -146,3 +149,4 @@ maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_field"),2]
 View(maxdists)
 
 write.csv(maxdists, file="data/maxdists.csv")
+

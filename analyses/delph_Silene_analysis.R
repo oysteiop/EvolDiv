@@ -41,8 +41,14 @@ data = data[-1020,] #Remove duplicated ID
 crossID = crossID[,1:3]
 data = merge(data, crossID, by="Cross", all.x=T)
 data$animal = paste(data$Cross, data$individual, sep="-")
+data$dampop = factor(substr(data$Female, 1, 1))
+data$sirepop = factor(substr(data$Male, 1, 1))
 
+means_as = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T)) 
 head(data)
+tapply(data$mean_calyx_M, data$dampop, mean, na.rm=T)
+tapply(data$mean_calyx_M, data$dampop, var, na.rm=T)
+tapply(data$mean_calyx_M>0, data$dampop, sum, na.rm=T)
 
 # Format the pedigree data
 pedigree = subset(data, select=c("animal","Female","Male"))
@@ -90,6 +96,8 @@ Sys.time()-a
 
 save(mod, file="./analyses/delph_Silene/Gmat75k_2traits.RData")
 
+
+#### Divergence analysis ####
 load(file="./analyses/delph_Silene/Gmat75k_2traits.RData")
 n=2
 
@@ -112,8 +120,9 @@ smat = matrix(apply(mod$VCV, 2, median)[9:12], nrow=n)
 colnames(smat) = rownames(smat) = c("calyx_F", "calyx_M")
 smat
 
-source("code/plot_GD.R")
-vals = plot_GD(gmat, smat, species="Silene latifolia", plot=T)
+source("code/computeGD.R")
+source("code/alignMat.R")
+vals = computeGD(gmat, smat, species="Silene latifolia", plot=T)
 
 gdDF = data.frame(sp="Silene_latifolia", g = "Silene latifolia: 3 pops", traits = ncol(gmat), 
                   emean = evolvabilityMeans(gmat)[1],
@@ -224,14 +233,18 @@ acos(t(g_ev[,1]) %*% s_ev[,1])*(180/pi)
 
 #### Divergence vectors ####
 
-means = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T))
-means
+#means = apply(data[, 10:11], 2, function(x) tapply(x, data$dampop, mean, na.rm=T))
+means=means_as
 z0 = colMeans(means)
 
+source("code/computeDelta.R")
 outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(species="Silene_latifolia", g="Silene latifolia: Xu 3 pops", ntraits=ncol(gmat), 
-                     d="Silene latifolia: All", pop=rownames(means), 
+deltaDF = data.frame(species="Silene_latifolia", g="Silene latifolia: 3 pops", ntraits=ncol(gmat), 
+                     d= "Silene latifolia: Yu et al 2011 greenhouse", pop=rownames(means), 
+                     dims = "lin",
+                     ndims= 1,
+                     traitgroups= "flo",
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,

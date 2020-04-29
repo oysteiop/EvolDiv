@@ -15,7 +15,7 @@ library(devtools)
 library(evolvability)
 
 ddat = read.table("data/dmatdata.txt", header=T)
-ddat$ID = paste(ddat$reference,ddat$species,ddat$environment, sep="_")
+ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
 maxdists = read.csv(file="data/maxdists.csv")
 
 #Scaling of trait variances with the mean
@@ -29,62 +29,50 @@ studies
 splist = tapply(as.character(ddat$species), ddat$ID, function(x) x[1])
 
 #Compute among-pop variance for each trait in each study
-outlist=list()
+outlist = list()
 for(s in 1:length(studies)){
-  red=ddat[ddat$ID==studies[[s]],]
-  red$trait=factor(red$trait)
-  df=data.frame(study_ID=studies[[s]], 
-                species=splist[[s]], 
-                trait=sort(unique(red$trait)),
-                environment=sort(unique(red$environment)),
-                npop=tapply(red$mean>-Inf, red$trait, sum, na.rm=T),
-                d=cbind(tapply(log(red$mean), red$trait, var, na.rm=T)),
-                mean=cbind(tapply(red$mean, red$trait, mean, na.rm=T)))
-  df=na.omit(df)
-  outlist[[s]]=df
+  red = ddat[ddat$ID==studies[[s]],]
+  red$trait = factor(red$trait)
+  df=data.frame(study_ID = studies[[s]], 
+                species = splist[[s]], 
+                trait = sort(unique(red$trait)),
+                environment = sort(unique(red$environment)),
+                npop = tapply(red$mean>-Inf, red$trait, sum, na.rm=T),
+                d = cbind(tapply(log(abs(red$mean)), red$trait, var, na.rm=T)),
+                mean = cbind(tapply(red$mean, red$trait, mean, na.rm=T)))
+  df = na.omit(df)
+  outlist[[s]] = df
 }
 ddf = rbind.fill(outlist)
 head(ddf, 5)
 
-# Sampling variance of a variance (From Lynch & Walsh 1998 p. 815)
-sv = (2*(ddf$d^2))/(ddf$npop+2)
-ddf$d_se = sqrt(sv)
+ddat$species_trait = paste0(ddat$species, "_", ddat$trait)
+ddf$species_trait = paste0(ddf$species, "_", ddf$trait)
 
-#Combine with data from Evolvability database
-edat = read.table("data/evolvabilitydatabase2020.txt", header=T)
-
-edat$species_measurement = paste0(edat$species,"_",edat$measurement)
-ddf$species_trait = paste0(ddf$species,"_",ddf$trait)
-
+# Add metadata
 tg1=NULL
 for(i in 1:nrow(ddf)){
-  tg1[i]=as.character(edat$traitgroup1)[which(as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])[1]]
+  tg1[i]=as.character(ddat$tg1)[which(as.character(ddat$species_trait)==as.character(ddf$species_trait)[i])[1]]
 }
 
 tg2=NULL
 for(i in 1:nrow(ddf)){
-  tg2[i]=as.character(edat$traitgroup2)[which(as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])[1]]
+  tg2[i]=as.character(ddat$tg2)[which(as.character(ddat$species_trait)==as.character(ddf$species_trait)[i])[1]]
 }
 
 dimension=NULL
 for(i in 1:nrow(ddf)){
-  dimension[i]=as.character(edat$dimension)[which(as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])[1]]
+  dimension[i]=as.character(ddat$dimension)[which(as.character(ddat$species_trait)==as.character(ddf$species_trait)[i])[1]]
 }
 
 ms=NULL
 for(i in 1:nrow(ddf)){
-  ms[i]=as.character(edat$matingsystem)[which(as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])[1]]
+  ms[i]=as.character(ddat$ms)[which(as.character(ddat$species_trait)==as.character(ddf$species_trait)[i])[1]]
 }
 
 maxdist=NULL
 for(i in 1:nrow(ddf)){
   maxdist[i]=as.numeric(maxdists[which(maxdists[,2]==as.character(ddf$study_ID)[i])[1],3])
-}
-
-evals=NULL
-for(i in 1:nrow(ddf)){
-w=which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])
-evals[i]=mean(edat$evolvability[w],na.rm=T)
 }
 
 ddf$maxdist = maxdist
@@ -94,14 +82,40 @@ ddf$ms = ms
 ddf$ms = factor(ddf$ms, levels=c("S","M","O"))
 ddf$dimension = dimension
 ddf$dimension = factor(ddf$dimension, levels=c("linear", "area", "mass_volume", "count", "ratio", "time"))
-ddf$evals = evals
 ddf$environment = factor(ddf$environment, levels=c("greenhouse", "common_garden", "field"))
+
+# Sampling variance of a variance (From Lynch & Walsh 1998 p. 815)
+sv = (2*(ddf$d^2))/(ddf$npop+2)
+ddf$d_se = sqrt(sv)
+#plot(ddf$d, ddf$d_se)
+#lines(0:100, 0:100)
+#plot(ddf$npop, (ddf$d_se/ddf$d))
+
+# Combine with data from Evolvability database
+edat = read.table("data/evolvabilitydatabase2020.txt", header=T)
+edat$species_measurement = paste0(edat$species,"_",edat$measurement)
+
+evals = NULL
+for(i in 1:nrow(ddf)){
+w = which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])
+evals[i] = mean(edat$evolvability[w], na.rm=T)
+}
+ddf$evals = evals
+
 head(ddf)
+summary(ddf)
 
-# Write csv of this and gap-fill manually, then import file
-#write.csv2(ddf, file="data/ddf.csv", row.names=F)
 
-ddf = read.csv2(file="data/ddf_gapfilled.csv")
+red=ddf[ddf$ms%in%c("S","M","O"),]
+red$ms=factor(red$ms,levels=c("S","M","O"))
+red=red[red$tg1%in%c("floral","vegetative"),]
+mstg=paste0(red$ms, red$tg1)
+mstg=factor(mstg, levels=c("Sfloral","Svegetative","Mfloral","Mvegetative","Ofloral","Ovegetative"))
+plot(factor(mstg), log(red$d),at=c(1,2,4,5,7,8), las=1, col=rep(c("white","grey"),2), xaxt="n", xlab="",
+     ylab="Divergence", ylim=c(-15, 6))
+legend("topleft", pch=c(15, 0), col=c("grey", "white"), legend=c("Vegetative", "Floral"), bty="n", pt.cex = 1.3)
+legend("topleft", pch=c(0, 0), col=c("black", "black"), legend=c("", ""), bty="n", pt.cex=1.3)
+axis(1, at=c(1.5, 4.5, 7.5), labels=c("Selfer", "Mixed", "Outcrossing"))
 
 #### Summary stats with all divergence data####
 length(unique(ddf$study_ID))
@@ -109,7 +123,6 @@ length(unique(ddf$species))
 
 tapply(ddf$d*100, ddf$tg1, median)
 round(sqrt(tapply(ddf$d, ddf$tg1, median))*sqrt(2/pi)*100, 1) #dL
-
 tapply(ddf$d>-Inf, ddf$tg1, sum)
 
 tapply(ddf$d*100, list(ddf$tg1, ddf$tg2), median)
@@ -120,7 +133,6 @@ tapply(ddf$d*100, list(ddf$tg1, ddf$dimension), median)
 
 tapply(ddf$d*100, list(ddf$ms, ddf$tg1), median, na.rm=T)
 tapply(ddf$d>-Inf, list(ddf$ms, ddf$tg1), sum, na.rm=T)
-
 
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d*100, lin$tg1, median)
@@ -218,9 +230,9 @@ h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
 #### Subset data for d vs. e meta-analysis ####
+ddf = na.omit(ddf)
 ddf = ddf[ddf$d>0,]
 ddf = ddf[ddf$evals>0,]
-ddf = na.omit(ddf)
 head(ddf)
 
 #Check
@@ -266,37 +278,39 @@ m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), 
 summary(m0)
 
 
-#Remove some of the repeated D. scandens studies?
+# Remove some of the repeated D. scandens studies?
 ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
 ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
 #ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
 
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
 ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
+wgts = 1/((ddf$d_se^2)/(ddf$d^2))
+plot(ddf$npop, wgts)
 
-m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
+m0 = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 summary(m0)
 
 m0b = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (log(evals)|species/study_ID), REML=F, data=ddf)
-summary(m0b)
 AIC(m0,m0b)
+summary(m0b)
 
-m = lmer(log(d)~ log(evals)*log(maxdist) + log(npop) + (1|species/study_ID), REML=F, data=ddf)
+m = lmer(log(d)~ log(evals)*log(maxdist) + log(npop) + (log(evals)|study_ID) +(1|species), REML=F, weights=wgts, data=ddf)
 summary(m)
 AIC(m0, m)
 
-m = lmer(log(d)~ log(evals)*ms + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
+m = lmer(log(d)~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 summary(m)
 
-m = lmer(log(d)~ log(evals)*dimension + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
+m = lmer(log(d)~ log(evals)*dimension + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 logLik(m0)
 logLik(m)
 
 summary(m)
 
-m = lmer(log(d)~ log(evals)*environment + log(npop) + log(maxdist) + (1|species/study_ID), REML=F, data=ddf)
+m = lmer(log(d)~ log(evals)*environment + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 summary(m)
 
@@ -319,10 +333,13 @@ summary(m)
 # Formal meta-analysis using Almer_SE
 SE = sqrt((ddf$d_se^2)/(ddf$d^2))
 plot(ddf$npop, SE)
-m = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (1|species/study_ID), 
+m0 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID), 
            SE=SE, maxiter = 100, data=ddf)
-AIC(m0, m)
-summary(m)
+m1 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), 
+                            SE=SE, maxiter = 100, data=ddf)
+
+AIC(m0, m1)
+summary(m1)
 
 #### Plotting evolvability vs. divergence ####
 
@@ -627,37 +644,37 @@ y = summary(m)$coef[6,1] + summary(m)$coef[14,1]*x1 +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="count"])
 lines(log10(exp(x1)), log10(exp(y)), col=cols[6], lwd=2)
 
-me_e = log(median(ddf$evals[dimension=="ratio"]))
+me_e = log(median(ddf$evals[ddf$dimension=="ratio"]))
 y = summary(m)$coef[1,1] + summary(m)$coef[9,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="ratio"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="ratio"])
 points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 
-me_e = log(median(ddf$evals[dimension=="linear"]))
+me_e = log(median(ddf$evals[ddf$dimension=="linear"]))
 y = summary(m)$coef[2,1] + summary(m)$coef[10,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="linear"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="linear"])
 points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 
-me_e = log(median(ddf$evals[dimension=="time"]))
+me_e = log(median(ddf$evals[ddf$dimension=="time"]))
 y = summary(m)$coef[3,1] + summary(m)$coef[11,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="time"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="time"])
 points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 
-me_e = log(median(ddf$evals[dimension=="mass_volume"]))
+me_e = log(median(ddf$evals[ddf$dimension=="mass_volume"]))
 y = summary(m)$coef[4,1] + summary(m)$coef[12,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="mass_volume"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="mass_volume"])
 points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 
-me_e = log(median(ddf$evals[dimension=="area"]))
+me_e = log(median(ddf$evals[ddf$dimension=="area"]))
 y = summary(m)$coef[5,1] + summary(m)$coef[13,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="area"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="area"])
 points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 
-me_e = log(median(ddf$evals[dimension=="count"]))
+me_e = log(median(ddf$evals[ddf$dimension=="count"]))
 y = summary(m)$coef[6,1] + summary(m)$coef[14,1]*me_e +
   summary(m)$coef[7,1]*mean(ddf$scale_npop[ddf$dimension=="count"]) +
   summary(m)$coef[8,1]*mean(ddf$scale_maxdist[ddf$dimension=="count"])
@@ -750,7 +767,7 @@ plotSubset("dimension", "ratio")
 plotSubset("dimension", "time")
 
 
-studies=unique(ddf$study_ID)
+studies = unique(ddf$study_ID)
 
 pdf("figs/univariate_G_D_plots2.pdf")
 for(s in 1:length(studies)){

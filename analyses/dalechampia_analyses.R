@@ -244,6 +244,10 @@ X = na.omit(X)
 head(X)
 str(X)
 
+X$population=factor(X$population)
+write.csv2(melt(t(apply(X[,1:5], 2, function(x) tapply(x>0, X$population, sum, na.rm=T)))), "SGmeans.csv")
+
+
 samples = 1000
 thin = 50
 burnin = samples*thin*.5
@@ -398,13 +402,16 @@ vals$res$SE = slopeSE
 
 vals
 
-gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
+gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A: Tulum", ntraits = ncol(gmat), 
+                  dims = "line",
+                  ndims = 1,
+                  traitgroups = "flo",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: MX", nPop = 12, 
+                  d = "Dalechampia scandens A: Bolstad et al. Mexico greenhouse" , nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -534,13 +541,16 @@ vals$res$SE = slopeSE
 
 vals
 
-gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens: Tulum", ntraits = ncol(gmat), 
+gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A: Tulum", ntraits = ncol(gmat), 
+                  dims = "line",
+                  ndims = 1,
+                  traitgroups = "flo",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens A: CR", nPop = 17, 
+                  d = "Dalechampia scandens A: Opedal et al. Costa Rica greenhouse", nPop = 17, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -729,13 +739,16 @@ vals$res$SE = slopeSE
 
 vals
 
-gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens: Tovar", ntraits = ncol(gmat), 
+gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens B: Tovar", ntraits = ncol(gmat), 
+                  dims = "line",
+                  ndims = 1,
+                  traitgroups = "flo",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Dalechampia scandens B: MX", nPop = 12, 
+                  d = "Dalechampia scandens B: Bolstad et al. Mexico greenhouse", nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -844,10 +857,11 @@ means = means[,c(6,5,3,4,1,2)]
 head(means)
 dim(means)
 
+source("code/computeDelta.R")
 outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", ntraits=ncol(gmat), 
-                     d="Dalechampia scandens A: MX", pop=rownames(means), 
+deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens A: Tulum", ntraits=ncol(gmat), 
+                     d="Dalechampia scandens A: Bolstad et al. Mexico greenhouse", pop=rownames(means), 
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,
@@ -942,8 +956,8 @@ mean(unlist(relec))
 sd(unlist(relec))
 
 
-deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens: Tulum", ntraits=ncol(gmat), 
-                     d="Dalechampia scandens A: CR", pop=rownames(means), 
+deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens A: Tulum", ntraits=ncol(gmat), 
+                     d="Dalechampia scandens A: Opedal et al. Costa Rica greenhouse", pop=rownames(means), 
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,
@@ -1023,8 +1037,8 @@ dim(means)
 
 outdat = computeDelta2(gmat/100, means, z0)
 
-deltaDF = data.frame(species="Dalechampia_scandens_B", g="Dalechampia scandens: Tovar", ntraits=ncol(gmat), 
-                     d="Dalechampia scandens B: MX", pop=rownames(means), 
+deltaDF = data.frame(species="Dalechampia_scandens_B", g="Dalechampia scandens B: Tovar", ntraits=ncol(gmat), 
+                     d="Dalechampia scandens B: Bolstad et al. Mexico greenhouse", pop=rownames(means), 
                      emean=evolvabilityMeans(gmat)[1],
                      emin=evolvabilityMeans(gmat)[2],
                      emax=evolvabilityMeans(gmat)[3],

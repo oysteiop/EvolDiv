@@ -217,11 +217,11 @@ signif(cov2cor(dmat), 2)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot="c")
+vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -237,13 +237,16 @@ vals$res$SE = slopeSE
 
 vals
 
-gdDF = data.frame(species="Crepis_tectorum", g = "Crepis tectorum: Visby", ntraits = ncol(gmat), 
+gdDF = data.frame(species="Crepis_tectorum", g = "Crepis tectorum: Vickleby", ntraits = ncol(gmat), 
+                  dims = "line+coun",
+                  ndims = 2,
+                  traitgroups = "veg",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Crepis tectorum: All", nPop = 54, 
+                  d = "Crepis tectorum: Andersson Crepis greenhouse", nPop = 54, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -346,8 +349,8 @@ z0 = colMeans(dat[,4:8])
 source("code/computeDelta.R")
 outdat = computeDelta2(G=gmat/100, means=means, z0=z0)
 
-deltaDF = data.frame(species="Crepis_tectorum", g="Crepis tectorum: Visby", ntraits=ncol(gmat), 
-                            d="Crepis tectorum: All", pop=rownames(means), 
+deltaDF = data.frame(species="Crepis_tectorum", g="Crepis tectorum: Vickleby", ntraits=ncol(gmat), 
+                            d="Crepis tectorum: Andersson Crepis greenhouse", pop=rownames(means), 
                             emean=outdat$emean,
                             emin=outdat$emin,
                             emax=outdat$emax,

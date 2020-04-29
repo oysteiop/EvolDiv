@@ -192,6 +192,7 @@ diag(gmat)/(diag(dmat) + diag(gmat))
 pmat = MeanP
 
 source("code/computeGD.R")
+source("code/alignMat.R")
 vals = computeGD(gmat, dmat, pmat, species="Lythrum salicaria", plot=F)
 
 #Uncertainty over the posterior
@@ -213,12 +214,15 @@ vals$res$SE = slopeSE
 vals
 
 gdDF = data.frame(species="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops", ntraits = ncol(gmat), 
+                  dims = "area+line+mass+time",
+                  ndims = 4,
+                  traitgroups = "flo+lif+veg",
                   emean = evolvabilityMeans(gmat)[1],
                   emin = evolvabilityMeans(gmat)[2],
                   emax = evolvabilityMeans(gmat)[3],
                   cmean = evolvabilityMeans(gmat)[4],
                   imean = evolvabilityMeans(gmat)[7],
-                  d = "Lythrum salicaria: All", nPop = 20, 
+                  d = "Lythrum salicaria: Colautti and Barrett 2011 greenhouse", nPop = 20, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
@@ -313,7 +317,7 @@ z0 = colMeans(means)
 outdat = computeDelta2(gmat/100, means, z0)
 
 deltaDF = data.frame(species="Lythrum_salicaria", g="Lythrum salicaria: 20 pops", ntraits=ncol(gmat), 
-                     d="Lythrum salicaria: All", pop=rownames(means), 
+                     d="Lythrum salicaria: Colautti and Barrett 2011 greenhouse", pop=rownames(means), 
                      emean=outdat$emean,
                      emin=outdat$emin,
                      emax=outdat$emax,

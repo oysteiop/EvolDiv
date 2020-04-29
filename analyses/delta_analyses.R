@@ -7,6 +7,9 @@ rm(list=ls())
 add2deltaList=function(pop=POPBASE[[s]]$popmeans[,1]){
   data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
              d=out$dmat, pop=pop, 
+             dims = paste0(substr(sort(unique(EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])), 1, 4), collapse="+"),
+             ndims = length(unique(EVOBASE[[as.character(out$g)]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])),
+             traitgroups = paste0(substr(sort(unique(EVOBASE[[out$g]]$Groups[match(colnames(out$G), names(EVOBASE[[out$g]]$Groups))])), 1, 3), collapse="+"),
              emean=outdat$emean,
              emin=outdat$emin,
              emax=outdat$emax,
@@ -50,6 +53,7 @@ colnames(means)==names(z0)
 #outdat = computeDelta(G=out$G, means=means, z0=z0)
 #evolvabilityMeans(out$G)
 outdat = computeDelta2(G=out$G, means=means, z0=z0)
+outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -250,6 +254,7 @@ for(gg in 1:5){
   colnames(means)==names(z0)
   
   outdat = computeDelta2(G=out$G, means=means, z0=z0)
+  outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -362,7 +367,7 @@ deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
 ##### Mimulus guttatus ####
 gmats = c(5,7)
-
+gg=1
 for(gg in 1:2){
 out = prepareGD(species = "Mimulus_guttatus", gmatrix = gmats[gg], dmatrix = 1)
 out$gmat
@@ -378,6 +383,7 @@ means = means[-gg,]
 colnames(means)==names(z0)
 
 outdat = computeDelta2(out$G, means, z0)
+outdat2 = computeDelta3(out$G, means, z0, SE=T, nSample=100)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -444,7 +450,7 @@ for(gg in 1:2){
 
 #### Plotting deltaList ####
 
-#save(deltaList, file="deltaList.RData")
+save(deltaList, file="deltaList.RData")
 
 load(file="deltaList.RData")
 
