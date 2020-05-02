@@ -17,6 +17,8 @@ add2gdList=function(){
              imean = evolvabilityMeans(out$G)[7],
              d = out$dmat, 
              dmean = evolvabilityMeans(out$D)[1],
+             betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
+             betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
              betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
              betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
              betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
@@ -51,7 +53,7 @@ estD = FALSE #Reestimating the error-corrected D matrices?
 thin = 100 # Thinning interval for the models estimating error-correcting D
 
 fixD = TRUE #Hold D fixed when assessing uncertainty
-nSample = 10 #Number of resamples for SE
+nSample = 100 #Number of resamples for SE
 
 gdList = list()
 
@@ -459,7 +461,7 @@ out$gmat
 # Mean G matrix
 glist = list()
 for(i in 1:4){
-  glist[[i]] = prepareGD(species = both_sp[14], gmatrix = i, dmatrix = 1)$G
+  glist[[i]] = prepareGD(species = "Spergularia_marina", gmatrix = i, dmatrix = 1)$G
 }
 gmat = apply(simplify2array(glist), 1:2, mean)
 
@@ -947,11 +949,18 @@ save(gdDat, file="gdDat.RData")
 
 # Summary stats
 median(gdDat$betaG)
+median(gdDat$r2G)
+sum(gdDat$betaG>-Inf)
+
 median(gdDat$betaD)
-median(gdDat$betaD_cond)
+median(gdDat$r2D)
+
 median(gdDat$betaP, na.rm=T)
+median(gdDat$r2P, na.rm=T)
+sum(gdDat$betaP>-Inf, na.rm=T)
+
+median(gdDat$betaD_cond)
 median(gdDat$betaP_cond, na.rm=T)
-sum(gdDat$betaP>0, na.rm=T)
 
 # Weighed mean
 wval = NULL
@@ -961,16 +970,15 @@ for(i in 1:nrow(gdDat)){
   wval[i] = gdDat$betaG[i]*u[i]
 }
 sum(wval)/sum(u)
-mean(gdDat$betaG)
+median(gdDat$betaG)
 
 m = lmer(betaG~1 + (1|species), weights= (1/(gdDat$betaG_SE^2)), data=gdDat)
 mSE = Almer_SE(betaG ~ 1 + (1|species), SE=gdDat$betaG_SE, data=gdDat)
 #m=lm(betaG~1, weights=(1/gdDat$betaG_SE^2), data=gdDat)
 summary(m)
 summary(mSE)
-plot(ranef(m)[[1]][,1], ranef(mSE)[[1]][,1])
 
-meanDat = ddply(gdDat, .(species, traitgroup), summarize,
+meanDat = ddply(gdDat, .(species), summarize,
                 emean = median(emean),
                 cmean = median(cmean),
                 dmean= median(dmean),
@@ -997,7 +1005,7 @@ hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors"))
 par(mar=c(4,4,1,2))
 plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
      ylim=c(-1,4), xlim=c(-.2,2), xlab="", ylab="", las=1)
-segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
+#segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
 #segments(gdDat$betaG, gdDat$betaD-gdDat$betaD_SE, gdDat$betaG, gdDat$betaD+gdDat$betaD_SE, col="grey")
 points(meanDat$betaG, meanDat$betaD, pch=16)
 points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
@@ -1005,7 +1013,8 @@ abline(h=1, lty=2)
 abline(v=1, lty=2)
 mtext("Slope of G eigenvectors", 1, line=2.5)
 mtext("Slope of D eigenvectors", 2, line=2.5)
-
+points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
+lines(-10:10, -10:10, lty=2)
 
 # Conditional evolvability
 x11(height=6, width=4.5)
@@ -1027,54 +1036,51 @@ abline(v=1, lty=2)
 mtext("Slope of G eigenvectors", 1, line=2.5)
 mtext("Slope of D eigenvectors", 2, line=2.5)
 
-par(mfrow=c(1,1))
-plot(gdDat$r2G, gdDat$betaG, pch=16, las=1, ylim=c(0,3), ylab="Slope", xlab="R2 for G eigenvectors")
-points(gdDat$r2G, gdDat$betaD)
-legend("topleft", pch=c(1,16), legend=c("D", "G"))
-abline(h=1)
+#More complex version
+pdf("slopescatter.pdf", height=6, width=9, family="Times")
+x11(height=6, width=9)
+mat = matrix(c(1,2,3,4,5,5,6,6,5,5,6,6), nrow=3, byrow=T)
+layout(mat = mat)
+par(mar=c(2,4,4,2), oma=c(1,0,0,0))
+hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
+text(-.275, 10, "(A)", cex=1.5, xpd=T)
+hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1, col="lightgrey")
+hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P eigenvectors")), las=1, col="lightblue")
+hist(gdDat$r2All, xlab="", ylab="", main=expression(paste(R^2, " overall")), las=1)
 
-plot(gdDat$r2G, gdDat$betaG, pch=16, las=1, ylim=c(0,3), ylab="Slope", xlab="R2")
-points(gdDat$r2D, gdDat$betaD)
-legend("topleft", pch=c(1,16), legend=c("D", "G"))
-abline(h=1)
+par(mar=c(4,4,1,2))
+plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
+     ylim=c(-1,4), xlim=c(-.2,2), xlab="", ylab="", las=1)
+#segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
+#segments(gdDat$betaG, gdDat$betaD-gdDat$betaD_SE, gdDat$betaG, gdDat$betaD+gdDat$betaD_SE, col="grey")
+points(meanDat$betaG, meanDat$betaD, pch=16)
+points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
+abline(h=1, lty=2)
+abline(v=1, lty=2)
+mtext("Slope of G eigenvectors", 1, line=3)
+mtext("Slope of D eigenvectors", 2, line=2.5)
+#points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
+lines(-10:10, -10:10, lty=2)
+text(-.5, 4, "(B)", cex=1.5, xpd=T)
 
-x11(height=4.5, width=4.5)
-plot(gdDat$r2All, gdDat$betaG, pch=16, las=1, ylim=c(0,4), ylab="Slope", xlab="Overall R2")
+plot(gdDat$r2All, gdDat$betaG, pch=16, las=1, xlim=c(0,1), ylim=c(0,3.5), ylab="", xlab="")
 points(gdDat$r2All, gdDat$betaD, pch=16, col="grey")
-legend("topright", pch=c(16,16), col=c("black", "grey"), legend=c("G", "D"))
+points(gdDat$r2All, gdDat$betaP, pch=16, col="lightblue")
+mtext(expression(paste(R^2, " overall")), 1, line=3)
+mtext("Slope", 2, line=2.5)
+legend("topright", pch=c(16,16,16), cex=1.3, col=c("black", "grey", "lightblue"), legend=c("G eigenvectors", "D eigenvectors", "P eigenvectors"))
 abline(h=1)
+text(-.165, 3.5, "(C)", cex=1.5, xpd=T)
 
-par(mfrow=c(2,2))
-plot(gdDat$theta, gdDat$betaG, pch=16, ylim=c(0, 1.6), xlim=c(0,90),las=1)
-coefs = summary(lm(betaG~theta, data=gdDat))$coef
-x = 0:90
-y = coefs[1,1] + coefs[2,1]*x
-#lines(x, y)
+dev.off()
 
-plot(gdDat$theta, gdDat$r2G, ylim=c(0,1), xlim=c(0,90), pch=16, las=1)
-coefs = summary(lm(r2G~theta, data=gdDat))$coef
-x = 0:90
-y = coefs[1,1] + coefs[2,1]*x
-#lines(x, y)
-
-plot(gdDat$theta, gdDat$betaD, pch=16, ylim=c(0, 3), xlim=c(0,90),las=1)
-coefs = summary(lm(betaG~theta, data=gdDat))$coef
-x = 0:90
-y = coefs[1,1] + coefs[2,1]*x
-#lines(x, y)
-
-plot(gdDat$theta, gdDat$r2D, ylim=c(0,1), xlim=c(0,90), pch=16, las=1)
-coefs = summary(lm(r2G~theta, data=gdDat))$coef
-x = 0:90
-y = coefs[1,1] + coefs[2,1]*x
-#lines(x, y)
-
-plot(gdDat$theta, gdDat$r2All, ylim=c(0,1), xlim=c(0,90), pch=16, las=1)
-coefs = summary(lm(r2G~theta, data=gdDat))$coef
-x = 0:90
-y = coefs[1,1] + coefs[2,1]*x
-#lines(x, y)
-
+m1 = lmer(betaG ~ r2All + ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m2 = lmer(betaG ~ r2All + ntraits + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m3 = lmer(betaG ~ ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m4 = lmer(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m5 = lmer(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
+AIC(m1, m2, m3, m4, m5)
+summary(m1)
 
 # All the studies ####
 nG = NULL

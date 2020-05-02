@@ -132,21 +132,35 @@ for(i in 1:nrow(comb2)){
 ms[i] = paste0(EVOBASE[[as.character(comb2$g[i])]]$MS, collapse = "+")
 }
 ms = factor(ms, levels=c("S", "M", "O"))
-table(ms)
-data.frame(comb2$ID, ms)
-
 comb2$ms = ms
 table(comb2$ms)
 
+x11()
+par(mfrow=c(1,2))
+plot(ms, comb2$betaG, las=1, ylab="Slope for G directions")
+plot(ms, comb2$edelta/comb2$emean.y, las=1, ylab=expression(paste("Proportional evolvability along   ", Delta, "z")))
+
 plot(ms, log10(comb2$div))
-plot(ms, comb2$betaG)
-plot(ms, comb2$edelta/comb2$emean.y)
+plot(ms, log10(comb2$dmean))
 
+flo = comb2[comb2$traitgroups=="flo",]
+table(flo$ms)
+par(mfrow=c(1,3))
+plot(flo$ms, flo$betaG)
+plot(flo$ms, log10(flo$dmean))
+plot(flo$ms, flo$edelta/flo$emean.y)
 
-m = lmer(betaG ~ ms + (1|species.y), weights=(1/comb2$betaG_SE^2),data=comb2)
+m0 = lmer(betaG ~ 1 + (1|species.y), weights=(1/comb2$betaG_SE^2), data=comb2)
+m = lmer(betaG ~ ms + (1|species.y), weights=(1/comb2$betaG_SE^2), data=comb2)
+AIC(m0, m)
 summary(m)
 m2 = Almer_SE(betaG ~ ms + (1|species.y), SE=comb2$betaG_SE, data=comb2)
 summary(m2)
+
+
+
+comb2$mstg=paste0(comb2$ms, comb2$traitgroups)
+plot(factor(comb2$mstg), comb2$betaG)
 
 # Study environments (for the divergence data) from POPBASE
 env = NULL
@@ -154,16 +168,15 @@ for(i in 1:nrow(comb2)){
   env[[i]] = paste0(POPBASE[[as.character(comb2$d[i])]]$Env, collapse="+")
 }
 env = factor(env, levels=c("field", "common_garden", "greenhouse"))
-
-table(env)
-data.frame(comb2$ID, env)
-
 comb2$env = env
 table(comb2$env)
 
+par(mfrow=c(1,2))
+plot(env, comb2$betaG, las=1, ylab="Slope for G directions")
+plot(env, comb2$edelta/comb2$emean.y, las=1, ylab=expression(paste("Proportional evolvability along   ", Delta, "z")))
+
 plot(comb2$env, log10(comb2$dmean))
-plot(comb2$env, comb2$betaG)
-plot(comb2$env, log(comb2$edelta/comb2$emean.y))
+plot(comb2$env, log10(comb2$div))
 abline(h=0)
 
 m = lmer(betaG ~ env + (1|species.y), weights=(1/comb2$betaG_SE^2), REML=T, data=comb2)
@@ -195,6 +208,10 @@ abline(v=0, lty=2)
 
 
 par(mfrow=c(1,1))
+plot(comb2$thetaGD, comb2$betaG, pch=16, col="lightgrey", las=1,
+     ylab="Slope for G eigenvectors", xlab="Angle between gmax and dmax")
+points(comb$thetaGD, comb$betaG, pch=16)
+
 plot(log(comb2$edelta/comb2$emean.x), comb2$thetaGD, pch=16, col="lightgrey", las=1,
      xlab="log(e_delta/e_mean)", ylab="Angle between gmax and dmax")
 points(log(comb$edelta/comb$emean.x), comb$thetaGD, pch=16)

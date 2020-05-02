@@ -545,7 +545,7 @@ meanDat = ddply(deltaDat, .(species), summarize,
               cdelta = median(cdelta),
               div = median(div))
 
-deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
+#deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
 
 x11(height=6.5, width=8)
 par(mfrow=c(2,2), mar=c(4,4,2,4))
@@ -638,111 +638,9 @@ text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), x
 
 points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, col="blue")
 
-#### Scaling between mean and max ####
-plot(log10(deltaDat$emean), (deltaDat$edelta-deltaDat$emean)/(deltaDat$emax-deltaDat$emean), pch=16, las=1, main="Evolvability",
-     col="lightgrey",
-     xlab="",
-     ylab="",
-     xlim=c(-1, 1.5), ylim=c(-1,1))
-#mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
-mtext("Mean evolvability (%)", 1, line=2.5)
-points(log10(meanDat$emean), (meanDat$edelta-meanDat$emean)/(meanDat$emax-meanDat$emean), pch=16)
-abline(h=0, lty=1)
-abline(h=log(1/2), lty=2)
-abline(h=log(1/3), lty=2)
-abline(h=log(2), lty=2)
-abline(h=log(3), lty=2)
-x=1.7
-text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
-
-points(log10(median(meanDat$emean)), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
-
-deltaDat2=deltaDat
-#deltaDat2 = deltaDat[-which(deltaDat$sp=="Mimulus micranthus"),]
-#deltaDat2$cmean[which(deltaDat2$cmean<0.01)]=0.01
-meanDat2=meanDat
-#meanDat2 = meanDat2[-which(meanDat$sp=="Mimulus micranthus"),]
-#deltaDat2$cdelta[which(deltaDat2$cdelta<0.01)]=0.01
-
-plot(log10(deltaDat2$cmean), log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1, main="Conditional evolvability",
-     col="lightgrey",
-     xlab="",
-     ylab="",
-     xaxt="n",
-     xlim=c(-2, 1), ylim=c(-2, 4))
-axis(1, at=c(-2:1), labels = c(10^(-2:1)))
-mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
-mtext("Mean evolvability (%)", 1, line=2.5)
-points(log10(meanDat2$cmean), log(meanDat2$cdelta/meanDat2$cmean), pch=16)
-abline(h=0, lty=1)
-abline(h=log(1/2), lty=2)
-abline(h=log(1/3), lty=2)
-abline(h=log(2), lty=2)
-abline(h=log(3), lty=2)
-x=1.2
-text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
-
-points(log10(median(meanDat2$cmean)), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
-
-plot(deltaDat$div, (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean), pch=16, las=1, main="Evolvability",
-     col="lightgrey",
-     xlab="",
-     ylab="",
-     xlim=c(0, 120), ylim=c(-1,1))
-#mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
-mtext("Mean evolvability (%)", 1, line=2.5)
-points(meanDat$div, (meanDat$cdelta-meanDat$cmean)/(meanDat$emax-meanDat$cmean), pch=16)
-
-plot(deltaDat$div, log(deltaDat$edelta/deltaDat$emean), pch=16, las=1,
-     col="lightgrey",
-     xlab="",
-     ylab="",
-     xlim=c(-5, 120), ylim=c(-2, 2))
-points(meanDat$div, log(meanDat$edelta/meanDat$emean), pch=16)
-mtext(expression(paste("log[", e(Delta), "/", bar(e), "]")), 2, line=2)
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-abline(h=0, lty=1)
-abline(h=log(1/2), lty=2)
-abline(h=log(1/3), lty=2)
-abline(h=log(2), lty=2)
-abline(h=log(3), lty=2)
-x=127
-text(x=x, y=0, labels=expression(paste(e(Delta),"=",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(2), labels=expression(paste(e(Delta),"=2",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(3), labels=expression(paste(e(Delta),"=3",bar(e))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(1/2), labels=expression(paste(e(Delta),"=",frac(1,2),bar(e))), xpd=T, cex=.8, adj=0)
-
-points(median(meanDat$div), median(log(meanDat$edelta/meanDat$emean)), pch=16, col="blue")
-
-plot(deltaDat2$div, log(deltaDat2$cdelta/deltaDat2$cmean), pch=16, las=1,
-     col="lightgrey",
-     xlab="",
-     ylab="",
-     xlim=c(-5, 120), ylim=c(-2, 4))
-points(meanDat2$div, log(meanDat2$cdelta/meanDat2$cmean), pch=16)
-mtext(expression(paste("log[", c(Delta), "/", bar(c), "]")), 2, line=2)
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-abline(h=0, lty=1)
-abline(h=log(1/2), lty=2)
-abline(h=log(1/3), lty=2)
-abline(h=log(2), lty=2)
-abline(h=log(3), lty=2)
-x=127
-text(x=x, y=0, labels=expression(paste(c(Delta),"=",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(2), labels=expression(paste(c(Delta),"=2",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(3), labels=expression(paste(c(Delta),"=3",bar(c))), xpd=T, cex=.8, adj=0)
-text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), xpd=T, cex=.8, adj=0)
-
-points(median(meanDat2$div), median(log(meanDat2$cdelta/meanDat2$cmean)), pch=16, col="blue")
-
-
-
+# Scaling between min, mean, and max
+x11(height=4, width=8)
+par(mfrow=c(1,2), mar=c(4,4,2,2))
 
 newe = (deltaDat$edelta-deltaDat$emean)/(deltaDat$emax-deltaDat$emean)
 for(i in 1:nrow(deltaDat)){
@@ -758,7 +656,6 @@ for(i in 1:nrow(meanDat)){
   }
 }
 
-par(mfrow=c(1,1))
 plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="")
 points(meanDat$div, newmeans, pch=16)
 abline(h=0)
@@ -768,7 +665,7 @@ mtext("Divergence from focal population (x100)", 1, line=2.5)
 newe = (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean)
 for(i in 1:nrow(deltaDat)){
   if(newe[i]<0){
-    newe[i] = ((deltaDat$cdelta[i]-emin[i])/(deltaDat$cmean[i]-emin[i]))-1
+    newe[i] = ((deltaDat$cdelta[i]-deltaDat$emin[i])/(deltaDat$cmean[i]-deltaDat$emin[i]))-1
   }
 }
 
@@ -779,7 +676,6 @@ for(i in 1:nrow(meanDat)){
   }
 }
 
-par(mfrow=c(1,1))
 plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="")
 points(meanDat$div, newmeans, pch=16)
 abline(h=0)

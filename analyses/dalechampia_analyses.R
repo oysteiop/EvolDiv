@@ -520,12 +520,15 @@ pmat = MeanP
 evolvabilityMeans(gmat)
 evolvabilityMeans(dmat)
 evolvabilityMeans(pmat)
+eigen(gmat)
+eigen(dmat)
+eigen(pmat)
 
 vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -552,6 +555,8 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A:
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Dalechampia scandens A: Opedal et al. Costa Rica greenhouse", nPop = 17, 
                   dmean = evolvabilityMeans(dmat)[1],
+                  betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
+                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
                   betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
