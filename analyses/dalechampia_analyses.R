@@ -413,11 +413,13 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A:
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Dalechampia scandens A: Bolstad et al. Mexico greenhouse" , nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
+                  betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
+                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
                   betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
                   betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
@@ -524,11 +526,11 @@ eigen(gmat)
 eigen(dmat)
 eigen(pmat)
 
-vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", plot=F)
+vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", ymin=-1, plot="c")
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:1000){
+for(i in 1:100){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -561,7 +563,7 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A:
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
                   betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
                   betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
@@ -755,11 +757,13 @@ gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens B:
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Dalechampia scandens B: Bolstad et al. Mexico greenhouse", nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
+                  betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
+                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
                   betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
                   betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)

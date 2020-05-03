@@ -23,7 +23,8 @@ length(pops)
 Plist = list()
 for(i in 1:length(pops)){
   sub = Ddat[Ddat$Population==pops[i],]
-  Plist[[i]] = cov(sub[,3:12])
+  Plist[[i]] = meanStdG(cov(sub[,3:12]), colMeans(sub[,3:12]))
+  
 }
 
 MeanP = apply(simplify2array(Plist), 1:2, mean)
@@ -147,7 +148,7 @@ gmat = apply(simplify2array(glist), 1:2, mean)
 
 # Individual Gmatrices
 pops=c("Dune", "Head", "Table", "Wood")
-#p=1
+p=4
 for(p in 1:length(pops)){
   pop = pops[p]
   filename=paste0("analyses/walter2018/Gmat_", pop, ".RData")
@@ -166,7 +167,7 @@ gmat
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dmat, MeanP, species="Senecio pinnatifolius", plot=F)
+vals = computeGD(gmat, dmat, MeanP, species="Senecio pinnatifolius", plot="c")
 
 #Uncertainty over the posterior
 out = list()
@@ -198,11 +199,13 @@ gdDF = data.frame(species="Senecio_pinnatifolius", g = name, ntraits = ncol(gmat
                   imean = evolvabilityMeans(gmat)[7],
                   d = "Senecio pinnatifolius: Walter et al 2018 greenhouse", nPop = 16, 
                   dmean = evolvabilityMeans(dmat)[1],
+                  betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
+                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
                   betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
                   betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)

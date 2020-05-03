@@ -127,6 +127,7 @@ load(file = "data/POPBASE.RData")
 maxdists = cbind(print(unlist(lapply(POPBASE, function(x)x$Study_ID))),
       print(unlist(lapply(POPBASE, function(x) max(x$distmat)/1000))))
 
+
 maxdists[which(maxdists[,1]=="Barrett_and_Shore_1987_Turnera_ulmifolia_greenhouse"),2]=188 #Ca. distance from map in paper
 maxdists[which(maxdists[,1]=="Podolsky_et_al._1997_Clarkia_dudleyana_greenhouse"),2]=11.3 #Ca. distance from map in paper
 maxdists[which(maxdists[,1]=="Carter_and_Murdy_1986_Talinum_mengesii_greenhouse"),2]=214 #Ca. distance from map in paper
@@ -145,6 +146,9 @@ maxdists[which(maxdists[,1]=="Colautti_and_Barrett_2011_Lythrum_salicaria_greenh
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_tenuituba_field"),2]=0.0943 #Author description in Excel file
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_x_tenuituba_field"),2]=0.96 #Author description in Excel file
 maxdists[which(maxdists[,1]=="Campbell_et_al_2018_Ipomopsis_aggregata_field"),2]=0.199 #Author description in Excel file
+
+maxdists=as.data.frame(maxdists)
+maxdists$ID = gsub("_", " ", titles)
 
 View(maxdists)
 

@@ -23,7 +23,7 @@ add2gdList=function(){
              betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
              betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
              betaP = vals$res[6,3], r2P = vals$res[6,6],
-             betaP_cond = vals$res[7,3], r2P_cond = vals$res[6,6],
+             betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
              r2All = vals$res[8,6],
              theta = vals$theta, row.names = NULL)
 }
@@ -114,7 +114,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot="e")
 
 gdList[[length(gdList)+1]]=add2gdList()
 
@@ -301,7 +301,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot="e")
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -993,49 +993,6 @@ meanDat
 min(c(range(gdDat$betaG), range(gdDat$betaD)))
 max(c(range(gdDat$betaG), range(gdDat$betaD)))
 
-x11(height=6, width=4.5)
-mat = matrix(c(1,2,3,3,3,3),nrow=3, byrow=T)
-layout(mat = mat)
-par(mar=c(2,4,4,2))
-hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
-#legend("topleft", "R2 G", bty="n")
-hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1)
-#legend("topleft", "R2 D", bty="n")
-
-par(mar=c(4,4,1,2))
-plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
-     ylim=c(-1,4), xlim=c(-.2,2), xlab="", ylab="", las=1)
-#segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
-#segments(gdDat$betaG, gdDat$betaD-gdDat$betaD_SE, gdDat$betaG, gdDat$betaD+gdDat$betaD_SE, col="grey")
-points(meanDat$betaG, meanDat$betaD, pch=16)
-points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
-abline(h=1, lty=2)
-abline(v=1, lty=2)
-mtext("Slope of G eigenvectors", 1, line=2.5)
-mtext("Slope of D eigenvectors", 2, line=2.5)
-points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
-lines(-10:10, -10:10, lty=2)
-
-# Conditional evolvability
-x11(height=6, width=4.5)
-mat = matrix(c(1,2,3,3,3,3),nrow=3, byrow=T)
-layout(mat = mat)
-par(mar=c(2,4,4,2))
-hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
-#legend("topleft", "R2 G", bty="n")
-hist(gdDat$r2D_cond, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1)
-#legend("topleft", "R2 D", bty="n")
-
-par(mar=c(4,4,1,2))
-plot(gdDat$betaG, gdDat$betaD_cond, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
-     ylim=c(0,4), xlim=c(0,2), xlab="", ylab="", las=1)
-points(meanDat$betaG, meanDat$betaD, pch=16)
-points(median(meanDat$betaG), median(meanDat$betaD_cond), pch=16, col="blue", cex=1.5)
-abline(h=1, lty=2)
-abline(v=1, lty=2)
-mtext("Slope of G eigenvectors", 1, line=2.5)
-mtext("Slope of D eigenvectors", 2, line=2.5)
-
 #More complex version
 pdf("slopescatter.pdf", height=6, width=9, family="Times")
 x11(height=6, width=9)
@@ -1045,7 +1002,7 @@ par(mar=c(2,4,4,2), oma=c(1,0,0,0))
 hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
 text(-.275, 10, "(A)", cex=1.5, xpd=T)
 hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1, col="lightgrey")
-hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P eigenvectors")), las=1, col="lightblue")
+hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P eigenvectors")), las=1, col="lightblue", breaks=10)
 hist(gdDat$r2All, xlab="", ylab="", main=expression(paste(R^2, " overall")), las=1)
 
 par(mar=c(4,4,1,2))
@@ -1081,6 +1038,52 @@ m4 = lmer(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=g
 m5 = lmer(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
 AIC(m1, m2, m3, m4, m5)
 summary(m1)
+
+#### Comparing e and c ####
+x11(height=6, width=9)
+par(mfrow=c(2,3))
+plot(gdDat$betaT, gdDat$betaT_cond, las=1,
+     xlim=c(-1.5, 2), ylim=c(-1.5, 2), pch=16,
+     main="Original traits",
+     xlab="Slope for evolvabilities",
+     ylab="Slope for cond. evolvabilities")
+lines(-10:10, -10:10)
+
+plot(gdDat$betaD, gdDat$betaD_cond, las=1,
+     xlim=c(0,4), ylim=c(0,4), pch=16,
+     main="D eigenvectors",
+     xlab="Slope for evolvabilities",
+     ylab="")
+lines(-10:10, -10:10)
+
+plot(gdDat$betaP, gdDat$betaP_cond, las=1,
+     xlim=c(-.5,3), ylim=c(-.5,3), pch=16,
+     main="P eigenvectors",
+     xlab="Slope for evolvabilities",
+     ylab="")
+lines(-10:10, -10:10)
+
+plot(gdDat$r2T, gdDat$r2T_cond, las=1,
+     xlim=c(0, 1), ylim=c(0, 1), pch=16,
+     main="",
+     xlab="R2 for evolvabilities",
+     ylab="R2 for cond. evolvabilities")
+lines(-10:10, -10:10)
+
+plot(gdDat$r2D, gdDat$r2D_cond, las=1,
+     xlim=c(0,1), ylim=c(0,1), pch=16,
+     main="",
+     xlab="R2 for evolvabilities",
+     ylab="")
+lines(-10:10, -10:10)
+
+plot(gdDat$r2P, gdDat$r2P_cond, las=1,
+     xlim=c(0,1), ylim=c(0,1), pch=16,
+     main="",
+     xlab="R2 for evolvabilities",
+     ylab="")
+lines(-10:10, -10:10)
+
 
 # All the studies ####
 nG = NULL
@@ -1246,4 +1249,48 @@ mean(ss, na.rm=T)
 sd(ss, na.rm=T)
 
 summary(lm(log(evolvabilityBeta(out$D, eigen(out$G)$vectors)$e) ~ log(eigen(out$G)$values)))$coef
+
+####Old plots ####
+x11(height=6, width=4.5)
+mat = matrix(c(1,2,3,3,3,3),nrow=3, byrow=T)
+layout(mat = mat)
+par(mar=c(2,4,4,2))
+hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
+#legend("topleft", "R2 G", bty="n")
+hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1)
+#legend("topleft", "R2 D", bty="n")
+
+par(mar=c(4,4,1,2))
+plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
+     ylim=c(-1,4), xlim=c(-.2,2), xlab="", ylab="", las=1)
+#segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
+#segments(gdDat$betaG, gdDat$betaD-gdDat$betaD_SE, gdDat$betaG, gdDat$betaD+gdDat$betaD_SE, col="grey")
+points(meanDat$betaG, meanDat$betaD, pch=16)
+points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
+abline(h=1, lty=2)
+abline(v=1, lty=2)
+mtext("Slope of G eigenvectors", 1, line=2.5)
+mtext("Slope of D eigenvectors", 2, line=2.5)
+points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
+lines(-10:10, -10:10, lty=2)
+
+# Conditional evolvability
+x11(height=6, width=4.5)
+mat = matrix(c(1,2,3,3,3,3),nrow=3, byrow=T)
+layout(mat = mat)
+par(mar=c(2,4,4,2))
+hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
+#legend("topleft", "R2 G", bty="n")
+hist(gdDat$r2D_cond, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1)
+#legend("topleft", "R2 D", bty="n")
+
+par(mar=c(4,4,1,2))
+plot(gdDat$betaG, gdDat$betaD_cond, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
+     ylim=c(0,4), xlim=c(0,2), xlab="", ylab="", las=1)
+points(meanDat$betaG, meanDat$betaD, pch=16)
+points(median(meanDat$betaG), median(meanDat$betaD_cond), pch=16, col="blue", cex=1.5)
+abline(h=1, lty=2)
+abline(v=1, lty=2)
+mtext("Slope of G eigenvectors", 1, line=2.5)
+mtext("Slope of D eigenvectors", 2, line=2.5)
 

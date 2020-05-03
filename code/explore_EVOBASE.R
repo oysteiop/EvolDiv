@@ -33,13 +33,13 @@ points(coords[,2], coords[,1], pch=16, col="darkblue")
 names(EVOBASE)
 
 # Extracting a single species
-s="Raphanus raphanistrum: Binghamton III"
-s="Turnera ulmifolia: A20"
+s = "Raphanus raphanistrum: Binghamton III"
 View(EVOBASE[[s]])
 
 names(EVOBASE[[s]])
 signif(EVOBASE[[s]]$G, 2)
 EVOBASE[[s]]$Means
+EVOBASE[[s]]$Subgroups
 
 signif(cov2cor(EVOBASE[[s]]$G), 2)
 
@@ -53,7 +53,12 @@ evolvabilityMeans(mg)
 eigen(mg)$values
 signif(cov2cor(mg), 3)
 
-evolvabilityBeta(mg, Beta = c(1,0,0))$a
+EVOBASE[[s]]$Subgroups
+sel = c(4,1,2)
+redG = mg[sel, sel] 
+redG
+evolvabilityBeta(redG, Beta = c(1,0,0))$a
+
 
 # Extracting just all the G matrices
 GG = lapply(EVOBASE, function(x) x$G)

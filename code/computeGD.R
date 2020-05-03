@@ -1,8 +1,8 @@
 check=F
 if(check){
-  gmat=out$G
-  dmat=modDpost
-  pmat=NULL
+  gmat=gmat
+  dmat=dmat
+  pmat=MeanP
   plot=FALSE 
   species="Species"
   nFam=out$nFam 
@@ -89,6 +89,10 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
   ma = lm(log(c(diag(dmat), var_d_g, var_d_d))~log(c(diag(gmat), var_g_g, var_g_d)), na=na.exclude)
   beta_a = summary(ma)$coef[2,1]
   r2_a = summary(ma)$r.squared
+  
+  mac = lm(log(c(diag(dmat), var_d_g, var_d_d))~log(c(cvals, var_g_g_c, var_g_d_c)), na=na.exclude)
+  beta_ac = summary(mac)$coef[2,1]
+  r2_ac = summary(mac)$r.squared
   
   if(!is.null(pmat)){
     mp = lm(log(var_d_p)~log(var_g_p), na=na.exclude)
@@ -202,7 +206,15 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
          ylab="log10 (Divergence [x100])", 
          main=species, las=1)
     points(log10(var_g_d), log10(var_d_d), pch=16)
-    points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
+    points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
+    #lines(-100:100, lty=2)
+    
+    legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_a, 2))), bty="n")
+    
+    mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
+    mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
+    segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
+    
     if(!is.null(pmat)){
       points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
       legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
@@ -229,6 +241,13 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     points(log10(var_g_d_c), log10(var_d_d), pch=16)
     
     points(log10(cvals), log10(diag(dmat)), pch=16, col="blue3")
+    
+    legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_ac, 2))), bty="n")
+    
+    mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
+    mean2 = mean(log10(c(cvals, var_g_g_c, var_g_d_c)))
+    segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
+    
     if(!is.null(pmat)){
       points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
       legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 

@@ -22,6 +22,7 @@ indat$mean[which(indat$e_on_log==1)]=1 #Set mean to 1 for log-scale estimates to
 # Compile G matrices and trait means
 Glist = list()
 groupList = list()
+groupList2 = list()
 MeanList = list()
 dimList = list()
 VpList = list()
@@ -45,6 +46,13 @@ for(s in 1:length(studies)){
   }
   names(groups) = traits
   groupList[[s]] = groups
+  
+  groups2 = NULL
+  for(t in 1:length(traits)){
+    groups2[t] = as.character(red$traitgroup2[which(red$traitX==traits[t] & red$traitY==traits[t])])
+  }
+  names(groups2) = traits
+  groupList2[[s]] = groups2
   
   dims = NULL
   for(t in 1:length(traits)){
@@ -119,6 +127,7 @@ for(i in 1:length(studies)){
                       G = signif(Glist[[i]],4), 
                       nFam = metadata$nfam[metadata$ID==studies[i]],
                       Groups = groupList[[i]],
+                      Subgroups = groupList2[[i]],
                       Dims = dimList[[i]],
                       Means = MeanList[[i]],
                       Vp = VpList[[i]])

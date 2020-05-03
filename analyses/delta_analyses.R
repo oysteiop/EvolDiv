@@ -651,33 +651,35 @@ for(i in 1:nrow(deltaDat)){
 
 newmeans = (meanDat$edelta-meanDat$emean)/(meanDat$emax-meanDat$emean)
 for(i in 1:nrow(meanDat)){
-  if(newe[i]<0){
-    newe[i]=((meanDat$edelta[i]-meanDat$emin[i])/(meanDat$emean[i]-meanDat$emin[i]))-1
+  if(newmeans[i]<0){
+    newmeans[i]=((meanDat$edelta[i]-meanDat$emin[i])/(meanDat$emean[i]-meanDat$emin[i]))-1
   }
 }
 
-plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="")
+plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (e) All studies (evolvability)")
 points(meanDat$div, newmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
 
-newe = (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean)
+newc = (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean)
 for(i in 1:nrow(deltaDat)){
-  if(newe[i]<0){
-    newe[i] = ((deltaDat$cdelta[i]-deltaDat$emin[i])/(deltaDat$cmean[i]-deltaDat$emin[i]))-1
+  if(newc[i]<0){
+    newc[i] = ((deltaDat$cdelta[i]-deltaDat$emin[i])/(deltaDat$cmean[i]-deltaDat$emin[i]))-1
   }
 }
 
-newmeans = (meanDat$cdelta-meanDat$cmean)/(meanDat$emax-meanDat$cmean)
+newcmeans = (meanDat$cdelta-meanDat$cmean)/(meanDat$emax-meanDat$cmean)
 for(i in 1:nrow(meanDat)){
-  if(newe[i]<0){
-    newe[i]=((meanDat$cdelta[i]-meanDat$emin[i])/(meanDat$cmean[i]-meanDat$emin[i]))-1
+  if(newcmeans[i]<0){
+    newcmeans[i]=((meanDat$cdelta[i]-meanDat$emin[i])/(meanDat$cmean[i]-meanDat$emin[i]))-1
   }
 }
 
-plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="")
-points(meanDat$div, newmeans, pch=16)
+plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (f) All studies (conditional evolvability)")
+points(meanDat$div, newcmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
@@ -685,8 +687,34 @@ mtext("Divergence from focal population (x100)", 1, line=2.5)
 
 
 #### Plotting individual studies from deltaList ####
-par(mfrow=c(1,1))
-plotDelta(44, lab.offset=0.05)
+unlist(lapply(deltaList, function(x) unique(x$species)))
+
+x11(height=8, width=12)
+par(mfrow=c(2,3))
+plotDelta(37, lab.offset=0.07, cex=1, title = "(a) Crepis tectorum")
+plotDelta(38, lab.offset=0.07, cex=1, title = "(c) Dalechampia scandens")
+
+plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (e) All studies (evolvability)")
+points(meanDat$div, newmeans, pch=16)
+abline(h=0)
+axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+
+plotDelta(2, lab.offset=0.07, cex=1, title = "(b) Lobelia siphilitica")
+plotDelta(45, lab.offset=0.07, cex=1, title = "(d) Arabidopsis lyrata")
+
+plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (f) All studies (conditional evolvability)")
+points(meanDat$div, newcmeans, pch=16)
+abline(h=0)
+axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
+mtext("Divergence from focal population (x100)", 1, line=2.5)
+
+
+
+
+
 
 pdf("figs/delta_plots.pdf", family="Times", height=5, width=5)
 for(i in 1:length(deltaList)){
@@ -694,7 +722,7 @@ for(i in 1:length(deltaList)){
 }
 dev.off()
 
-plotDelta = function(index, lab.offset=0.05){
+plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), cex=.8, lab.offset=0.05){
   plotData = deltaList[[index]]
   
   ylim = c(plotData$emin[1], plotData$emax[1])
@@ -703,8 +731,7 @@ plotDelta = function(index, lab.offset=0.05){
   par(mar=c(4,4,5,4))
   plot(plotData$div, plotData$edelta, pch=16, ylim=ylim, las=1,
        xlab="", ylab="",
-       main=paste(plotData$g[1],"/",
-                  plotData$d[1]))
+       main=title)
   mtext("Divergence from focal population (x100)", 1, line=2.5)
   mtext("Evolvability (%)", 2, line=2.5)
   points(plotData$div, plotData$cdelta, pch=16, col="grey")
@@ -714,10 +741,10 @@ plotDelta = function(index, lab.offset=0.05){
   abline(h=plotData$emin, lty=1)
   abline(h=plotData$emax, lty=1)
   x = max(plotData$div)+(max(plotData$div)-min(plotData$div))*lab.offset
-  text(x=x, y=plotData$emean[1], labels=expression(bar(e)), xpd=T, cex=.8, adj=0)
-  text(x=x, y=plotData$emin[1], labels=expression(e[min]), xpd=T, cex=.8, adj=0)
-  text(x=x, y=plotData$emax[1], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
-  text(x=x, y=plotData$cmean[1], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
+  text(x=x, y=plotData$emean[1], labels=expression(bar(e)), xpd=T, cex=cex, adj=0)
+  text(x=x, y=plotData$emin[1], labels=expression(e[min]), xpd=T, cex=cex, adj=0)
+  text(x=x, y=plotData$emax[1], labels=expression(e[max]), xpd=T, cex=cex, adj=0)
+  text(x=x, y=plotData$cmean[1], labels=expression(bar(c)), xpd=T, cex=cex, adj=0)
   
   legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 }

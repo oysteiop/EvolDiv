@@ -163,6 +163,28 @@ round(sqrt(tapply(ddf$d, list(ddf$tg1, ddf$tg2), median))*sqrt(2/pi)*100, 1) #dL
 round(tapply(exp(sqrt(ddf$d)), list(ddf$tg1, ddf$tg2), median), 3) #dL
 tapply(ddf$d>-Inf, ddf$tg2, sum)
 
+# Mating systems
+tapply(ddf$d, ddf$ms, median)
+round(tapply(exp(sqrt(ddf$d)), ddf$ms, median), 3)*100 #dP
+tapply(ddf$d>-Inf, ddf$ms, sum)
+
+ss = na.omit(subset(ddf, select=c("d","d_se","ms")))
+ss = ss[ss$d>0,]
+ss$se2 = (ss$d_se^2)/(ss$d^2)
+summary(lm(log(d)~ms, weights = 1/se2, data=ss))
+plot(ss$ms, log(ss$d))
+
+# Environments
+tapply(ddf$d, ddf$environment, median)
+round(tapply(exp(sqrt(ddf$d)), ddf$environment, median), 3)*100 #dP
+tapply(ddf$d>-Inf, ddf$environment, sum)
+
+ss = na.omit(subset(ddf, select=c("d","environment")))
+ss = ss[ss$d>0,]
+summary(lm(log(d)~environment, data=ss))
+plot(ss$environment, log(ss$d))
+
+
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d*100, lin$tg1, median)
 tapply(exp(sqrt(lin$d)), lin$tg1, median) #dP
@@ -285,8 +307,8 @@ length(unique(ddf$species))
 #### Informal meta-analysis ####
 
 # Remove some of the repeated D. scandens studies?
-ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
-ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
+#ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
+#ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
 #ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
 
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
@@ -294,7 +316,7 @@ ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
 wgts = 1/((ddf$d_se^2)/(ddf$d^2)) #Mean-scaled sampling variance because analysis is on log
 
 #Baseline meta-analytic model
-m0 = lmer(log(d)~ log(evals) + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m0 = lmer(log(d)~ log(evals) + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 summary(m0)
 
 #Alternative models
@@ -321,6 +343,8 @@ m0 = lmer(log(d) ~ log(evals) + scale_npop + scale_maxdist + (log(evals)|study_I
 summary(m0)
 
 m = lmer(log(d) ~ log(evals)*tg1 + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
+logLik(m0)
+logLik(m)
 AIC(m0, m)
 summary(m)
 

@@ -10,6 +10,19 @@ load(file="deltaDat.RData")
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
 
+
+gperd=tapply(gdDat$g, gdDat$d, function(x) length(unique(x)))
+
+
+red=droplevels(gdDat[gdDat$d %in% names(gperd)[which(gperd>1)],])
+plot(red$d, red$betaG)
+plot(red$d, red$betaT)
+
+summary(lmer(betaG~1+(1|d), weights=1/(betaG_SE^2), data=red))
+summary(lmer(betaT~1+(1|d), data=red))
+summary(lmer(betaT~1+(1|d), data=gdDat))
+
+# Combine dataframes
 names(gdDat)
 gdMeans= ddply(gdDat, .(species), summarize,
                         emean = median(emean),
@@ -184,6 +197,26 @@ summary(m)
 
 m2 = Almer_SE(betaG ~ env + (1|species.y), SE=comb2$betaG_SE, data=comb2)
 summary(m2)
+
+
+#### Maximum distances ####
+maxdist = read.csv(file="data/maxdists.csv")
+head(maxdist)
+
+dist=NULL
+for(i in 1:nrow(comb2)){
+  dist[i] = maxdist$V2[which(as.character(maxdist$ID)==as.character(comb2$d[i]))]
+}
+comb2$maxdist=dist
+
+plot(log(comb2$maxdist),comb2$betaG)
+cor(log(comb2$maxdist),comb2$betaG, "pairwise")
+
+plot(log(comb2$maxdist),comb2$r2All)
+cor(log(comb2$maxdist),comb2$r2All, "pairwise")
+
+summary(lm(betaG~log(maxdist)+dmean, data=comb2))
+
 
 #### Plots comparing GD and delta analyses ####
 x11(height=4, width=7)
