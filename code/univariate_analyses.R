@@ -49,6 +49,10 @@ head(ddf, 5)
 ddat$species_trait = paste0(ddat$species, "_", ddat$trait)
 ddf$species_trait = paste0(ddf$species, "_", ddf$trait)
 
+length(unique(ddf$species))
+length(unique(ddf$species_trait))
+length(unique(ddat$population))
+
 # Add metadata
 tg1=NULL
 for(i in 1:nrow(ddf)){
@@ -109,6 +113,7 @@ for(i in 1:nrow(ddf)){
 }
 #ddf$tmvals = tmvals
 
+#### Start of analyses ####
 head(ddf)
 summary(ddf)
 
@@ -174,6 +179,9 @@ ss$se2 = (ss$d_se^2)/(ss$d^2)
 summary(lm(log(d)~ms, weights = 1/se2, data=ss))
 plot(ss$ms, log(ss$d))
 
+round(tapply(ddf$d, list(ddf$ms, ddf$tg1), median), 3)
+round(tapply(ddf$d>0, list(ddf$ms, ddf$tg1), sum, na.rm=T), 3)
+
 # Environments
 tapply(ddf$d, ddf$environment, median)
 round(tapply(exp(sqrt(ddf$d)), ddf$environment, median), 3)*100 #dP
@@ -183,7 +191,6 @@ ss = na.omit(subset(ddf, select=c("d","environment")))
 ss = ss[ss$d>0,]
 summary(lm(log(d)~environment, data=ss))
 plot(ss$environment, log(ss$d))
-
 
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d*100, lin$tg1, median)
@@ -224,7 +231,7 @@ veg = ddf[ddf$tg1=="vegetative",]
 medians = tapply(veg$logd, veg$tg2, median, na.rm=T)
 veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
 levels(veg$tg2)
-a = 1:7
+a = 1:9
 
 x11(height=5.5, width=6.5)
 par(mar=c(8,4,2,2))
@@ -303,6 +310,8 @@ for(i in 1:nrow(ddf)){
 #### Summary stats ####
 length(unique(ddf$study_ID))
 length(unique(ddf$species))
+
+tapply(ddf$d, list(ddf$ms, ddf$tg1), median)
 
 #### Informal meta-analysis ####
 

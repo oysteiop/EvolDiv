@@ -74,6 +74,7 @@ for(s in 1:length(studies)){
   }
 }
 
+cov2cor(Plist[[18]])
 
 #Preparing metadata
 metadata = ddply(indat, .(ID), summarize,

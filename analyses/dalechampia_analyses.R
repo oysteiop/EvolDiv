@@ -526,7 +526,7 @@ eigen(gmat)
 eigen(dmat)
 eigen(pmat)
 
-vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", ymin=-1, plot="c")
+vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens", ymin=-1, plot="e")
 
 #Uncertainty over the posterior
 out = list()

@@ -151,7 +151,7 @@ colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flower
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot="c")
+vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot="e")
 
 #Uncertainty over the posterior
 out = list()

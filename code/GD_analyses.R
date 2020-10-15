@@ -455,8 +455,8 @@ gdList[[length(gdList)+1]] = add2gdList()
 }
 
 #### Spergularia ####
-out = prepareGD(species="Spergularia_marina", gmatrix = 1, dmatrix = 1)
-out$gmat
+out = prepareGD(species="Spergularia_marina", gmatrix = 4, dmatrix = 1)
+out$G
 
 # Mean G matrix
 glist = list()
@@ -491,8 +491,25 @@ save(modDpost, file="analyses/adj_Dmats/Spergularia.RData")
 load(file="analyses/adj_Dmats/Spergularia.RData")
 modD = matrix(apply(modDpost, 2, median), nrow=sqrt(ncol(modDpost)))
 
+# P matrix
+names(PMATBASE)
+
+plist = list()
+ma = match(colnames(out$G), names(PMATBASE[["Spergularia marina: ASC"]]$Means))
+
+plist[[1]] = meanStdG(PMATBASE[["Spergularia marina: ASC"]]$P[ma, ma], 
+                      PMATBASE[["Spergularia marina: ASC"]]$Means[ma])
+plist[[2]] = meanStdG(PMATBASE[["Spergularia marina: COP"]]$P[ma, ma], 
+                      PMATBASE[["Spergularia marina: COP"]]$Means[ma])
+plist[[3]] = meanStdG(PMATBASE[["Spergularia marina: MSH"]]$P[ma, ma], 
+                      PMATBASE[["Spergularia marina: MSH"]]$Means[ma])
+plist[[4]] = meanStdG(PMATBASE[["Spergularia marina: SMB"]]$P[ma, ma], 
+                      PMATBASE[["Spergularia marina: SMB"]]$Means[ma])
+MeanP = apply(simplify2array(plist), 1:2, mean)
+colnames(out$G)
+
 # Loop
-gg=1
+gg=2
 for(gg in 1:4){
 out = prepareGD(species="Spergularia_marina", gmatrix = gg, dmatrix = 1)
 
@@ -502,7 +519,7 @@ modD = matrix(apply(modDpost, 2, median), nrow=sqrt(ncol(modDpost)))
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = computeGD(out$G, modDpost, species="Spergularia marina", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Spergularia marina", SE=T, fixD=fixD, nSample=nSample, ymin=-4, plot="e")
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
@@ -1037,7 +1054,7 @@ m3 = lmer(betaG ~ ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data
 m4 = lmer(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
 m5 = lmer(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
 AIC(m1, m2, m3, m4, m5)
-summary(m1)
+summary(m4)
 
 #### Comparing e and c ####
 x11(height=6, width=9)
@@ -1085,7 +1102,7 @@ plot(gdDat$r2P, gdDat$r2P_cond, las=1,
 lines(-10:10, -10:10)
 
 
-# All the studies ####
+# All the studies (old discontinued analysis) ####
 nG = NULL
 nD = NULL
 for(s in c(1:length(both_sp))){

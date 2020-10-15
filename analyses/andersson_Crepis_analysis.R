@@ -217,7 +217,7 @@ signif(cov2cor(dmat), 2)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot=F)
+vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot="e")
 
 #Uncertainty over the posterior
 out = list()
