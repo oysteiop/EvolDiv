@@ -10,7 +10,6 @@ load(file="deltaDat.RData")
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
 
-
 gperd=tapply(gdDat$g, gdDat$d, function(x) length(unique(x)))
 
 

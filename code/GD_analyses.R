@@ -965,12 +965,12 @@ for(i in 1: nrow(gdDat)){
 save(gdDat, file="gdDat.RData")
 
 # Summary stats
+median(gdDat$betaD)
+median(gdDat$r2D)
+
 median(gdDat$betaG)
 median(gdDat$r2G)
 sum(gdDat$betaG>-Inf)
-
-median(gdDat$betaD)
-median(gdDat$r2D)
 
 median(gdDat$betaP, na.rm=T)
 median(gdDat$r2P, na.rm=T)

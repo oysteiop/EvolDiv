@@ -18,11 +18,6 @@ ddat = read.table("data/dmatdata.txt", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
 maxdists = read.csv(file="data/maxdists.csv")
 
-#Scaling of trait variances with the mean
-#ddat=ddat[ddat$trait!="organ_size",]
-#plot(log10(ddat$mean), log10(ddat$sd))
-#lines(-10:10, -10:10)
-
 #List of studies
 studies = sort(unique(ddat$ID))
 studies
@@ -117,6 +112,44 @@ for(i in 1:nrow(ddf)){
 head(ddf)
 summary(ddf)
 
+#### Summary stats with all divergence data ####
+length(unique(ddf$study_ID))
+length(unique(ddf$species))
+
+ddf$dP = exp(sqrt(ddf$d)*sqrt(2/pi))
+
+tapply(ddf$d, ddf$tg1, median)
+tapply(ddf$dP, ddf$tg1, median)
+tapply(ddf$d>-Inf, ddf$tg1, sum)
+
+# Linear traits only
+lin = ddf[ddf$dimension=="linear",]
+tapply(lin$d, lin$tg1, median)
+tapply(lin$dP, lin$tg1, median)
+
+# By study
+na.omit(as.data.frame(tapply(lin$dP, list(lin$study_ID, lin$tg1), median, na.rm=T)[,c(1,4)]))
+
+# Within floral traits
+flo = droplevels(ddf[ddf$tg1=="floral",])
+sort(tapply(flo$d, flo$tg2, median, na.rm=T))
+sort(tapply(flo$dP, flo$tg2, median, na.rm=T))
+sort(tapply(flo$dP>-1, flo$tg2, sum, na.rm=T))
+
+# Mating systems
+tapply(ddf$d, ddf$ms, median)
+tapply(ddf$dP, ddf$ms, median)
+tapply(ddf$d>-Inf, ddf$ms, sum)
+
+ss = na.omit(subset(ddf, select=c("d","d_se","ms")))
+ss = ss[ss$d>0,]
+ss$se2 = (ss$d_se^2)/(ss$d^2)
+summary(lm(log(d)~ms, weights = 1/se2, data=ss))
+plot(ss$ms, log(ss$d))
+
+round(tapply(ddf$d, list(ddf$ms, ddf$tg1), median), 3)
+round(tapply(ddf$d>0, list(ddf$ms, ddf$tg1), sum, na.rm=T), 3)
+
 # Mating system vs. trait group ####
 red = ddf[ddf$ms%in%c("S","M","O"),]
 red$ms = factor(red$ms, levels=c("S","M","O"))
@@ -125,11 +158,15 @@ mstg = paste0(red$ms, red$tg1)
 mstg = factor(mstg, levels=c("Sfloral","Svegetative","Mfloral","Mvegetative","Ofloral","Ovegetative"))
 
 x11(height=4.5, width=4.5)
-plot(factor(mstg), log(red$d),at=c(1,2,4,5,7,8), las=1, col=rep(c("white","grey"),2), xaxt="n", xlab="",
-     ylab="Divergence", ylim=c(-15, 6))
+plot(factor(mstg), log10(red$d*100), at=c(1,2,4,5,7,8), las=1, col=rep(c("white","grey"),2), xaxt="n", xlab="",
+     ylab="Proportional divergence", ylim=c(-3, 4), yaxt="n")
 legend("topleft", pch=c(15, 0), col=c("grey", "white"), legend=c("Vegetative", "Floral"), bty="n", pt.cex = 1.3)
 legend("topleft", pch=c(0, 0), col=c("black", "black"), legend=c("", ""), bty="n", pt.cex=1.3)
 axis(1, at=c(1.5, 4.5, 7.5), labels=c("Selfer", "Mixed", "Outcrossing"))
+
+xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2/(2/pi))
+axis(2, at=x3at, signif(xt3, 4), las=1)
 
 
 flo = ddf[which(ddf$tg1=="floral"),]
@@ -155,36 +192,10 @@ xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(log(xt3)^2)
 axis(2, at=x3at, signif(xt3, 4), las=1)
 
-#### Summary stats with all divergence data ####
-length(unique(ddf$study_ID))
-length(unique(ddf$species))
-
-tapply(ddf$d, ddf$tg1, median)
-round(tapply(exp(sqrt(ddf$d)), ddf$tg1, median), 3)*100 #dP
-tapply(ddf$d>-Inf, ddf$tg1, sum)
-
-tapply(ddf$d*100, list(ddf$tg1, ddf$tg2), median)
-round(sqrt(tapply(ddf$d, list(ddf$tg1, ddf$tg2), median))*sqrt(2/pi)*100, 1) #dL
-round(tapply(exp(sqrt(ddf$d)), list(ddf$tg1, ddf$tg2), median), 3) #dL
-tapply(ddf$d>-Inf, ddf$tg2, sum)
-
-# Mating systems
-tapply(ddf$d, ddf$ms, median)
-round(tapply(exp(sqrt(ddf$d)), ddf$ms, median), 3)*100 #dP
-tapply(ddf$d>-Inf, ddf$ms, sum)
-
-ss = na.omit(subset(ddf, select=c("d","d_se","ms")))
-ss = ss[ss$d>0,]
-ss$se2 = (ss$d_se^2)/(ss$d^2)
-summary(lm(log(d)~ms, weights = 1/se2, data=ss))
-plot(ss$ms, log(ss$d))
-
-round(tapply(ddf$d, list(ddf$ms, ddf$tg1), median), 3)
-round(tapply(ddf$d>0, list(ddf$ms, ddf$tg1), sum, na.rm=T), 3)
 
 # Environments
 tapply(ddf$d, ddf$environment, median)
-round(tapply(exp(sqrt(ddf$d)), ddf$environment, median), 3)*100 #dP
+tapply(ddf$dP, ddf$environment, median)
 tapply(ddf$d>-Inf, ddf$environment, sum)
 
 ss = na.omit(subset(ddf, select=c("d","environment")))
@@ -192,13 +203,7 @@ ss = ss[ss$d>0,]
 summary(lm(log(d)~environment, data=ss))
 plot(ss$environment, log(ss$d))
 
-lin = ddf[ddf$dimension=="linear",]
-tapply(lin$d*100, lin$tg1, median)
-tapply(exp(sqrt(lin$d)), lin$tg1, median) #dP
-
-t(tapply(lin$d*100, list(lin$tg1,lin$species), median))
-
-# Dimensions plot
+# Dimensions plot ####
 medians = tapply(log(ddf$evals), ddf$dimension, median, na.rm=T)
 ddf$dimension = factor(ddf$dimension, levels=names(sort(medians, decreasing=F)))
 
@@ -215,7 +220,14 @@ legend("topleft", pch=c(0, 0), col=c("black", "black"), legend=c("", ""), bty="n
 axis(2, at=c(-2:3), signif(10^(-2:3), 1), las=1)
 xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(100*log(xt3)^2)
-axis(4, at=x3at, signif(xt3, 4), las=1)
+x3atNEW = log10(100*log(xt3)^2/(2/pi))
+
+axis(4, at=x3atNEW, signif(xt3, 4), las=1)
+
+# Back-transformation
+dp = exp(sqrt(ddf$d*(2/pi)))
+cor(ddf$d, (log(dp))^2/(2/pi))
+
 
 # Boxplots ####
 ddf$logd = log10(ddf$d*100)
@@ -225,6 +237,7 @@ ddf$logd[which(ddf$logd<(-3))]=log10(0.000025)
 tpos=-.25
 xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(100*log(xt3)^2)
+x3atNEW = log10(100*log(xt3)^2/(2/pi))
 
 veg = ddf[ddf$tg1=="vegetative",]
 
@@ -238,7 +251,7 @@ par(mar=c(8,4,2,2))
 plot(veg$tg2, veg$logd, cex=.8, notch=F, xaxt="n", col="darkgreen", 
      ylab="Proportional divergence", xlab="", yaxt="n", ylim=c(-3,3), xlim=c(0,30))
 #axis(2, at=c(-3:3), c("<0.001",c(signif(10^(c(-2:3)),1))), las=1)
-axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
+axis(2, at=x3atNEW, c("<1.005", signif(xt3, 4)[-1]), las=1)
 
 axis(1, at=a, labels = FALSE)
 labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
@@ -330,21 +343,6 @@ summary(m0)
 
 #Alternative models
 
-# Evolvability*distance interaction
-m = lmer(log(d)~ log(evals)*scale_maxdist + scale_npop + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-summary(m)
-
-#Study environments
-m = lmer(log(d)~ log(evals)*environment + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-summary(m)
-
-#Mating systems
-m = lmer(log(d)~ log(evals)+ms + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-summary(m)
-
 #Floral vs. vegetative traits
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
@@ -354,11 +352,32 @@ summary(m0)
 m = lmer(log(d) ~ log(evals)*tg1 + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
 logLik(m0)
 logLik(m)
+AIC(m0, m)$AIC[2] - AIC(m0, m)$AIC[1]
+
+m = lmer(log(d) ~ -1 + tg1 + log(evals):tg1 + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
+summary(m)
+
+# Evolvability*distance interaction
+m = lmer(log(d)~ log(evals)*scale_maxdist + scale_npop + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 summary(m)
 
-m = lmer(log(d) ~ log(evals)*scale_maxdist + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
+#Study environments
+m = lmer(log(d)~ log(evals)*environment + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+summary(m)
+
+m = lmer(log(d)~ -1 + environment + log(evals):environment + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+summary(m)
+
+#Mating systems
+m = lmer(log(d)~ log(evals)*ms + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+summary(m)
+
+m = lmer(log(d)~ -1 + ms + log(evals):ms + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 summary(m)
 
 # Formal meta-analysis using Almer_SE
@@ -392,7 +411,9 @@ m = lmer(log(d*100) ~ -1 + tg1 + log(evals):tg1 + scale_npop+ scale_maxdist
          + (log(evals)|study_ID) +(1|species), data=floveg)
 
 xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(100*log(xt3)^2)
+#x3at = log10(100*log(xt3)^2)
+x3at = log10(100*log(xt3)^2/(2/pi))
+
 cols=c(rgb(0, 0, 0.545, .35), 
        rgb(0.004, 0.196, 0.125, .35),
        rgb(.545, 0, 0, .35))
@@ -859,4 +880,9 @@ for(i in 1:nrow(ddf)){
   }}
 
 plot(ddf$tmvals, log(ddf$d))
+
+#Scaling of trait variances with the mean
+#ddat=ddat[ddat$trait!="organ_size",]
+#plot(log10(ddat$mean), log10(ddat$sd))
+#lines(-10:10, -10:10)
 
