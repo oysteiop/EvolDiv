@@ -13,6 +13,7 @@ library(MCMCglmm)
 #with_libpaths(new="C:/Program Files/R/R-3.5.0/library",install_github("GHBolstad/evolvability"))
 #.libPaths("C:/Program Files/R/R-3.5.0/library")
 library(evolvability)
+library(MuMIn)
 
 ddat = read.table("data/dmatdata.txt", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
@@ -192,7 +193,6 @@ xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(log(xt3)^2)
 axis(2, at=x3at, signif(xt3, 4), las=1)
 
-
 # Environments
 tapply(ddf$d, ddf$environment, median)
 tapply(ddf$dP, ddf$environment, median)
@@ -202,6 +202,28 @@ ss = na.omit(subset(ddf, select=c("d","environment")))
 ss = ss[ss$d>0,]
 summary(lm(log(d)~environment, data=ss))
 plot(ss$environment, log(ss$d))
+
+# Environment vs. trait group ####
+tapply(ddf$d, list(ddf$tg1, ddf$environment), median)
+tapply(ddf$dP, list(ddf$tg1, ddf$environment), median)
+tapply(ddf$d>-Inf, list(ddf$tg1, ddf$environment), sum)
+
+red = ddf[ddf$environment%in%c("field","greenhouse"),]
+red$environment = factor(red$environment, levels=c("field","greenhouse"))
+red = red[red$tg1%in%c("floral","vegetative"),]
+mstg = paste0(red$environment, red$tg1)
+mstg = factor(mstg, levels=c("fieldfloral","fieldvegetative","greenhousefloral","greenhousevegetative"))
+
+x11(height=4.5, width=4.5)
+plot(factor(mstg), log10(red$d*100), at=c(1,2,4,5), las=1, col=rep(c("white","grey"),2), xaxt="n", xlab="",
+     ylab="Proportional divergence", ylim=c(-3, 4), yaxt="n")
+legend("topleft", pch=c(15, 0), col=c("grey", "white"), legend=c("Vegetative", "Floral"), bty="n", pt.cex = 1.3)
+legend("topleft", pch=c(0, 0), col=c("black", "black"), legend=c("", ""), bty="n", pt.cex=1.3)
+axis(1, at=c(1.5, 4.5), labels=c("Field", "Greenhouse"))
+
+xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2/(2/pi))
+axis(2, at=x3at, signif(xt3, 4), las=1)
 
 # Dimensions plot ####
 medians = tapply(log(ddf$evals), ddf$dimension, median, na.rm=T)
@@ -227,7 +249,6 @@ axis(4, at=x3atNEW, signif(xt3, 4), las=1)
 # Back-transformation
 dp = exp(sqrt(ddf$d*(2/pi)))
 cor(ddf$d, (log(dp))^2/(2/pi))
-
 
 # Boxplots ####
 ddf$logd = log10(ddf$d*100)
@@ -300,6 +321,64 @@ text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
 h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
+# Simpler boxplot for main text
+
+tpos=-.25
+xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2)
+x3atNEW = log10(100*log(xt3)^2/(2/pi))
+
+veg = ddf[ddf$tg1=="vegetative",]
+
+medians = tapply(veg$logd, veg$tg2, median, na.rm=T)
+veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
+levels(veg$tg2)
+a = 1:8
+
+x11(height=5.5, width=5.5)
+par(mar=c(8,4,2,2))
+plot(veg$tg2, veg$logd, cex=.8, notch=F, xaxt="n", col="darkgreen", 
+     ylab="Proportional divergence", xlab="", yaxt="n", ylim=c(-3,3), xlim=c(0,23))
+#axis(2, at=c(-3:3), c("<0.001",c(signif(10^(c(-2:3)),1))), las=1)
+axis(2, at=x3atNEW, c("<1.005", signif(xt3, 4)[-1]), las=1)
+
+#x3at = seq(-3, 3, 1)
+#x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
+#axis(2, at=x3at, signif(x3, 3), las=1, col="red")
+
+axis(1, at=a, labels = FALSE)
+labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+labels = sub("_"," ",labels)
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1,cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logd[ddf$tg1=="vegetative"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+# Floral
+floral = ddf[ddf$tg1=="floral" & ddf$tg2!="fitness",]
+#floral$logd[which(floral$logd==-Inf)]=log10(0.01)
+
+medians = tapply(floral$logd, floral$tg2, median, na.rm=T)
+floral$tg2 = factor(floral$tg2, levels=names(sort(medians,decreasing=T)))
+levels(floral$tg2)
+a = (max(a)+2):((max(a)+1)+length(levels(floral$tg2)))
+
+par(new=T)
+plot(floral$tg2, floral$logd, cex=.8, yaxt="n", at=a, xaxt="n", col="darkblue",
+     ylab="", xlab="", ylim=c(-3,3), xlim=c(0,23))
+axis(1, at=a, labels = FALSE)
+labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+labels = sub("_"," ",labels)
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
+       bty="n", legend=c("Floral (n = 273)", "Vegetative (n = 80)"))
+
+
+
 #### Subset data for d vs. e meta-analysis ####
 ddf = na.omit(ddf)
 ddf = ddf[ddf$d>0,]
@@ -335,50 +414,87 @@ tapply(ddf$d, list(ddf$ms, ddf$tg1), median)
 
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
 ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
+ddf$scale_log_evol = scale(log(ddf$evals), scale=F)
+
 wgts = 1/((ddf$d_se^2)/(ddf$d^2)) #Mean-scaled sampling variance because analysis is on log
 
-#Baseline meta-analytic model
-m0 = lmer(log(d)~ log(evals) + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+# Baseline meta-analytic model
+
+# Fit with REML=T to get parameter estimates
+m0 = lmer(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m0)
+exp(sqrt((2/pi)*exp(summary(m0)$coef[1,1]))) #dP at intercept (mean)
+r.squaredGLMM(m0)
 
-#Alternative models
+# Refit with REML=F for AIC comparisons
+m0 = lmer(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 
-#Floral vs. vegetative traits
+# Alternative models
+
+# Evolvability*distance interaction
+m = lmer(log(d)~ scale_log_evol*scale_maxdist + scale_npop + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+summary(m)
+
+# Evolvability*npop interaction
+m = lmer(log(d)~ scale_log_evol*scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+summary(m)
+
+# Study environments
+m = lmer(log(d)~ scale_log_evol*environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+
+# Refit with REML=T to get parameter estimates
+m = lmer(log(d)~ scale_log_evol*environment + scale_npop + log(maxdist) + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+summary(m)
+r.squaredGLMM(m)
+
+# Suppress global intercept to get parameter estimates per group
+m = lmer(log(d)~ -1 + environment + scale_log_evol:environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+summary(m)
+
+# Mating systems
+m = lmer(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+
+# Refit with REML=T to get parameter estimates
+m = lmer(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+summary(m)
+r.squaredGLMM(m)
+
+# Suppress global intercept to get parameter estimates per group
+m = lmer(log(d)~ -1 + ms + scale_log_evol:ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+summary(m)
+
+# Floral vs. vegetative traits
+
+# Subset to floral and vegetative traits only
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
-m0 = lmer(log(d) ~ log(evals) + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
-summary(m0)
+floveg_wgts = 1/((floveg$d_se^2)/(floveg$d^2)) #Mean-scaled sampling variance because analysis is on log
 
-m = lmer(log(d) ~ log(evals)*tg1 + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
+# New baseline model for AIC comparison
+m0 = lmer(log(d) ~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
+
+m = lmer(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
 logLik(m0)
 logLik(m)
 AIC(m0, m)$AIC[2] - AIC(m0, m)$AIC[1]
 
-m = lmer(log(d) ~ -1 + tg1 + log(evals):tg1 + scale_npop + scale_maxdist + (log(evals)|study_ID) + (1|species), REML=F, data=floveg)
+# Refit with REML=T to get parameter estimates
+m = lmer(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
+summary(m)
+r.squaredGLMM(m)
+
+# Suppress global intercept to get parameter estimates per group
+m = lmer(log(d) ~ -1 + tg1 + scale_log_evol:tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
 summary(m)
 
-# Evolvability*distance interaction
-m = lmer(log(d)~ log(evals)*scale_maxdist + scale_npop + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-summary(m)
-
-#Study environments
-m = lmer(log(d)~ log(evals)*environment + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
-summary(m)
-
-m = lmer(log(d)~ -1 + environment + log(evals):environment + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-summary(m)
-
-#Mating systems
-m = lmer(log(d)~ log(evals)*ms + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-AIC(m0, m)
-AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
-summary(m)
-
-m = lmer(log(d)~ -1 + ms + log(evals):ms + scale_npop + log(maxdist) + (log(evals)|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
-summary(m)
 
 # Formal meta-analysis using Almer_SE
 SE = sqrt((ddf$d_se^2)/(ddf$d^2))
@@ -602,16 +718,20 @@ m = lmer(log(d*100) ~ -1 + dimension + log(evals):dimension + scale_npop+ scale_
          + (1|species/study_ID), data=ddf)
 cols = c("blue3", "firebrick", "green3", "yellow3","cyan", "black") 
 
-x11(height=4.5, width=6.5)
+x11(height=5, width=6)
 par(mfrow=c(1,1), mar=c(4,4,2,7))
-plot(log10(ddf$evals), log10(ddf$d*100),
+plot(log10(ddf$evals), ddf$logd,
      xlab="Evolvability (%)",
-     ylab="Divergence (x100)",
+     ylab="Proportional divergence",
      pch=1, cex=1*sqrt(ddf$npop),
      col=cols[as.numeric(ddf$dimension)],
      xlim=c(-2.5, 2),ylim=c(-4,3),xaxt="n", yaxt="n")
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
-axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
+
+xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2/(2/pi))
+axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
+
 
 x1=seq(min(log(ddf$evals[ddf$dimension=="ratio"])),
        max(log(ddf$evals[ddf$dimension=="ratio"])), .1)
@@ -715,8 +835,10 @@ rese = summary(lm(log10(ddf$evals)~ddf$dimension))$residuals
 
 plot(rese, resd)
 m = lmer(resd ~ rese + scale_npop + scale_maxdist
-         + (1|species/study_ID), data=ddf)
+         + (rese|study_ID) + (1|species), data=ddf)
 summary(m)
+
+r.squaredGLMM(m)
 
 x11(height = 4.5, width=6.5)
 par(mfrow=c(1,1), mar=c(4,4,2,7))

@@ -204,12 +204,12 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
          xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
          xlab="log10 (Evolvability [%])", 
          ylab="log10 (Divergence [x100])", 
-         main=species, las=1)
-    points(log10(var_g_d), log10(var_d_d), pch=16)
+         pch=16, main=species, las=1)
+    points(log10(var_g_d), log10(var_d_d), pch=1)
     points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
     #lines(-100:100, lty=2)
     
-    legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_a, 2))), bty="n")
+    #legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_a, 2))), bty="n")
     
     mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
     mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
@@ -217,12 +217,17 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     
     if(!is.null(pmat)){
       points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
-      legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
-             pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+      #legend("bottomright", c("Original traits", "G directions", "D directions", "P directions"), 
+      #       pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+      legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
+                                     paste("G directions (", round(100*r2_g, 1),")"),
+                                     paste("D directions (", round(100*r2_d, 1),")"),
+                                     paste("P directions (", round(100*r2_p, 1),")")),
+             pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
     }
     if(is.null(pmat)){
-      legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors"), 
-             pch=c(16, 1, 16), col=c("blue3", "black", "black"))
+      legend("bottomright", c("Original traits", "G directions", "D directions"), 
+             pch=c(16, 16, 1), col=c("blue3", "black", "black"))
     }
   }
   
@@ -237,12 +242,12 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
          xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
          xlab="log10 (Conditional evolvability [%])", 
          ylab="log10 (Divergence [x100])", 
-         main=species, las=1)
-    points(log10(var_g_d_c), log10(var_d_d), pch=16)
+         pch=16, main=species, las=1)
+    points(log10(var_g_d_c), log10(var_d_d), pch=1)
     
     points(log10(cvals), log10(diag(dmat)), pch=16, col="blue3")
     
-    legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_ac, 2))), bty="n")
+    #legend("topleft", legend=substitute(paste(r^2, " = ", v), list(v=signif(r2_ac, 2))), bty="n")
     
     mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
     mean2 = mean(log10(c(cvals, var_g_g_c, var_g_d_c)))
@@ -251,15 +256,17 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     if(!is.null(pmat)){
       points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
       legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
-             pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+             pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
     }
     if(is.null(pmat)){
       legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors"), 
-             pch=c(16, 1, 16), col=c("blue3", "black", "black"))
+             pch=c(16, 16, 1), col=c("blue3", "black", "black"))
     }
   }
   
-  outlist = list(res=res, theta = theta)
+  outlist = list(res=res, theta = theta, 
+                 evolvabilityMeans = evolvabilityMeans(a$G_ge), 
+                 divergenceMeans = evolvabilityMeans(a$D_de))
   
   return(outlist)
 }

@@ -1,6 +1,6 @@
-###########################################################
-#### - Computing statistics for scaling of D with G - #####
-###########################################################
+###################################################################
+#### - Preparing and aligning G and D matrices for analyses - #####
+###################################################################
 computeMeanG = function(species){
   sp = unlist(lapply(EVOBASE, function(x) x$Species))
   gMats = lapply(EVOBASE[which(sp==species)], function(x) x$G)

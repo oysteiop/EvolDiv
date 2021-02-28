@@ -526,11 +526,13 @@ eigen(gmat)
 eigen(dmat)
 eigen(pmat)
 
+source("code/computeGD.R")
+source("code/alignMat.R")
 vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens", ymin=-1, plot="e")
 
-#Uncertainty over the posterior
+# Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:10){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -648,35 +650,84 @@ xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g), log10(var_d_g), 
+plot(log10(diag(gmat)), log10(diag(dmat)), 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
      xlab="log10 (Evolvability [%])", 
      ylab="log10 (Divergence [x100])", 
-     main="Dalechampia: Tulum CR", las=1)
+     main="Dalechampia: Tulum CR", las=1, pch=16, col="blue3")
+points(log10(var_g_g), log10(var_d_g))
 points(log10(var_g_d), log10(var_d_d), pch=16)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
-points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
 legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
        pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+
+# Plot with modified axes
+x11(width=5, height=5)
+xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(diag(gmat)), log10(diag(dmat)), 
+     xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
+     xlab="Evolvability (%)", 
+     ylab="Proportional divergence",
+     yaxt="n",
+     xaxt="n",
+     main="Dalechampia scandens", las=1, pch=16, col="blue3")
+points(log10(var_g_g), log10(var_d_g), pch=16)
+points(log10(var_g_d), log10(var_d_d))
+points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
+
+mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
+mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
+segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
+
+legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
+                               paste("G directions (", round(100*r2_g, 1),")"),
+                               paste("D directions (", round(100*r2_d, 1),")"),
+                               paste("P directions (", round(100*r2_p, 1),")")),
+       pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
+
+axis(1, at=c(-1, -.5, 0), signif(10^c(-1, -.5, 0),1))
+
+xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2/(2/pi))
+axis(2, at=x3at, signif(xt3, 4), las=1)
+
+#exp(sqrt(diag(dmat/100)*(2/pi)))
+
+
 
 # Cond
 xmin = log10(min(c(var_g_g_c, var_g_d_c), na.rm=T))
 xmax = log10(max(c(var_g_g_c, var_g_d_c), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(var_g_g_c), log10(var_d_g), 
+plot(log10(diag(gmat)), log10(diag(dmat)), col="white", pch=16, 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
      xlab="log10 (Conditional evolvability [%])", 
      ylab="log10 (Divergence [x100])", 
      main="Dalechampia: Tulum CR", las=1)
-points(log10(var_g_d_c), log10(var_d_d), pch=16)
-points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
-#points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="grey")
+
 legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "P eigenvectors"), 
        pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
 
 points(log10(cvals), log10(diag(dmat)), pch=16, col="blue")
-#arrows(log10(diag(gmat)), log10(diag(dmat)), log10(cvals), log10(diag(dmat)), code=2, length=.05)
+arrows(log10(diag(gmat)), log10(diag(dmat)), log10(cvals), log10(diag(dmat)), code=2, length=.05)
+
+
+points(log10(var_g_d), log10(var_d_d), pch=16, col="grey")
+points(log10(var_g_d_c), log10(var_d_d), pch=16)
+arrows(log10(var_g_d), log10(var_d_d), log10(var_g_d_c), log10(var_d_d), code=2, length=.05)
+
+points(log10(var_g_p), log10(var_d_p), pch=16, col="grey")
+points(log10(var_g_p_c), log10(var_d_p), pch=16, col="firebrick")
+arrows(log10(var_g_p), log10(var_d_p), log10(var_g_p_c), log10(var_d_p), code=2, length=.05)
+
+
+points(log10(var_g_g_c), log10(var_d_g))
+
+
 
 
 #Angles
@@ -1078,3 +1129,202 @@ text(x=x, y=evolvabilityMeans(gmat)[2], labels=expression(e[min]), xpd=T, cex=.8
 text(x=x, y=evolvabilityMeans(gmat)[3], labels=expression(e[max]), xpd=T, cex=.8, adj=0)
 text(x=x, y=evolvabilityMeans(gmat)[4], labels=expression(bar(c)), xpd=T, cex=.8, adj=0)
 legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
+
+
+#### Selection/Evolvability analysis ####
+# The D matrix
+dat = read.table("data/dalechampia/populations/costarica_greenhouse.txt", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDl, GSDc, GSDr)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHl, GHr)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWl, SWc, SWr)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GW)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+dat = read.table("data/dalechampia/populations/mexico_greenhouse.txt", header=T)
+
+load(file="analyses/dalechampia/Dmat_CostaRica_75k.RData")
+n=6
+dpost = mod$VCV[,1:(n*n)]
+dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
+colnames(dmat) = rownames(dmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
+dmat
+
+#plot(mod$VCV[,1])
+
+# The G matrix
+dat = read.csv("data/dalechampia/tulum/TulumDiallel.csv", header=T)
+dat$GSD = apply(subset(dat, select=c(GSDL, GSDC, GSDR)), 1, mean, na.rm=T)
+dat$GH  = apply(subset(dat, select=c(GHL, GHR)), 1, mean, na.rm=T)
+dat$SW  = apply(subset(dat, select=c(SWL, SWC, SWR)), 1, mean, na.rm=T)
+dat$UBL = apply(subset(dat, select=c(UBL, UBC, UBR)), 1, mean, na.rm=T)
+dat$LBL = apply(subset(dat, select=c(LBL, LBC, LBR)), 1, mean, na.rm=T)
+dat$GA  = sqrt(dat$GH*dat$GWTot)
+dat$BA  = with(dat, sqrt(UBL*UBW)+sqrt(LBL*LBW))
+
+load("analyses/dalechampia/Gmat_Tulum.RData")
+
+n = 6
+gpost = mod$VCV[,1:(n*n)]
+gmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)/100
+colnames(gmat) = rownames(gmat) = c("BA", "GA", "GSD", "SW", "GAD", "ASD")
+round(gmat, 2)
+
+# The mean P matrix
+load(file="analyses/dalechampia/MeanP.RData")
+pmat = MeanP
+
+# Selection data
+flosel = read.table("C:/data/FlowerSelection/flowerbeta.txt", header=T)
+#flosel = flosel[flosel$Study!="Soteras_et_al_2020",]
+flosel$StudySpecies = as.factor(paste(flosel$Study, flosel$Genus, flosel$epithet, sep="_"))
+flosel$BetaRaw = flosel$BetaVar/flosel$SD
+flosel$BetaRawSE = flosel$BetaVarSE/flosel$SD
+flosel$CV = flosel$SD/flosel$Mean
+ww = which(flosel$Study=="Albertsen_et_al._201x")
+flosel$PL[ww] = 1-((0.13*flosel$pollen[ww])/(1+(0.13*flosel$pollen[ww])))
+sa = flosel[flosel$Study=="Albertsen_et_al._201x",]
+
+sa$fit = sa$PollSize-sa$Mean
+
+names(sa)
+
+bdat = subset(sa, select=c("Population", "Year", "Trait", "BetaMean"))
+head(bdat, 9)
+
+bdat = data.frame(matrix(bdat$BetaMean, nrow=8))
+colnames(bdat)=unique(sa$Trait)
+bdat
+
+Bmat = cov(bdat)
+round(Bmat, 3)
+
+names(bdat)
+Gred = gmat[c(1:3, 6), c(1:3, 6)]
+
+
+Rmat = Gred %*% Bmat %*% Gred
+Rmat
+
+# Derive eigenvectors
+# Compute eigenvectors etc.
+gmat = Gred
+dmat = dmat[c(1:3, 6), c(1:3, 6)]
+bmat = Bmat
+rmat = Rmat
+pmat = pmat[c(1:3, 6), c(1:3, 6)]
+
+library(evolvability)
+
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+var_r_g = evolvabilityBeta(rmat, Beta = g_ev)$e
+
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
+var_r_d = evolvabilityBeta(rmat, Beta = d_ev)$e
+
+r_ev = eigen(rmat)$vectors
+var_g_r = evolvabilityBeta(gmat, Beta = r_ev)$e
+var_d_r = evolvabilityBeta(dmat, Beta = r_ev)$e
+var_r_r = evolvabilityBeta(rmat, Beta = r_ev)$e
+
+p_ev = eigen(pmat)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
+var_r_p = evolvabilityBeta(rmat, Beta = p_ev)$e
+
+# Plot R vs. D
+
+plot(log10(var_r_r), log10(var_d_r), xlim=c(-4, 0), ylim=c(-1, 2))
+points(log10(var_r_d), log10(var_d_d), pch=16)
+points(log10(var_r_p), log10(var_d_p), pch=16, col="firebrick")
+points(log10(diag(rmat)), log10(diag(dmat)), pch=16, col="blue")
+
+x11(width=5, height=5)
+xmin = log10(min(c(var_r_r, var_r_d), na.rm=T))
+xmax = log10(max(c(var_r_r, var_r_d), na.rm=T))
+ymin = log10(min(c(var_d_r, var_d_d), na.rm=T))
+ymax = log10(max(c(var_d_r, var_d_d), na.rm=T))
+plot(log10(var_r_r), log10(var_d_r), 
+     xlim=c(xmin, xmax), ylim=c(ymin-1, ymax), 
+     xlab="log10 (Exp. divergence)", 
+     ylab="log10 (Divergence [x100])", 
+     main="Dalechampia: Tulum CR", las=1)
+points(log10(var_r_d), log10(var_d_d), pch=16)
+points(log10(var_r_p), log10(var_d_p), pch=16, col="firebrick")
+points(log10(diag(rmat)), log10(diag(dmat)), pch=16, col="blue3")
+
+legend("bottomright", c("Original traits", "R eigenvectors", "D eigenvectors", "P eigenvectors"), 
+       pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
+
+
+
+var_b_p = evolvabilityBeta(bmat, Beta = p_ev)$e
+
+plot(log10(var_g_p), log10(var_b_p), xlim=c(-1.5,.5), ylim=c(-2,0))
+points(log10(diag(gmat)), log10(diag(bmat)), pch=16)
+
+x11(width=12*.75, height=4.5*.75)
+par(mfrow=c(1,3))
+plot(log10(var_g_p), log10(var_d_p), las=1, ylim=c(-.3, 1), xlab="", ylab="")
+points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
+mtext("log10 (Evolvability)", 1, line=2.5)
+mtext("log10 (Divergence)", 2, line=2.5)
+
+plot(log10(var_b_p), log10(var_d_p), las=1, ylim=c(-.3, 1), xlab="", ylab="")
+points(log10(diag(bmat)), log10(diag(dmat)), pch=16, col="blue3")
+mtext("log10 (Var in selection)", 1, line=2.5)
+
+plot(log10(var_r_p), log10(var_d_p), las=1, ylim=c(-.3, 1), xlab="", ylab="")
+points(log10(diag(rmat)), log10(diag(dmat)), pch=16, col="blue3")
+mtext("log10 (Pred. divergence)", 1, line=2.5)
+
+
+mt = lm(log(diag(dmat))~log(diag(gmat)))
+beta_t = summary(mt)$coef[2,1]
+beta_t
+r2_t = summary(mt)$r.squared
+r2_t
+
+mtc = lm(log(diag(dmat))~log(cvals))
+beta_tc = summary(mtc)$coef[2,1]
+beta_tc
+r2_tc = summary(mtc)$r.squared
+r2_tc
+
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
+beta_g
+r2_g = summary(mg)$r.squared
+r2_g
+
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
+beta_d
+r2_d = summary(md)$r.squared
+r2_d
+
+mdc = lm(log(var_d_d)~log(var_g_d_c))
+beta_dc = summary(mdc)$coef[2,1]
+beta_dc
+r2_dc = summary(mdc)$r.squared
+r2_dc
+
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
+beta_p
+r2_p = summary(mp)$r.squared
+r2_p
+
+mpc = lm(log(var_d_p)~log(var_g_p_c))
+beta_pc = summary(mpc)$coef[2,1]
+beta_pc
+r2_pc = summary(mpc)$r.squared
+r2_pc
+
+res = data.frame(traits = c("Original", "Original","G eigenvectors", "D eigenvectors", "D eigenvectors", "P eigenvectors", "P eigenvectors"),
+                 evol = c("e","c","e","e","c","e","c"),
+                 slope = round(c(beta_t, beta_tc, beta_g, beta_d, beta_dc, beta_p, beta_pc), 3),
+                 r2 = round(c(r2_t, r2_tc, r2_g, r2_d, r2_dc, r2_p, r2_pc), 3))
+res

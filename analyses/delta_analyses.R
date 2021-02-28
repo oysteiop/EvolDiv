@@ -6,18 +6,19 @@ rm(list=ls())
 
 add2deltaList=function(pop=POPBASE[[s]]$popmeans[,1]){
   data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
-             d=out$dmat, pop=pop, 
+             d = out$dmat, pop = pop, 
              dims = paste0(substr(sort(unique(EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])), 1, 4), collapse="+"),
              ndims = length(unique(EVOBASE[[as.character(out$g)]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])),
              traitgroups = paste0(substr(sort(unique(EVOBASE[[out$g]]$Groups[match(colnames(out$G), names(EVOBASE[[out$g]]$Groups))])), 1, 3), collapse="+"),
-             emean=outdat$emean,
-             emin=outdat$emin,
-             emax=outdat$emax,
-             cmean=outdat$cmean,
-             div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
-             theta=outdat$theta, row.names=NULL)
+             emean = outdat$emean,
+             emin = outdat$emin,
+             emax = outdat$emax,
+             cmean = outdat$cmean,
+             div = outdat$div, edelta = outdat$edelta, cdelta = outdat$cdelta,
+             theta = outdat$theta, row.names=NULL)
 }
 
+library(plyr)
 library(reshape2)
 library(MCMCglmm)
 library(evolvability)
@@ -53,7 +54,7 @@ colnames(means)==names(z0)
 #outdat = computeDelta(G=out$G, means=means, z0=z0)
 #evolvabilityMeans(out$G)
 outdat = computeDelta2(G=out$G, means=means, z0=z0)
-outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
+#outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -490,11 +491,11 @@ load(file="analyses/delph_Silene/deltaDF.RData")
 deltaList[[length(deltaList)+1]]=deltaDF
 
 # Compile dataframe
-library(plyr)
 deltaDat = rbind.fill(deltaList)
 dim(deltaDat)
 tail(deltaDat)
 
+# Keep angles between 0 and 90
 for(i in 1: nrow(deltaDat)){
   if(deltaDat$theta[i]>90){
     deltaDat$theta[i]=180-deltaDat$theta[i]
@@ -638,7 +639,8 @@ text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), x
 
 points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, col="blue")
 
-# Scaling between min, mean, and max
+# Alternative figure with scaling between min, mean, and max
+
 x11(height=4, width=8)
 par(mfrow=c(1,2), mar=c(4,4,2,2))
 
@@ -656,9 +658,9 @@ for(i in 1:nrow(meanDat)){
   }
 }
 
-plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+plot(deltaDat$div, newe, pch=16, col="black", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
      main=" (e) All studies (evolvability)")
-points(meanDat$div, newmeans, pch=16)
+#points(meanDat$div, newmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
@@ -679,50 +681,16 @@ for(i in 1:nrow(meanDat)){
 
 plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
      main=" (f) All studies (conditional evolvability)")
-points(meanDat$div, newcmeans, pch=16)
+#points(meanDat$div, newcmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
-
 
 
 #### Plotting individual studies from deltaList ####
-unlist(lapply(deltaList, function(x) unique(x$species)))
-
-x11(height=8, width=12)
-par(mfrow=c(2,3))
-plotDelta(37, lab.offset=0.07, cex=1, title = "(a) Crepis tectorum")
-plotDelta(38, lab.offset=0.07, cex=1, title = "(c) Dalechampia scandens")
-
-plot(deltaDat$div, newe, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
-     main=" (e) All studies (evolvability)")
-points(meanDat$div, newmeans, pch=16)
-abline(h=0)
-axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-
-plotDelta(2, lab.offset=0.07, cex=1, title = "(b) Lobelia siphilitica")
-plotDelta(45, lab.offset=0.07, cex=1, title = "(d) Arabidopsis lyrata")
-
-plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
-     main=" (f) All studies (conditional evolvability)")
-points(meanDat$div, newcmeans, pch=16)
-abline(h=0)
-axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
-mtext("Divergence from focal population (x100)", 1, line=2.5)
-
-
-
-
-
-
-pdf("figs/delta_plots.pdf", family="Times", height=5, width=5)
-for(i in 1:length(deltaList)){
-  plotDelta(i, lab.offset=0.05)
-}
-dev.off()
-
-plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), cex=.8, lab.offset=0.05){
+plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), 
+                     xlab=T, ylab=T,
+                     cex=.8, lab.offset=0.05){
   plotData = deltaList[[index]]
   
   ylim = c(plotData$emin[1], plotData$emax[1])
@@ -732,8 +700,8 @@ plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), cex=
   plot(plotData$div, plotData$edelta, pch=16, ylim=ylim, las=1,
        xlab="", ylab="",
        main=title)
-  mtext("Divergence from focal population (x100)", 1, line=2.5)
-  mtext("Evolvability (%)", 2, line=2.5)
+  if(xlab) {mtext("Divergence from focal population", 1, line=2.5)}
+  if(ylab) {mtext("Evolvability (%)", 2, line=2.5)}
   points(plotData$div, plotData$cdelta, pch=16, col="grey")
   
   abline(h=plotData$emean, lty=2)
@@ -748,6 +716,43 @@ plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), cex=
   
   legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 }
+
+unlist(lapply(deltaList, function(x) unique(x$species)))
+
+# Figure 4
+x11(height=8, width=12)
+par(mfrow=c(2,3))
+plotDelta(37, lab.offset=0.07, cex=1, xlab=F, title = "(a) Crepis tectorum")
+plotDelta(38, lab.offset=0.07, cex=1, xlab=F, ylab=F, title = "(c) Dalechampia scandens")
+
+plot(deltaDat$div, newe, pch=16, col="black", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (e) All studies (evolvability)")
+#points(meanDat$div, newmeans, pch=16)
+abline(h=0)
+axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
+#mtext("Divergence from focal population (x100)", 1, line=2.5)
+
+plotDelta(2, lab.offset=0.07, cex=1, title = "(b) Lobelia siphilitica")
+plotDelta(45, lab.offset=0.07, cex=1, ylab=F, title = "(d) Arabidopsis lyrata")
+
+plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
+     main=" (f) All studies (conditional evolvability)")
+#points(meanDat$div, newcmeans, pch=16)
+abline(h=0)
+axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
+mtext("Divergence from focal population", 1, line=2.5)
+
+
+
+
+
+
+pdf("figs/delta_plots.pdf", family="Times", height=5, width=5)
+for(i in 1:length(deltaList)){
+  plotDelta(i, lab.offset=0.05)
+}
+dev.off()
+
 
 
 #### Plotting individual systems from deltaList ####

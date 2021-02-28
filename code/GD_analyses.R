@@ -10,13 +10,13 @@ add2gdList=function(){
              dims = paste0(substr(sort(unique(EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])), 1, 4), collapse="+"),
              ndims = length(unique(EVOBASE[[as.character(out$g)]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))])),
              traitgroups = paste0(substr(sort(unique(EVOBASE[[out$g]]$Groups[match(colnames(out$G), names(EVOBASE[[out$g]]$Groups))])), 1, 3), collapse="+"),
-             emean = evolvabilityMeans(out$G)[1],
-             emin = evolvabilityMeans(out$G)[2],
-             emax = evolvabilityMeans(out$G)[3],
-             cmean = evolvabilityMeans(out$G)[4],
-             imean = evolvabilityMeans(out$G)[7],
+             emean = vals$evolvabilityMeans[1],
+             emin = vals$evolvabilityMeans[2],
+             emax = vals$evolvabilityMeans[3],
+             cmean = vals$evolvabilityMeans[4],
+             imean = vals$evolvabilityMeans[7],
              d = out$dmat, 
-             dmean = evolvabilityMeans(out$D)[1],
+             dmean = vals$divergenceMeans[1],
              betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
              betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
              betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
@@ -31,6 +31,7 @@ add2gdList=function(){
 library(reshape2)
 library(plyr)
 library(MCMCglmm)
+library(lme4)
 library(evolvability)
 source("code/prepareGD.R")
 source("code/computeGD.R")
@@ -49,11 +50,11 @@ dsp = unlist(lapply(POPBASE, function(x) x$Species))
 both_sp = unique(gsp[which(gsp %in% dsp)])
 both_sp
 
-estD = FALSE #Reestimating the error-corrected D matrices?
-thin = 100 # Thinning interval for the models estimating error-correcting D
+estD = FALSE #Re-estimating the error-corrected D matrices?
+thin = 100 # Thinning interval for the models estimating error-corrected D
 
 fixD = TRUE #Hold D fixed when assessing uncertainty
-nSample = 100 #Number of resamples for SE
+nSample = 10 #Number of resamples for SE
 
 gdList = list()
 
@@ -117,6 +118,85 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot="e")
 
 gdList[[length(gdList)+1]]=add2gdList()
+
+# Manual plot
+# Compute eigenvectors etc.
+dmat = out$D
+gmat = out$G
+
+g_ev = eigen(gmat)$vectors
+var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
+var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
+
+d_ev = eigen(dmat)$vectors
+var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
+var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
+
+p_ev = eigen(MeanP)$vectors
+var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
+var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
+
+# Compute summary stats
+mt = lm(log(diag(dmat))~log(diag(gmat)))
+beta_t = summary(mt)$coef[2,1]
+beta_t
+r2_t = summary(mt)$r.squared
+r2_t
+
+mg = lm(log(var_d_g)~log(var_g_g))
+beta_g = summary(mg)$coef[2,1]
+beta_g
+r2_g = summary(mg)$r.squared
+r2_g
+
+md = lm(log(var_d_d)~log(var_g_d))
+beta_d = summary(md)$coef[2,1]
+beta_d
+r2_d = summary(md)$r.squared
+r2_d
+
+mp = lm(log(var_d_p)~log(var_g_p))
+beta_p = summary(mp)$coef[2,1]
+beta_p
+r2_p = summary(mp)$r.squared
+r2_p
+
+x11(width=5, height=5)
+xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(diag(gmat)), log10(diag(dmat)), 
+     xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
+     xlab="Evolvability (%)", 
+     ylab="Proportional divergence",
+     yaxt="n",
+     xaxt="n",
+     main="Lobelia siphilitica", las=1, pch=16, col="blue3")
+points(log10(var_g_g), log10(var_d_g), pch=16)
+points(log10(var_g_d), log10(var_d_d), pch=1)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
+
+mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
+mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
+segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
+
+legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
+                               paste("G directions (", round(100*r2_g, 1),")"),
+                               paste("D directions (", round(100*r2_d, 1),")"),
+                               paste("P directions (", round(100*r2_p, 1),")")),
+       pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
+
+axis(1, at=seq(-.4, 1, .2), signif(10^seq(-.4, 1, .2), 2))
+
+#xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+#x3at = log10(100*log(xt3)^2/(2/pi))
+#axis(2, at=x3at, signif(xt3, 4), las=1)
+
+x3at = seq(-2, .5, .5)
+x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
+axis(2, at=x3at, signif(x3, 3), las=1)
+
 
 # G = CERA, D = Caruso 2003
 out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
@@ -357,7 +437,7 @@ plot(modD, out$D)
 lines(-1:1, -1:1)
 cor(c(modD), c(out$D))
 
-save(modD, file="analyses/adj_Dmats/Aquilegia_HerlihyEckert2007.RData")
+save(modDpost, file="analyses/adj_Dmats/Aquilegia_HerlihyEckert2007.RData")
 }
 
 # Load the error-corrected D matrix
@@ -509,7 +589,7 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 colnames(out$G)
 
 # Loop
-gg=2
+gg=4
 for(gg in 1:4){
 out = prepareGD(species="Spergularia_marina", gmatrix = gg, dmatrix = 1)
 
@@ -622,7 +702,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = computeGD(out$G, modDpost, species="Clarkia dudleyana", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, species="Clarkia dudleyana", SE=T, fixD=fixD, nSample=nSample, plot="e")
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -964,20 +1044,21 @@ for(i in 1: nrow(gdDat)){
 
 save(gdDat, file="gdDat.RData")
 
-# Summary stats
-median(gdDat$betaD)
-median(gdDat$r2D)
+# Summary stats ####
+sum(gdDat$betaG>-Inf) # Number of multivariate scaling relationships for G/D directions
 
-median(gdDat$betaG)
-median(gdDat$r2G)
-sum(gdDat$betaG>-Inf)
+median(gdDat$betaD) # Median slope for D directions
+median(gdDat$r2D) # Median r2 for D directions
 
+median(gdDat$betaG) # Median slope for G directions
+median(gdDat$r2G) # Median r2 for D directions
+
+sum(gdDat$betaP>-Inf, na.rm=T) # Number of multivariate scaling relationships for P directions
 median(gdDat$betaP, na.rm=T)
 median(gdDat$r2P, na.rm=T)
-sum(gdDat$betaP>-Inf, na.rm=T)
 
-median(gdDat$betaD_cond)
-median(gdDat$betaP_cond, na.rm=T)
+median(gdDat$betaD_cond) # Median slope for D directions (conditional evolvability)
+median(gdDat$betaP_cond, na.rm=T) # # Median slope for P directions (conditional evolvability)
 
 # Weighed mean
 wval = NULL
@@ -995,6 +1076,7 @@ mSE = Almer_SE(betaG ~ 1 + (1|species), SE=gdDat$betaG_SE, data=gdDat)
 summary(m)
 summary(mSE)
 
+# Means per species
 meanDat = ddply(gdDat, .(species), summarize,
                 emean = median(emean),
                 cmean = median(cmean),
@@ -1010,17 +1092,21 @@ meanDat
 min(c(range(gdDat$betaG), range(gdDat$betaD)))
 max(c(range(gdDat$betaG), range(gdDat$betaD)))
 
-#More complex version
+#cm = cov(cbind(gdDat$betaG, gdDat$betaD))/38
+#library(ellipse)
+#ellipse(cm, centre=c(mean(gdDat$betaG), mean(gdDat$betaD)))
+
+# Slope scatterplot figure ####
 pdf("slopescatter.pdf", height=6, width=9, family="Times")
 x11(height=6, width=9)
 mat = matrix(c(1,2,3,4,5,5,6,6,5,5,6,6), nrow=3, byrow=T)
 layout(mat = mat)
 par(mar=c(2,4,4,2), oma=c(1,0,0,0))
-hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G eigenvectors")), las=1)
+hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G directions")), las=1)
 text(-.275, 10, "(A)", cex=1.5, xpd=T)
-hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D eigenvectors")), las=1, col="lightgrey")
-hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P eigenvectors")), las=1, col="lightblue", breaks=10)
-hist(gdDat$r2All, xlab="", ylab="", main=expression(paste(R^2, " overall")), las=1)
+hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D directions")), las=1)
+hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P directions")), las=1, breaks=10)
+hist(gdDat$r2T, xlab="", ylab="", main=expression(paste(R^2, " original traits")), las=1)
 
 par(mar=c(4,4,1,2))
 plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
@@ -1031,18 +1117,22 @@ points(meanDat$betaG, meanDat$betaD, pch=16)
 points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
 abline(h=1, lty=2)
 abline(v=1, lty=2)
-mtext("Slope of G eigenvectors", 1, line=3)
-mtext("Slope of D eigenvectors", 2, line=2.5)
+mtext("Slope for G directions", 1, line=3)
+mtext("Slope for D directions", 2, line=2.5)
 #points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
 lines(-10:10, -10:10, lty=2)
 text(-.5, 4, "(B)", cex=1.5, xpd=T)
 
-plot(gdDat$r2All, gdDat$betaG, pch=16, las=1, xlim=c(0,1), ylim=c(0,3.5), ylab="", xlab="")
-points(gdDat$r2All, gdDat$betaD, pch=16, col="grey")
-points(gdDat$r2All, gdDat$betaP, pch=16, col="lightblue")
-mtext(expression(paste(R^2, " overall")), 1, line=3)
+#lines(ellipse(cm, centre=c(mean(gdDat$betaG), mean(gdDat$betaD))))
+
+plot(gdDat$r2G, gdDat$betaG, pch=16, las=1, xlim=c(0,1), ylim=c(0, 3), ylab="", xlab="")
+points(gdDat$r2D, gdDat$betaD, pch=1, col="black")
+points(gdDat$r2P, gdDat$betaP, pch=16, col="firebrick")
+#points(gdDat$r2T, gdDat$betaT, pch=16, col="blue")
+
+mtext(expression(paste(R^2, "")), 1, line=3)
 mtext("Slope", 2, line=2.5)
-legend("topright", pch=c(16,16,16), cex=1.3, col=c("black", "grey", "lightblue"), legend=c("G eigenvectors", "D eigenvectors", "P eigenvectors"))
+legend("topleft", pch=c(16,1,16), cex=1.3, col=c("black", "black", "firebrick"), legend=c("G directions", "D directions", "P directions"))
 abline(h=1)
 text(-.165, 3.5, "(C)", cex=1.5, xpd=T)
 
@@ -1058,49 +1148,63 @@ summary(m4)
 
 #### Comparing e and c ####
 x11(height=6, width=9)
-par(mfrow=c(2,3))
+par(mfrow=c(2,3), mar=c(4,4,2,2), oma=c(0,2,0,0), xpd=F)
 plot(gdDat$betaT, gdDat$betaT_cond, las=1,
      xlim=c(-1.5, 2), ylim=c(-1.5, 2), pch=16,
      main="Original traits",
-     xlab="Slope for evolvabilities",
-     ylab="Slope for cond. evolvabilities")
+     xlab="",
+     ylab="")
+mtext("Slope for evolvabilities", 1, line=3)
+mtext("Slope for cond. evolvabilities", 2, line=3)
+
 lines(-10:10, -10:10)
 
 plot(gdDat$betaD, gdDat$betaD_cond, las=1,
      xlim=c(0,4), ylim=c(0,4), pch=16,
-     main="D eigenvectors",
-     xlab="Slope for evolvabilities",
+     main="D directions",
+     xlab="",
      ylab="")
+mtext("Slope for evolvabilities", 1, line=3)
+
 lines(-10:10, -10:10)
 
 plot(gdDat$betaP, gdDat$betaP_cond, las=1,
      xlim=c(-.5,3), ylim=c(-.5,3), pch=16,
-     main="P eigenvectors",
-     xlab="Slope for evolvabilities",
+     main="P directions",
+     xlab="",
      ylab="")
+mtext("Slope for evolvabilities", 1, line=3)
 lines(-10:10, -10:10)
 
 plot(gdDat$r2T, gdDat$r2T_cond, las=1,
      xlim=c(0, 1), ylim=c(0, 1), pch=16,
      main="",
-     xlab="R2 for evolvabilities",
-     ylab="R2 for cond. evolvabilities")
+     xlab="",
+     ylab="")
+mtext(expression(paste(r^2, " for evolvabilities")), 1, line=3)
+mtext(expression(paste(r^2, " for cond. evolvabilities")), 2, line=2.5)
+
 lines(-10:10, -10:10)
 
 plot(gdDat$r2D, gdDat$r2D_cond, las=1,
      xlim=c(0,1), ylim=c(0,1), pch=16,
      main="",
-     xlab="R2 for evolvabilities",
+     xlab="",
      ylab="")
+mtext(expression(paste(r^2, " for evolvabilities")), 1, line=3)
+
 lines(-10:10, -10:10)
 
 plot(gdDat$r2P, gdDat$r2P_cond, las=1,
      xlim=c(0,1), ylim=c(0,1), pch=16,
      main="",
-     xlab="R2 for evolvabilities",
+     xlab="",
      ylab="")
+mtext(expression(paste(r^2, " for evolvabilities")), 1, line=3)
+
 lines(-10:10, -10:10)
 
+#### END OF FINAL ANALYSES ####
 
 # All the studies (old discontinued analysis) ####
 nG = NULL

@@ -219,9 +219,9 @@ source("code/computeGD.R")
 source("code/alignMat.R")
 vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot="e")
 
-#Uncertainty over the posterior
+# Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:10){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -275,6 +275,12 @@ var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
 var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
 
 # Compute summary stats
+mt = lm(log(diag(dmat))~log(diag(gmat)))
+beta_t = summary(mt)$coef[2,1]
+beta_t
+r2_t = summary(mt)$r.squared
+r2_t
+
 mg = lm(log(var_d_g)~log(var_g_g))
 beta_g = summary(mg)$coef[2,1]
 beta_g
@@ -309,6 +315,40 @@ points(log10(var_g_p), log10(var_d_p), pch=16, col="green")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
+
+# Plot with modifed axes
+x11(width=5, height=5)
+xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
+xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
+ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
+ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
+plot(log10(var_g_g), log10(var_d_g), pch=16, 
+     xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
+     xlab="Evolvability (%)", 
+     ylab="Proportional divergence",
+     xaxt="n",
+     yaxt="n",
+     main="Crepis tectorum", las=1)
+points(log10(var_g_d), log10(var_d_d), pch=1)
+points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
+points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
+
+mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
+mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
+segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
+
+legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
+                               paste("G directions (", round(100*r2_g, 1),")"),
+                               paste("D directions (", round(100*r2_d, 1),")"),
+                               paste("P directions (", round(100*r2_p, 1),")")),
+       pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
+
+axis(1, at=c(-.5, 0, .5, 1, 1.5), signif(10^c(-.5, 0, .5, 1, 1.5),1))
+xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(100*log(xt3)^2/(2/pi))
+axis(2, at=x3at, signif(xt3, 4), las=1)
+
+
 
 cvals=NULL
 for(i in 1:5){

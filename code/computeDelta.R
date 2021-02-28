@@ -16,12 +16,27 @@ for(i in 1:nrow(means)){
 return(outdat)
 }
 
+randomDelta = function(n = 1, gmat = NULL){
+  X = t(rmvnorm(n, sigma=gmat))
+  X = t(t(X)/sqrt(colSums(X^2)))
+  rownames(X) = paste("dim", 1:ncol(gmat), sep = "")
+  X
+}
+
 # Work with rotated matrices and include dimension reduction
-computeDelta2 = function(G, means, z0){
+computeDelta2 = function(G, means, z0, ndrift=10000){
+  require(mvtnorm)
+  
   ge = eigen(G)
   G_ge = diag(ge$values[which(ge$values>0)])
 
-  outdat = matrix(NA, nrow=nrow(means), ncol=9)
+  outdat = matrix(NA, nrow=nrow(means), ncol=10)
+  
+  #Drift expectation
+  rb = randomDelta(n = ndrift, gmat = G)
+  e_beta = NULL
+  e_drift = mean(evolvabilityBeta(G_ge*100, rb)$e)
+  
   for(i in 1:nrow(means)){
     z1 = unlist(means[i,]) #Means for population z1
     delta = log(z1)-log(z0) #Difference on log scale from z1 to focal pop (z0)
@@ -36,10 +51,10 @@ computeDelta2 = function(G, means, z0){
     c_delta = evolvabilityBeta(G_ge*100, scale_delta)$c
     theta = acos(eigen(G_ge)$vectors[,1] %*% scale_delta)*(180/pi)
     
-    outdat[i,]=c(div, e_delta, c_delta, theta, evolvabilityMeans(G_ge*100)[c(1:4,7)])
+    outdat[i,]=c(div, e_delta, c_delta, theta, evolvabilityMeans(G_ge*100)[c(1:4,7)], e_drift)
   }
   outdat = as.data.frame(outdat)
-  colnames(outdat) = c("div", "edelta", "cdelta", "theta", "emean","emin", "emax","cmean","imean")
+  colnames(outdat) = c("div", "edelta", "cdelta", "theta", "emean","emin", "emax","cmean","imean","edrift")
   return(outdat)
 }
 

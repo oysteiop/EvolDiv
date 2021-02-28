@@ -127,3 +127,16 @@ elist
 lapply(MG, function(x) signif(cov2cor(x), 2))
 
 table(unlist(lapply(MG, dim)))/2
+
+
+# Autonomy hypothesis fig
+x11(height=5, width=6)
+par(mar=c(8,5,2,2))
+avals = c(40, 60, 80, 15)
+out = barplot(avals, ylim=c(0, 100), las=1, ylab="Autonomy (%)")
+
+axis(1, at = out, labels=F)
+labels =labels = c("c(Flower size|Flower size)", "c(Flower size|Fit)", 
+                   "c(Flower size|Display)", "c(Flower size|G)")
+text(out, par("usr")[3] -7, srt = 45, adj = 1,cex=1,
+     labels = labels, xpd = TRUE)
