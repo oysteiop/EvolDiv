@@ -3,28 +3,30 @@
 ###############################################
 rm(list=ls())
 
-library(plyr)
-library(reshape2)
-library(lme4)
-library(MCMCglmm)
-#library(devtools)
+library(devtools)
 #install_github("GHBolstad/evolvability")
 #library(withr)
 #with_libpaths(new="C:/Program Files/R/R-3.5.0/library",install_github("GHBolstad/evolvability"))
 #.libPaths("C:/Program Files/R/R-3.5.0/library")
+library(plyr)
+library(reshape2)
+library(lme4)
+library(MCMCglmm)
 library(evolvability)
 library(MuMIn)
+library(fBasics)
 
+# Read datafiles
 ddat = read.table("data/dmatdata.txt", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
 maxdists = read.csv(file="data/maxdists.csv")
 
-#List of studies
+# List of studies
 studies = sort(unique(ddat$ID))
 studies
 splist = tapply(as.character(ddat$species), ddat$ID, function(x) x[1])
 
-#Compute among-pop variance for each trait in each study
+# Compute among-pop variance for each trait in each study
 outlist = list()
 for(s in 1:length(studies)){
   red = ddat[ddat$ID==studies[[s]],]
@@ -114,33 +116,118 @@ head(ddf)
 summary(ddf)
 
 #### Summary stats with all divergence data ####
-length(unique(ddf$study_ID))
-length(unique(ddf$species))
+length(unique(ddf$study_ID)) # Number of divergence studies
+length(!is.na(ddat$mean)) # Number of population means
+length(unique(paste0(ddat$species, ddat$population))) # Number of populations
+length(unique(ddf$species)) # Number of species
+length(unique(ddat$family)) # Number of families
 
-ddf$dP = exp(sqrt(ddf$d)*sqrt(2/pi))
+ddf$dP = exp(sqrt(ddf$d)*sqrt(2/pi)) # Compute proportional divergence metric
 
 tapply(ddf$d, ddf$tg1, median)
 tapply(ddf$dP, ddf$tg1, median)
 tapply(ddf$d>-Inf, ddf$tg1, sum)
+
+# Standard errors for floral and vegetative divergence
+flosamp = NULL
+for(i in 1:10000){
+flosamp[i] = median(sample(ddf$dP[which(ddf$tg1=="floral")], replace=T))
+}
+vegsamp = NULL
+for(i in 1:10000){
+  vegsamp[i] = median(sample(ddf$dP[which(ddf$tg1=="vegetative")], replace=T))
+}
+
+sd(vegsamp)
+sd(flosamp)
+
+# Model comparison flo vs. veg
+floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
+floveg$tg1 = factor(floveg$tg1)
+floveg = floveg[floveg$d>0,]
+
+m0 = glmmTMB(log(d)~ 1 + (1|study_ID) + (1|species), REML=F, data=floveg)
+m = glmmTMB(log(d)~ tg1 + (1|study_ID) + (1|species), REML=F, data=floveg)
+
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1] #delta AIC, support for model m
+
+summary(m)
+
+#floveg = floveg[!is.na(floveg$ms),]
+
+#m0 = lmer(log(d)~ 1 + (1|study_ID) + (1|species), REML=F, data=floveg)
+#m1 = lmer(log(d)~ tg1 + (1|study_ID) + (1|species), REML=F, data=floveg)
+#m2 = lmer(log(d)~ ms + (1|study_ID) + (1|species), REML=F, data=floveg)
+#m3 = lmer(log(d)~ tg1 + ms + (1|study_ID) + (1|species), REML=F, data=floveg)
+#m4 = lmer(log(d)~ tg1 * ms + (1|study_ID) + (1|species), REML=F, data=floveg)
+
+#AIC(m0, m1, m2, m3, m4)
 
 # Linear traits only
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d, lin$tg1, median)
 tapply(lin$dP, lin$tg1, median)
 
-# By study
-na.omit(as.data.frame(tapply(lin$dP, list(lin$study_ID, lin$tg1), median, na.rm=T)[,c(1,4)]))
+flosamp = NULL
+for(i in 1:10000){
+  flosamp[i] = median(sample(lin$dP[which(lin$tg1=="floral")], replace=T))
+}
+vegsamp = NULL
+for(i in 1:10000){
+  vegsamp[i] = median(sample(lin$dP[which(lin$tg1=="vegetative")], replace=T))
+}
 
-# Within floral traits
+sd(vegsamp)
+sd(flosamp)
+
+# Linear floral vs. linear vegetative
+floveglin = floveg[floveg$dimension=="linear",]
+
+m0 = glmmTMB(log(d)~ 1 + (1|study_ID) + (1|species), REML=F, data=floveglin)
+m = glmmTMB(log(d)~ tg1 + (1|study_ID) + (1|species), REML=F, data=floveglin)
+
+AIC(m0, m)
+AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
+
+summary(m)
+
+# By study
+pairwise = na.omit(as.data.frame(tapply(lin$dP, list(lin$study_ID, lin$tg1), median, na.rm=T)[,c(1,4)]))
+pairwise
+sum(pairwise$vegetative>pairwise$floral)
+sum(!is.na(pairwise$vegetative>pairwise$floral))
+
+# Subcategories Within floral traits
 flo = droplevels(ddf[ddf$tg1=="floral",])
 sort(tapply(flo$d, flo$tg2, median, na.rm=T))
 sort(tapply(flo$dP, flo$tg2, median, na.rm=T))
 sort(tapply(flo$dP>-1, flo$tg2, sum, na.rm=T))
 
-# Mating systems
+# Summary stats per mating system category ####
 tapply(ddf$d, ddf$ms, median)
 tapply(ddf$dP, ddf$ms, median)
 tapply(ddf$d>-Inf, ddf$ms, sum)
+
+selfsamp = NULL
+for(i in 1:10000){
+  selfsamp[i] = median(sample(ddf$dP[which(ddf$ms=="S")], replace=T))
+}
+mixsamp = NULL
+for(i in 1:10000){
+  mixsamp[i] = median(sample(ddf$dP[which(ddf$ms=="M")], replace=T))
+}
+outsamp = NULL
+for(i in 1:10000){
+  outsamp[i] = median(sample(ddf$dP[which(ddf$ms=="O")], replace=T))
+}
+
+sd(selfsamp)
+sd(mixsamp)
+sd(outsamp)
+quantile(selfsamp, c(0.025, 0.975))
+quantile(mixsamp, c(0.025, 0.975))
+quantile(outsamp, c(0.025, 0.975))
 
 ss = na.omit(subset(ddf, select=c("d","d_se","ms")))
 ss = ss[ss$d>0,]
@@ -170,33 +257,26 @@ x3at = log10(100*log(xt3)^2/(2/pi))
 axis(2, at=x3at, signif(xt3, 4), las=1)
 
 
-flo = ddf[which(ddf$tg1=="floral"),]
-veg = ddf[which(ddf$tg1=="vegetative"),]
-fit = ddf[which(ddf$tg2=="fit"),]
-size = ddf[which(ddf$tg2=="flowersize"),]
-
-length(which(fit$evals<median(ddf$evals, na.rm=T)))/sum(fit$evals>-Inf, na.rm=T)
-length(which(fit$d<median(ddf$d, na.rm=T)))/sum(fit$d>-Inf, na.rm=T)
-length(which(size$evals<median(ddf$evals, na.rm=T)))/sum(size$evals>-Inf, na.rm=T)
-length(which(size$d<median(ddf$d, na.rm=T)))/sum(size$d>-Inf, na.rm=T)
-
-par(mfrow=c(1,1))
-plot(log10(flo$evals), log10(flo$d), ylim=c(-7.2, 0.5), yaxt="n")
-
-plot(log10(ddf$evals), log10(ddf$d), ylim=c(-6, 1), col="lightgrey",
-     xlab="Evolvability", ylab="Proportional divergence", yaxt="n")
-points(log10(fit$evals), log10(fit$d), pch=16)
-abline(h=log10(median(fit$d)))
-abline(v=log10(median(fit$evals, na.rm=T)))
-
-xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(log(xt3)^2)
-axis(2, at=x3at, signif(xt3, 4), las=1)
-
-# Environments
+# Summary stats per study environment category ####
 tapply(ddf$d, ddf$environment, median)
 tapply(ddf$dP, ddf$environment, median)
 tapply(ddf$d>-Inf, ddf$environment, sum)
+
+ghsamp = NULL
+for(i in 1:10000){
+  ghsamp[i] = median(sample(ddf$dP[which(ddf$environment=="greenhouse")], replace=T))
+}
+cgsamp = NULL
+for(i in 1:10000){
+  cgsamp[i] = median(sample(ddf$dP[which(ddf$environment=="common_garden")], replace=T))
+}
+fsamp = NULL
+for(i in 1:10000){
+  fsamp[i] = median(sample(ddf$dP[which(ddf$environment=="field")], replace=T))
+}
+sd(ghsamp)
+sd(cgsamp)
+sd(fsamp)
 
 ss = na.omit(subset(ddf, select=c("d","environment")))
 ss = ss[ss$d>0,]
@@ -225,15 +305,15 @@ xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(100*log(xt3)^2/(2/pi))
 axis(2, at=x3at, signif(xt3, 4), las=1)
 
-# Dimensions plot ####
+# Trait dimensions plot ####
 medians = tapply(log(ddf$evals), ddf$dimension, median, na.rm=T)
 ddf$dimension = factor(ddf$dimension, levels=names(sort(medians, decreasing=F)))
 
 x11(height=4.5, width=4.5)
 par(mar=c(5,4,2,4))
-plot(ddf$dimension, log10(ddf$d*100), at=c(1,4,7,10,13,16), xlim=c(0,17), ylim=c(-3, 5.5), col="grey", xaxt="n", las=1, yaxt="n")
+plot(ddf$dimension, log10(ddf$d*100), at=c(1,4,7,10,13,16), xlim=c(0,17), ylim=c(-3, 5.5), col="grey", xaxt="n", las=1, yaxt="n", xlab="")
 par(new=T)
-plot(ddf$dimension, log10(ddf$evals), at=c(2,5,8,11,14,17), xlim=c(0,17), ylim=c(-3, 5.5), xaxt="n", yaxt="n")
+plot(ddf$dimension, log10(ddf$evals), at=c(2,5,8,11,14,17), xlim=c(0,17), ylim=c(-3, 5.5), xaxt="n", yaxt="n", xlab="")
 axis(1, at=c(1.5, 4.5, 7.5, 10.5, 13.5, 16.5), labels=rep("", 6))
 text(c(1.5, 4.5, 7.5, 10.5, 13.5, 16.5), par("usr")[3] - .5, srt = 45, adj = 1,cex=1,
      labels = levels(ddf$dimension), xpd = TRUE)
@@ -246,11 +326,7 @@ x3atNEW = log10(100*log(xt3)^2/(2/pi))
 
 axis(4, at=x3atNEW, signif(xt3, 4), las=1)
 
-# Back-transformation
-dp = exp(sqrt(ddf$d*(2/pi)))
-cor(ddf$d, (log(dp))^2/(2/pi))
-
-# Boxplots ####
+# General boxplots ####
 ddf$logd = log10(ddf$d*100)
 ddf$logd[which(ddf$logd==-Inf)]=log10(0.000025)
 ddf$logd[which(ddf$logd<(-3))]=log10(0.000025)
@@ -282,7 +358,7 @@ text(a, par("usr")[3] + tpos, srt = 45, adj = 1,cex=.7,
 h = median(ddf$logd[ddf$tg1=="vegetative"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
-#####
+#
 
 lifehist = ddf[ddf$tg1=="lifehistory",]
 medians = tapply(lifehist$logd, lifehist$tg2, median, na.rm=T)
@@ -321,21 +397,9 @@ text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
 h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
-# Simpler boxplot for main text
-
-tpos=-.25
-xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(100*log(xt3)^2)
-x3atNEW = log10(100*log(xt3)^2/(2/pi))
-
-veg = ddf[ddf$tg1=="vegetative",]
-
-medians = tapply(veg$logd, veg$tg2, median, na.rm=T)
-veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
-levels(veg$tg2)
-a = 1:8
-
-x11(height=5.5, width=5.5)
+# Simpler boxplot for main text ####
+#x11(height=5.5, width=5.5)
+pdf("pubfigs/FloVegBoxes.pdf", height=5.5, width=5.5, fam = "Times")
 par(mar=c(8,4,2,2))
 plot(veg$tg2, veg$logd, cex=.8, notch=F, xaxt="n", col="darkgreen", 
      ylab="Proportional divergence", xlab="", yaxt="n", ylim=c(-3,3), xlim=c(0,23))
@@ -369,15 +433,17 @@ plot(floral$tg2, floral$logd, cex=.8, yaxt="n", at=a, xaxt="n", col="darkblue",
 axis(1, at=a, labels = FALSE)
 labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
 labels = sub("_"," ",labels)
+labels[11] = "FLOWER SIZE (79)"
 text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
      labels = labels, xpd = TRUE)
 h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
 segments(min(a), h, max(a), h, lwd=3)
 
 legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
-       bty="n", legend=c("Floral (n = 273)", "Vegetative (n = 80)"))
+       bty="n", legend=c(expression(paste("Floral (", italic(n)," = 273)")), 
+                         expression(paste("Vegetative (", italic(n)," = 80)"))))
 
-
+dev.off()
 
 #### Subset data for d vs. e meta-analysis ####
 ddf = na.omit(ddf)
@@ -385,7 +451,7 @@ ddf = ddf[ddf$d>0,]
 ddf = ddf[ddf$evals>0,]
 head(ddf)
 
-#Check
+# Check (not needed anymore)
 tg1=tg2=dimension=ms=evals=NULL
 
 for(i in 1:nrow(ddf)){
@@ -399,13 +465,13 @@ for(i in 1:nrow(ddf)){
   evals[i]=mean(sel$evolvability)
 }
 
-#### Summary stats ####
+#### Summary stats for univariate meta-analysis ####
 length(unique(ddf$study_ID))
 length(unique(ddf$species))
 
 tapply(ddf$d, list(ddf$ms, ddf$tg1), median)
 
-#### Informal meta-analysis ####
+#### Univariate meta-analysis ####
 
 # Remove some of the repeated D. scandens studies?
 #ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
@@ -421,57 +487,57 @@ wgts = 1/((ddf$d_se^2)/(ddf$d^2)) #Mean-scaled sampling variance because analysi
 # Baseline meta-analytic model
 
 # Fit with REML=T to get parameter estimates
-m0 = lmer(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+m0 = glmmTMB(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m0)
-exp(sqrt((2/pi)*exp(summary(m0)$coef[1,1]))) #dP at intercept (mean)
+exp(sqrt((2/pi)*exp(summary(m0)$coef$cond[1,1]))) #dP at intercept (mean)
 r.squaredGLMM(m0)
 
 # Refit with REML=F for AIC comparisons
-m0 = lmer(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m0 = glmmTMB(log(d)~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 
 # Alternative models
 
 # Evolvability*distance interaction
-m = lmer(log(d)~ scale_log_evol*scale_maxdist + scale_npop + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*scale_maxdist + scale_npop + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
 summary(m)
 
 # Evolvability*npop interaction
-m = lmer(log(d)~ scale_log_evol*scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
 summary(m)
 
 # Study environments
-m = lmer(log(d)~ scale_log_evol*environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
 
 # Refit with REML=T to get parameter estimates
-m = lmer(log(d)~ scale_log_evol*environment + scale_npop + log(maxdist) + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*environment + scale_npop + log(maxdist) + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m)
 r.squaredGLMM(m)
 
 # Suppress global intercept to get parameter estimates per group
-m = lmer(log(d)~ -1 + environment + scale_log_evol:environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ -1 + environment + scale_log_evol:environment + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m)
 
 # Mating systems
-m = lmer(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights=wgts, data=ddf)
 AIC(m0, m)
 AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1]
 
 # Refit with REML=T to get parameter estimates
-m = lmer(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ scale_log_evol*ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m)
 r.squaredGLMM(m)
 
 # Suppress global intercept to get parameter estimates per group
-m = lmer(log(d)~ -1 + ms + scale_log_evol:ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
+m = glmmTMB(log(d)~ -1 + ms + scale_log_evol:ms + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights=wgts, data=ddf)
 summary(m)
 
-# Floral vs. vegetative traits
+# Trait groups (floral vs. vegetative)
 
 # Subset to floral and vegetative traits only
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
@@ -479,37 +545,24 @@ floveg$tg1 = factor(floveg$tg1)
 floveg_wgts = 1/((floveg$d_se^2)/(floveg$d^2)) #Mean-scaled sampling variance because analysis is on log
 
 # New baseline model for AIC comparison
-m0 = lmer(log(d) ~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
+m0 = glmmTMB(log(d) ~ scale_log_evol + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
 
-m = lmer(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
-logLik(m0)
-logLik(m)
+m = glmmTMB(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=F, weights = floveg_wgts, data=floveg)
+AIC(m0, m)
 AIC(m0, m)$AIC[2] - AIC(m0, m)$AIC[1]
 
 # Refit with REML=T to get parameter estimates
-m = lmer(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
+m = glmmTMB(log(d) ~ scale_log_evol*tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
 summary(m)
 r.squaredGLMM(m)
 
 # Suppress global intercept to get parameter estimates per group
-m = lmer(log(d) ~ -1 + tg1 + scale_log_evol:tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
+m = glmmTMB(log(d) ~ -1 + tg1 + scale_log_evol:tg1 + scale_npop + scale_maxdist + (scale_log_evol|study_ID) + (1|species), REML=T, weights = floveg_wgts, data=floveg)
 summary(m)
-
-
-# Formal meta-analysis using Almer_SE
-SE = sqrt((ddf$d_se^2)/(ddf$d^2))
-plot(ddf$npop, SE)
-m0 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), 
-           SE=SE, maxiter = 100, data=ddf)
-summary(m0)
-
-m1 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID), 
-                            SE=SE, maxiter = 100, data=ddf)
-AIC(m0, m1)
 
 #### Plotting evolvability vs. divergence ####
 
-#All data
+# All data
 par(mfrow=c(1,1))
 plot(log10(ddf$evals),ddf$logd,
      xlab="Evolvability (%)",
@@ -520,7 +573,11 @@ plot(log10(ddf$evals),ddf$logd,
 axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
 
-#Floral and vegetative
+quantile(ddf$d)
+points(tapply(ddf$logd, ddf$study_ID, mean, na.rm=T),tapply(log10(ddf$evals), ddf$study_ID, mean, na.rm=T), pch=16)
+summary(lm(tapply(ddf$logd, ddf$study_ID, mean, na.rm=T)~tapply(log(ddf$evals), ddf$study_ID, mean, na.rm=T)))
+
+# Floral and vegetative
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
 m = lmer(log(d*100) ~ -1 + tg1 + log(evals):tg1 + scale_npop+ scale_maxdist 
@@ -530,27 +587,29 @@ xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 #x3at = log10(100*log(xt3)^2)
 x3at = log10(100*log(xt3)^2/(2/pi))
 
-cols=c(rgb(0, 0, 0.545, .35), 
-       rgb(0.004, 0.196, 0.125, .35),
-       rgb(.545, 0, 0, .35))
-####
+cols = c(rgb(0, 0, 0.545, .35), 
+         rgb(0.004, 0.196, 0.125, .35),
+         rgb(.545, 0, 0, .35))
 
-x11(height=5, width=6)
-par(mfrow=c(1,1))
+cairo_pdf("pubfigs/univar_evol_div.pdf", width=4, height=8, fam="Times")
+x11(width=4, height=8)
+par(mfrow=c(3,1), mar=c(4,5,0.1,2))
+
 plot(log10(floveg$evals), floveg$logd,
-     xlab="Evolvability (%)",
-     ylab="Proportional divergence",
+     xlab="",
+     ylab="",
      pch=1, cex=1*sqrt(floveg$npop),
      col=cols[1:2][as.numeric(floveg$tg1)],
      xlim=c(-2.5, 3.5), ylim=c(-3,3), xaxt="n", yaxt="n")
 axis(1, c(-2,-1,0,1,2), 10^c(-2,-1,0,1,2))
 #axis(2, c(-3,-2,-1,0,1,2), c("<0.001", 10^c(-2,-1,0,1,2)), las=1)
 axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
+mtext("Proportional divergence", 2, line=3.3, cex=0.8)
 
 par(new=T)
 plot(floveg$tg1, floveg$logd, at=c(2.5, 3), boxwex=0.4, xlab="", ylab="",
      col=cols[1:2],
-     xlim=c(-2.5, 3.5), ylim=c(-3.5,3), xaxt="n", yaxt="n")
+     xlim=c(-2.5, 3.5), ylim=c(-3,3), xaxt="n", yaxt="n")
 
 x1=seq(min(log(floveg$evals[floveg$tg1=="floral"])),
        max(log(floveg$evals[floveg$tg1=="floral"])), .1)
@@ -581,24 +640,22 @@ points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkgreen")
 legend("topleft", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Floral", "Vegetative"))
 
-
 # Mating systems
 m = lmer(log(d*100) ~ -1 + ms + log(evals):ms + scale_npop+ scale_maxdist 
          + (log(evals)|study_ID) +(1|species), data=ddf)
 summary(m)$coef
 
-x11(height=5, width=6)
-par(mfrow=c(1,1))
 plot(log10(ddf$evals), ddf$logd,
      xlab="",
-     ylab="Proportional divergence",
+     ylab="",
      pch=1, cex=1*sqrt(ddf$npop),
      col=cols[as.numeric(ddf$ms)],
      xlim=c(-2.5, 3.75), ylim=c(-3.5,3), xaxt="n", yaxt="n")
 axis(1, c(-2,-1,0,1,2), 10^c(-2,-1,0,1,2))
 #axis(2, c(-3,-2,-1,0,1,2), c("<0.001", 10^c(-2,-1,0,1,2)), las=1)
 axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
-mtext("Evolvability (%)", 1, line=2.5)
+#mtext("Evolvability (%)", 1, line=2.5)
+mtext("Proportional divergence", 2, line=3.3, cex=0.8)
 
 par(new=T)
 plot(ddf$ms, ddf$logd, at=c(2.5, 3, 3.5), boxwex=0.4, xlab="", ylab="",
@@ -652,17 +709,16 @@ m = lmer(log(d*100) ~ -1 + environment + log(evals):environment + scale_npop+ sc
          + (log(evals)|study_ID) +(1|species), data=ddf)
 summary(m)$coef
 
-x11(height=5, width=6)
-par(mfrow=c(1,1))
 plot(log10(ddf$evals), ddf$logd,
      xlab="",
-     ylab="Proportional divergence",
+     ylab="",
      pch=1, cex=1*sqrt(ddf$npop),
      col=cols[as.numeric(ddf$environment)],
      xlim=c(-2.5, 3.75), ylim=c(-3.5,3), xaxt="n", yaxt="n")
 axis(1, c(-2,-1,0,1,2), 10^c(-2,-1,0,1,2))
 axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
-mtext("Evolvability (%)", 1, line=2.5)
+mtext("Evolvability (%)", 1, line=2.5, cex=0.8)
+mtext("Proportional divergence", 2, line=3.3, cex=0.8)
 
 par(new=T)
 plot(ddf$environment, ddf$logd, at=c(2.5, 3, 3.5), boxwex=0.4, xlab="", ylab="",
@@ -711,9 +767,9 @@ points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkred")
 legend("topleft", pch=15, col=c("darkblue", "darkgreen", "darkred"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Greenhouse", "Garden", "Field"))
 
+dev.off()
 
 # Dimensions
-library(fBasics)
 m = lmer(log(d*100) ~ -1 + dimension + log(evals):dimension + scale_npop+ scale_maxdist 
          + (1|species/study_ID), data=ddf)
 cols = c("blue3", "firebrick", "green3", "yellow3","cyan", "black") 
@@ -814,7 +870,6 @@ points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black", cex=1.3)
 legend(x=2.2, y = 2, pch=15, col=cols, cex=1, pt.cex=1.5, 
        bty="n", legend=levels(ddf$dimension), xpd=T)
 
-
 # Contextual model
 dimmeans = tapply(log(ddf$evals), ddf$dimension, mean)
 
@@ -828,8 +883,7 @@ m = lmer(log(d*100) ~ log(evals) + meanvals + scale_npop + scale_maxdist
          + (1|species/study_ID), data=ddf)
 summary(m)
 
-
-# Removing the dimension effect
+# Removing the dimension effect by taking residuals
 resd = summary(lm(log10(ddf$d*100)~ddf$dimension))$residuals
 rese = summary(lm(log10(ddf$evals)~ddf$dimension))$residuals
 
@@ -852,6 +906,8 @@ plot(rese, resd, las=1,
 #axis(2,c(-4,-3,-2,-1,0,1,2),10^c(-4,-3,-2,-1,0,1,2), las=1)
 legend(x=2.4, y = 2, pch=15, col=cols, cex=1, pt.cex=1.5, 
        bty="n", legend=levels(ddf$dimension), xpd=T)
+
+#### END OF ANALYSES REPORTED IN PAPER ####
 
 # Function to plot e vs. d with subset highlighted ####
 plotSubset = function(category, subset, xlim=c(-2.5,2), ylim=c(-4,3), ...){
@@ -882,7 +938,7 @@ plotSubset("environment", "field", lwd=2)
 plotSubset("environment", "common_garden", lwd=2)
 
 x11()
-par(mfrow=c(1,2))
+par(mfrow=c(2,3))
 plotSubset("tg1", "floral")
 plotSubset("tg1", "vegetative")
 plotSubset("tg2", "flowersize")
@@ -899,9 +955,8 @@ plotSubset("dimension", "count")
 plotSubset("dimension", "ratio")
 plotSubset("dimension", "time")
 
-
+# Individual studies
 studies = unique(ddf$study_ID)
-
 pdf("figs/univariate_G_D_plots2.pdf")
 for(s in 1:length(studies)){
   study=studies[s]
@@ -909,7 +964,87 @@ for(s in 1:length(studies)){
 }
 dev.off()
 
-#### Formal meta-analysis using MCMCglmm ####
+#### Test off-setting of area and cubic measures
+for(i in 1:nrow(ddf)){
+  if(ddf$dimension[i]=="area"){
+    ddf$d[i]=ddf$d[i]/4
+    ddf$evals[i]=ddf$evals[i]/4
+  }
+  if(ddf$dimension[i]=="mass_volume"){
+    ddf$d[i]=ddf$d[i]/9
+    ddf$evals[i]=ddf$evals[i]/9
+  }
+}
+
+
+# Outcrossing rates ####
+for(i in 1:nrow(ddf)){
+  if(!is.na(ddf$ms[i])){
+    if(is.na(ddf$tmvals[i]) & ddf$ms[i]=="O")
+      ddf$tmvals[i]=1
+  }}
+
+plot(ddf$tmvals, log(ddf$d))
+
+#Scaling of trait variances with the mean
+#ddat=ddat[ddat$trait!="organ_size",]
+#plot(log10(ddat$mean), log10(ddat$sd))
+#lines(-10:10, -10:10)
+
+
+flo = ddf[which(ddf$tg1=="floral"),]
+veg = ddf[which(ddf$tg1=="vegetative"),]
+fit = ddf[which(ddf$tg2=="fit"),]
+size = ddf[which(ddf$tg2=="flowersize"),]
+
+length(which(fit$evals<median(ddf$evals, na.rm=T)))/sum(fit$evals>-Inf, na.rm=T)
+length(which(fit$d<median(ddf$d, na.rm=T)))/sum(fit$d>-Inf, na.rm=T)
+length(which(size$evals<median(ddf$evals, na.rm=T)))/sum(size$evals>-Inf, na.rm=T)
+length(which(size$d<median(ddf$d, na.rm=T)))/sum(size$d>-Inf, na.rm=T)
+
+par(mfrow=c(1,1))
+plot(log10(flo$evals), log10(flo$d), ylim=c(-7.2, 0.5), yaxt="n")
+
+plot(log10(ddf$evals), log10(ddf$d), ylim=c(-6, 1), col="lightgrey",
+     xlab="Evolvability", ylab="Proportional divergence", yaxt="n")
+points(log10(fit$evals), log10(fit$d), pch=16)
+abline(h=log10(median(fit$d)))
+abline(v=log10(median(fit$evals, na.rm=T)))
+
+xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+x3at = log10(log(xt3)^2)
+axis(2, at=x3at, signif(xt3, 4), las=1)
+
+
+# Back-transformation
+dp = exp(sqrt(ddf$d*(2/pi)))
+cor(ddf$d, (log(dp))^2/(2/pi))
+
+# Contextual model
+emeans = tapply(log(ddf$evals), ddf$study_ID, mean)
+
+meanvals=NULL
+for(i in 1:nrow(ddf)){
+  meanvals[i]=emeans[which(names(emeans)==ddf$study_ID[i])] 
+}
+data.frame(meanvals, ddf$study_ID)
+
+m = lmer(log(d*100) ~ log(evals) + meanvals + scale_maxdist + scale_npop +
+           + (1|species/study_ID), data=ddf)
+summary(m)
+
+# Formal meta-analysis using Almer_SE
+SE = sqrt((ddf$d_se^2)/(ddf$d^2))
+plot(ddf$npop, SE)
+m0 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), 
+                            SE=SE, maxiter = 100, data=ddf)
+summary(m0)
+
+m1 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID), 
+                            SE=SE, maxiter = 100, data=ddf)
+AIC(m0, m1)
+
+#### Formal meta-analysis using MCMCglmm
 
 #Prepare data
 names(ddf)
@@ -980,31 +1115,4 @@ plot(log(moddat$maxdist), log(moddat$d))
 plot(log(moddat$evals), log(moddat$d))
 plot(log(moddat$npop), log(moddat$d))
 
-
-#### Test off-setting of area and cubic measures ####
-for(i in 1:nrow(ddf)){
-  if(ddf$dimension[i]=="area"){
-    ddf$d[i]=ddf$d[i]/4
-    ddf$evals[i]=ddf$evals[i]/4
-  }
-  if(ddf$dimension[i]=="mass_volume"){
-    ddf$d[i]=ddf$d[i]/9
-    ddf$evals[i]=ddf$evals[i]/9
-  }
-}
-
-
-# Outcrossing rates ####
-for(i in 1:nrow(ddf)){
-  if(!is.na(ddf$ms[i])){
-    if(is.na(ddf$tmvals[i]) & ddf$ms[i]=="O")
-      ddf$tmvals[i]=1
-  }}
-
-plot(ddf$tmvals, log(ddf$d))
-
-#Scaling of trait variances with the mean
-#ddat=ddat[ddat$trait!="organ_size",]
-#plot(log10(ddat$mean), log10(ddat$sd))
-#lines(-10:10, -10:10)
 

@@ -528,7 +528,7 @@ eigen(pmat)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens", ymin=-1, plot="e")
+vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens", ymin=-1, plot=F)
 
 # Uncertainty over the posterior
 out = list()
@@ -669,11 +669,13 @@ ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(diag(gmat)), log10(diag(dmat)), 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
-     xlab="Evolvability (%)", 
-     ylab="Proportional divergence",
+     xlab="", 
+     ylab="",
      yaxt="n",
      xaxt="n",
-     main="Dalechampia scandens", las=1, pch=16, col="blue3")
+     main="", las=1, pch=16, col="blue3")
+mtext(expression(paste(italic(Dalechampia), " ", italic(scandens))), line=0.5, cex=.8)
+
 points(log10(var_g_g), log10(var_d_g), pch=16)
 points(log10(var_g_d), log10(var_d_d))
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
@@ -682,17 +684,21 @@ mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
 mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
-legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
-                               paste("G directions (", round(100*r2_g, 1),")"),
-                               paste("D directions (", round(100*r2_d, 1),")"),
-                               paste("P directions (", round(100*r2_p, 1),")")),
+legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
+                               paste0("G directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=c(-1, -.5, 0), signif(10^c(-1, -.5, 0),1))
 
-xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(100*log(xt3)^2/(2/pi))
-axis(2, at=x3at, signif(xt3, 4), las=1)
+#xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+#x3at = log10(100*log(xt3)^2/(2/pi))
+#axis(2, at=x3at, signif(xt3, 4), las=1)
+
+x3at = seq(-1, 1, .5)
+x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
+axis(2, at=x3at, signif(x3, 3), las=1)
 
 #exp(sqrt(diag(dmat/100)*(2/pi)))
 

@@ -116,7 +116,7 @@ Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
 dat = Gdat
 
 load(file="./analyses/puentes2016/Dmat150k.RData")
-n=4
+n = 4
 dpost = mod$VCV[,1:(n*n)]
 dmat = matrix(apply(mod$VCV, 2, median)[1:(n*n)], nrow=n)
 colnames(dmat) = rownames(dmat) = c("petal.width.mm", "petal.length.mm", "flowers", "rosette.size.cm")
@@ -139,7 +139,7 @@ gmat = apply(simplify2array(glist), 1:2, mean)
 # Each G
 levels(Gdat$pop)
 pops = c("SPIT", "STUC", "STUS", "VIS")
-p=1
+p = 1
 for(p in 1:length(pops)){
   pop = pops[p]
   filename = paste0("analyses/puentes2016/Gmat_", pop,".RData")
@@ -273,11 +273,15 @@ ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(diag(gmat)), log10(diag(dmat)), 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
-     xlab="Evolvability (%)", 
-     ylab="Proportional divergence",
+     xlab="", 
+     ylab="",
      yaxt="n",
      xaxt="n",
-     main="Arabidopsis lyrata", las=1, pch=16, col="blue3")
+     main="", las=1, pch=16, col="blue3")
+mtext("Evolvability (%)", 1, line=2.5, cex=0.8)
+mtext("Proportional divergence", 2, line=3.3, cex=0.8)
+mtext(expression(paste(italic(Arabidopsis), " ", italic(lyrata))), line=0.5, cex=.8)
+
 points(log10(var_g_g), log10(var_d_g), pch=16)
 points(log10(var_g_d), log10(var_d_d), pch=1)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
@@ -286,17 +290,23 @@ mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
 mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
-legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
-                               paste("G directions (", round(100*r2_g, 1),")"),
-                               paste("D directions (", round(100*r2_d, 1),")"),
-                               paste("P directions (", round(100*r2_p, 1),")")),
+legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
+                               paste0("G directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=seq(-.4, 1, .2), signif(10^seq(-.4, 1, .2), 2))
 
-xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(100*log(xt3)^2/(2/pi))
-axis(2, at=x3at, signif(xt3, 4), las=1)
+#xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+#x3at = log10(100*log(xt3)^2/(2/pi))
+#axis(2, at=x3at, signif(xt3, 4), las=1)
+
+x3at = seq(-1, 1, .5)
+x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
+axis(2, at=x3at, signif(x3, 3), las=1)
+
+
 
 #exp(sqrt(diag(dmat/100)*(2/pi)))
 

@@ -1,5 +1,11 @@
-computeDelta = function(G, means, z0){
-outdat = matrix(NA, nrow=nrow(means), ncol=4)
+computeDelta = function(G, means, z0, ndrift=1000){
+outdat = matrix(NA, nrow=nrow(means), ncol=5)
+
+#Drift expectation
+rb = randomDelta(n = ndrift, gmat = G)
+e_beta = NULL
+e_drift = mean(evolvabilityBeta(G*100, rb)$e)
+
 for(i in 1:nrow(means)){
   z1 = unlist(means[i,])
   delta = log(z1)-log(z0)
@@ -11,7 +17,7 @@ for(i in 1:nrow(means)){
   c_delta = evolvabilityBeta(G*100, scale_delta)$c
   theta = acos(t(eigen(G)$vectors[,1]) %*% scale_delta)*(180/pi)
   
-  outdat[i,]=c(div, e_delta, c_delta, theta)
+  outdat[i,]=c(div, e_delta, c_delta, theta, e_drift)
   }
 return(outdat)
 }
@@ -24,7 +30,7 @@ randomDelta = function(n = 1, gmat = NULL){
 }
 
 # Work with rotated matrices and include dimension reduction
-computeDelta2 = function(G, means, z0, ndrift=10000){
+computeDelta2 = function(G, means, z0, ndrift=1000){
   require(mvtnorm)
   
   ge = eigen(G)
@@ -33,7 +39,7 @@ computeDelta2 = function(G, means, z0, ndrift=10000){
   outdat = matrix(NA, nrow=nrow(means), ncol=10)
   
   #Drift expectation
-  rb = randomDelta(n = ndrift, gmat = G)
+  rb = randomDelta(n = ndrift, gmat = G_ge)
   e_beta = NULL
   e_drift = mean(evolvabilityBeta(G_ge*100, rb)$e)
   

@@ -32,6 +32,8 @@ points(coords[,2], coords[,1], pch=16, col="darkblue")
 # List studies in the database
 names(EVOBASE)
 
+unique(unlist(lapply(EVOBASE, function(x) x$Species)))
+
 # Extracting a single species
 s = "Raphanus raphanistrum: Binghamton III"
 View(EVOBASE[[s]])

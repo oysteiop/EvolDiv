@@ -217,7 +217,7 @@ signif(cov2cor(dmat), 2)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot="e")
+vals = computeGD(gmat, dpost, MeanP, species="Crepis tectorum", plot=F)
 
 # Uncertainty over the posterior
 out = list()
@@ -317,18 +317,25 @@ points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
 # Plot with modifed axes
-x11(width=5, height=5)
+
+cairo_pdf("multiEvolDivCases.pdf", height=8, width=8, fam="Times")
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+
+#x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(var_g_g), log10(var_d_g), pch=16, 
      xlim=c(xmin, xmax), ylim=c(ymin, ymax), 
-     xlab="Evolvability (%)", 
-     ylab="Proportional divergence",
+     xlab="", 
+     ylab="",
      xaxt="n",
      yaxt="n",
-     main="Crepis tectorum", las=1)
+     main="", las=1)
+mtext("Proportional divergence", 2, line=3.3, cex=0.8)
+mtext(expression(paste(italic(Crepis), " ", italic(tectorum))), line=0.5, cex=.8)
+
 points(log10(var_g_d), log10(var_d_d), pch=1)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
 points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue3")
@@ -337,18 +344,23 @@ mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
 mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
-legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
-                               paste("G directions (", round(100*r2_g, 1),")"),
-                               paste("D directions (", round(100*r2_d, 1),")"),
-                               paste("P directions (", round(100*r2_p, 1),")")),
+legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
+                               paste0("G directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=c(-.5, 0, .5, 1, 1.5), signif(10^c(-.5, 0, .5, 1, 1.5),1))
-xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(100*log(xt3)^2/(2/pi))
-axis(2, at=x3at, signif(xt3, 4), las=1)
 
+x3at = seq(-.5, 1.5, .5)
+x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
+axis(2, at=x3at, signif(x3, 3), las=1)
 
+#xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
+#x3at = log10(100*log(xt3)^2/(2/pi))
+#axis(2, at=x3at, signif(xt3, 4), las=1)
+
+####
 
 cvals=NULL
 for(i in 1:5){

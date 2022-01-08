@@ -115,7 +115,13 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot="e")
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
+
+#out$G = out$G[-1, -1]
+#out$D = out$D[-1, -1]
+#MeanP = MeanP[-1, -1]
+
+vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
 
@@ -161,18 +167,21 @@ beta_p
 r2_p = summary(mp)$r.squared
 r2_p
 
-x11(width=5, height=5)
+#x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
 ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
 plot(log10(diag(gmat)), log10(diag(dmat)), 
      xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
-     xlab="Evolvability (%)", 
-     ylab="Proportional divergence",
+     xlab="", 
+     ylab="",
      yaxt="n",
      xaxt="n",
-     main="Lobelia siphilitica", las=1, pch=16, col="blue3")
+     main="", las=1, pch=16, col="blue3")
+mtext("Evolvability (%)", line=2.5, cex=0.8)
+mtext(expression(paste(italic(Lobelia), " ", italic(siphilitica))), line=0.5, cex=.8)
+
 points(log10(var_g_g), log10(var_d_g), pch=16)
 points(log10(var_g_d), log10(var_d_d), pch=1)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
@@ -181,10 +190,10 @@ mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
 mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
-legend("bottomright", legend=c(paste("Original traits (", round(100*r2_t, 1),")"),
-                               paste("G directions (", round(100*r2_g, 1),")"),
-                               paste("D directions (", round(100*r2_d, 1),")"),
-                               paste("P directions (", round(100*r2_p, 1),")")),
+legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
+                               paste0("G directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=seq(-.4, 1, .2), signif(10^seq(-.4, 1, .2), 2))
@@ -197,6 +206,7 @@ x3at = seq(-2, .5, .5)
 x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
 axis(2, at=x3at, signif(x3, 3), las=1)
 
+dev.off() # For complex figure compiled from multiple R files
 
 # G = CERA, D = Caruso 2003
 out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
@@ -253,7 +263,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
 #vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=T, fixD=T, nSample=nSample, plot=F)
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
 
@@ -283,7 +293,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -996,7 +1006,7 @@ gdList[[length(gdList)+1]] = add2gdList()
 
 #### dgList output ####
 
-save(gdList, file="gdList.RData")
+#save(gdList, file="gdList.RData")
 
 load(file="gdList.RData")
 
@@ -1043,6 +1053,10 @@ for(i in 1: nrow(gdDat)){
 }
 
 save(gdDat, file="gdDat.RData")
+
+#### END OF FINAL ANALYSES ####
+
+# Postprocessing is moved to the file 'GD_postprocessing
 
 # Summary stats ####
 sum(gdDat$betaG>-Inf) # Number of multivariate scaling relationships for G/D directions
@@ -1096,17 +1110,19 @@ max(c(range(gdDat$betaG), range(gdDat$betaD)))
 #library(ellipse)
 #ellipse(cm, centre=c(mean(gdDat$betaG), mean(gdDat$betaD)))
 
+#gdDat = gdDat[gdDat$ndims==1,]
+
 # Slope scatterplot figure ####
-pdf("slopescatter.pdf", height=6, width=9, family="Times")
-x11(height=6, width=9)
+cairo_pdf("pubfigs/slopescatter.pdf", height=6, width=9, family="Times")
+#x11(height=6, width=9)
 mat = matrix(c(1,2,3,4,5,5,6,6,5,5,6,6), nrow=3, byrow=T)
 layout(mat = mat)
 par(mar=c(2,4,4,2), oma=c(1,0,0,0))
-hist(gdDat$r2G, xlab="", ylab="", main=expression(paste(R^2, " G directions")), las=1)
+hist(gdDat$r2G, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " G-directions")), las=1)
 text(-.275, 10, "(A)", cex=1.5, xpd=T)
-hist(gdDat$r2D, xlab="", ylab="", main=expression(paste(R^2, " D directions")), las=1)
-hist(gdDat$r2P, xlab="", ylab="", main=expression(paste(R^2, " P directions")), las=1, breaks=10)
-hist(gdDat$r2T, xlab="", ylab="", main=expression(paste(R^2, " original traits")), las=1)
+hist(gdDat$r2D, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " D-directions")), las=1)
+hist(gdDat$r2P, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " P-directions")), las=1)
+hist(gdDat$r2T, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " original traits")), las=1)
 
 par(mar=c(4,4,1,2))
 plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
@@ -1117,8 +1133,8 @@ points(meanDat$betaG, meanDat$betaD, pch=16)
 points(median(meanDat$betaG), median(meanDat$betaD), pch=16, col="blue", cex=1.5)
 abline(h=1, lty=2)
 abline(v=1, lty=2)
-mtext("Slope for G directions", 1, line=3)
-mtext("Slope for D directions", 2, line=2.5)
+mtext("Slope for G-directions", 1, line=3)
+mtext("Slope for D-directions", 2, line=2.5)
 #points(gdDat$betaG, gdDat$betaP, col="lightblue", pch=16)
 lines(-10:10, -10:10, lty=2)
 text(-.5, 4, "(B)", cex=1.5, xpd=T)
@@ -1130,11 +1146,11 @@ points(gdDat$r2D, gdDat$betaD, pch=1, col="black")
 points(gdDat$r2P, gdDat$betaP, pch=16, col="firebrick")
 #points(gdDat$r2T, gdDat$betaT, pch=16, col="blue")
 
-mtext(expression(paste(R^2, "")), 1, line=3)
+mtext(expression(paste(r^2, "")), 1, line=3)
 mtext("Slope", 2, line=2.5)
-legend("topleft", pch=c(16,1,16), cex=1.3, col=c("black", "black", "firebrick"), legend=c("G directions", "D directions", "P directions"))
+legend("topleft", pch=c(16,1,16), cex=1.3, col=c("black", "black", "firebrick"), legend=c("G-directions", "D-directions", "P-directions"))
 abline(h=1)
-text(-.165, 3.5, "(C)", cex=1.5, xpd=T)
+text(-.165, 3, "(C)", cex=1.5, xpd=T)
 
 dev.off()
 
@@ -1146,7 +1162,7 @@ m5 = lmer(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
 AIC(m1, m2, m3, m4, m5)
 summary(m4)
 
-#### Comparing e and c ####
+#### Comparing e and c (Appendix 2) ####
 x11(height=6, width=9)
 par(mfrow=c(2,3), mar=c(4,4,2,2), oma=c(0,2,0,0), xpd=F)
 plot(gdDat$betaT, gdDat$betaT_cond, las=1,
@@ -1204,7 +1220,6 @@ mtext(expression(paste(r^2, " for evolvabilities")), 1, line=3)
 
 lines(-10:10, -10:10)
 
-#### END OF FINAL ANALYSES ####
 
 # All the studies (old discontinued analysis) ####
 nG = NULL
