@@ -662,7 +662,7 @@ legend("bottomright", c("Original traits", "G eigenvectors", "D eigenvectors", "
        pch=c(16, 1, 16, 16), col=c("blue3", "black", "black", "firebrick"))
 
 # Plot with modified axes
-x11(width=5, height=5)
+#x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
@@ -674,7 +674,7 @@ plot(log10(diag(gmat)), log10(diag(dmat)),
      yaxt="n",
      xaxt="n",
      main="", las=1, pch=16, col="blue3")
-mtext(expression(paste(italic(Dalechampia), " ", italic(scandens))), line=0.5, cex=.8)
+mtext(expression(paste(italic(Dalechampia), " ", italic(scandens))), line=0.5, cex=.9)
 
 points(log10(var_g_g), log10(var_d_g), pch=16)
 points(log10(var_g_d), log10(var_d_d))
@@ -685,9 +685,9 @@ mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
 legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
-                               paste0("G directions (", round(100*r2_g, 1),"%)"),
-                               paste0("D directions (", round(100*r2_d, 1),"%)"),
-                               paste0("P directions (", round(100*r2_p, 1),"%)")),
+                               paste0("G-directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D-directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P-directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=c(-1, -.5, 0), signif(10^c(-1, -.5, 0),1))

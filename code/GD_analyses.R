@@ -56,7 +56,11 @@ thin = 100 # Thinning interval for the models estimating error-corrected D
 fixD = TRUE #Hold D fixed when assessing uncertainty
 nSample = 10 #Number of resamples for SE
 
+linearonly = F
+
 gdList = list()
+
+# Start of Analyses ####
 
 #### Lobelia ####
 
@@ -117,96 +121,9 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 
 EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
 
-#out$G = out$G[-1, -1]
-#out$D = out$D[-1, -1]
-#MeanP = MeanP[-1, -1]
-
-vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
-
-# Manual plot
-# Compute eigenvectors etc.
-dmat = out$D
-gmat = out$G
-
-g_ev = eigen(gmat)$vectors
-var_g_g = evolvabilityBeta(gmat, Beta = g_ev)$e
-var_d_g = evolvabilityBeta(dmat, Beta = g_ev)$e
-
-d_ev = eigen(dmat)$vectors
-var_g_d = evolvabilityBeta(gmat, Beta = d_ev)$e
-var_d_d = evolvabilityBeta(dmat, Beta = d_ev)$e
-
-p_ev = eigen(MeanP)$vectors
-var_g_p = evolvabilityBeta(gmat, Beta = p_ev)$e
-var_d_p = evolvabilityBeta(dmat, Beta = p_ev)$e
-
-# Compute summary stats
-mt = lm(log(diag(dmat))~log(diag(gmat)))
-beta_t = summary(mt)$coef[2,1]
-beta_t
-r2_t = summary(mt)$r.squared
-r2_t
-
-mg = lm(log(var_d_g)~log(var_g_g))
-beta_g = summary(mg)$coef[2,1]
-beta_g
-r2_g = summary(mg)$r.squared
-r2_g
-
-md = lm(log(var_d_d)~log(var_g_d))
-beta_d = summary(md)$coef[2,1]
-beta_d
-r2_d = summary(md)$r.squared
-r2_d
-
-mp = lm(log(var_d_p)~log(var_g_p))
-beta_p = summary(mp)$coef[2,1]
-beta_p
-r2_p = summary(mp)$r.squared
-r2_p
-
-#x11(width=5, height=5)
-xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
-xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
-ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
-ymax = log10(max(c(var_d_g, var_d_d), na.rm=T))
-plot(log10(diag(gmat)), log10(diag(dmat)), 
-     xlim=c(xmin, xmax), ylim=c(ymin-.5, ymax), 
-     xlab="", 
-     ylab="",
-     yaxt="n",
-     xaxt="n",
-     main="", las=1, pch=16, col="blue3")
-mtext("Evolvability (%)", line=2.5, cex=0.8)
-mtext(expression(paste(italic(Lobelia), " ", italic(siphilitica))), line=0.5, cex=.8)
-
-points(log10(var_g_g), log10(var_d_g), pch=16)
-points(log10(var_g_d), log10(var_d_d), pch=1)
-points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
-
-mean1 = mean(log10(c(diag(dmat), var_d_g, var_d_d)))
-mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
-segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
-
-legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
-                               paste0("G directions (", round(100*r2_g, 1),"%)"),
-                               paste0("D directions (", round(100*r2_d, 1),"%)"),
-                               paste0("P directions (", round(100*r2_p, 1),"%)")),
-       pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
-
-axis(1, at=seq(-.4, 1, .2), signif(10^seq(-.4, 1, .2), 2))
-
-#xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-#x3at = log10(100*log(xt3)^2/(2/pi))
-#axis(2, at=x3at, signif(xt3, 4), las=1)
-
-x3at = seq(-2, .5, .5)
-x3 = exp(sqrt(((10^x3at)/100)*(2/pi)))
-axis(2, at=x3at, signif(x3, 3), las=1)
-
-dev.off() # For complex figure compiled from multiple R files
 
 # G = CERA, D = Caruso 2003
 out = prepareGD(species="Lobelia_siphilitica", gmatrix = 1, dmatrix = 3)
@@ -263,7 +180,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
 #vals = computeGD(out$G, out$D, MeanP, species="Lobelia siphilitica", SE=T, fixD=T, nSample=nSample, plot=F)
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]]=add2gdList()
 
@@ -293,7 +210,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=F, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -323,7 +240,7 @@ plist[[3]] = meanStdG(PMATBASE[["Lobelia siphilitica: Reichelt"]]$P[ma, ma],
                       PMATBASE[["Lobelia siphilitica: Reichelt"]]$Means[ma])
 MeanP = apply(simplify2array(plist), 1:2, mean)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Lobelia siphilitica", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -391,7 +308,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot="e")
+vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -413,7 +330,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -463,7 +380,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -485,7 +402,7 @@ out$G = out$G*100 #Single G
 #signif(cov2cor(out$G),2)
 #signif(cov2cor(out$D),2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Aquilegia canadensis", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -528,7 +445,6 @@ load(file="analyses/adj_Dmats/Brassica.RData")
 modD = matrix(apply(modDpost, 2, median), nrow=sqrt(ncol(modDpost)))
 
 # Loop
-gg=4
 for(gg in c(1:5)){
 out = prepareGD(species="Brassica_cretica", gmatrix = gg, dmatrix = 1)
 
@@ -539,7 +455,7 @@ out$D = modD*100
 out$G = out$G*100 #Single G
 
 #vals = computeGD(out$G, out$D, species="Brassica cretica", SE=F, fixD=T,  nSample=nSample, plot="e", xmin=-3, ymin=-2)
-vals = computeGD(out$G, modDpost, species="Brassica cretica", SE=T, fixD=fixD, nSample=nSample, plot=F, xmin=-3, ymin=-2)
+vals = computeGD(out$G, modDpost, species="Brassica cretica", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
@@ -599,7 +515,7 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 colnames(out$G)
 
 # Loop
-gg=4
+gg=1
 for(gg in 1:4){
 out = prepareGD(species="Spergularia_marina", gmatrix = gg, dmatrix = 1)
 
@@ -609,7 +525,7 @@ modD = matrix(apply(modDpost, 2, median), nrow=sqrt(ncol(modDpost)))
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = computeGD(out$G, modDpost, MeanP, species="Spergularia marina", SE=T, fixD=fixD, nSample=nSample, ymin=-4, plot="e")
+vals = computeGD(out$G, modDpost, MeanP, species="Spergularia marina", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, ymin=-4, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
@@ -661,7 +577,9 @@ modD = matrix(apply(modDpost, 2, median), nrow=sqrt(ncol(modDpost)))
 out$D = modD*100
 out$G = out$G*100 #Single G
 
-vals = computeGD(out$G, modDpost, species="Solanum carolinense", SE=T, fixD=fixD, nSample=nSample, plot=F)
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
+
+vals = computeGD(out$G, modDpost, species="Solanum carolinense", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 }
@@ -711,8 +629,9 @@ out$G = out$G*100 #Single G
 #evolvabilityMeans(out$D)
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
 
-vals = computeGD(out$G, modDpost, species="Clarkia dudleyana", SE=T, fixD=fixD, nSample=nSample, plot="e")
+vals = computeGD(out$G, modDpost, species="Clarkia dudleyana", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -763,7 +682,12 @@ MeanP = meanStdG(PMATBASE[["Ipomopsis aggregata: Vera Falls"]]$P[ma, ma], PMATBA
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Ipomopsis aggregata", SE=T, fixD=fixD, nSample=nSample, plot=F)
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
+#out$G = out$G[-4, -4]
+#out$D = out$D[-4, -4]
+#MeanP = MeanP[-4, -4]
+
+vals = computeGD(out$G, out$D, MeanP, species="Ipomopsis aggregata", linearonly=linearonly, SE=F, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -816,7 +740,7 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Ipomopsis aggregata", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Ipomopsis aggregata", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -870,7 +794,7 @@ MeanP = apply(simplify2array(plist), 1:2, mean)
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = computeGD(out$G, modDpost, MeanP, species="Ipomopsis aggregata", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, MeanP, species="Ipomopsis aggregata", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -911,8 +835,9 @@ out$G = out$G*100
 #evolvabilityMeans(out$D)
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
 
-vals = computeGD(out$G, modDpost, species="Turnera ulmifolia", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, species="Turnera ulmifolia", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -957,8 +882,9 @@ out$G = out$G*100
 #evolvabilityMeans(out$D)
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
+EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]
 
-vals = computeGD(out$G, modDpost, species="Fragaria virginiana", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, species="Fragaria virginiana", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 
@@ -1000,7 +926,7 @@ out$G = out$G*100
 #signif(cov2cor(out$G), 2)
 #signif(cov2cor(out$D), 2)
 
-vals = computeGD(out$G, modDpost, species="Fragaria virginiana", SE=T, fixD=fixD, nSample=nSample, plot=F)
+vals = computeGD(out$G, modDpost, species="Fragaria virginiana", linearonly=linearonly, SE=T, fixD=fixD, nSample=nSample, plot=F)
 
 gdList[[length(gdList)+1]] = add2gdList()
 

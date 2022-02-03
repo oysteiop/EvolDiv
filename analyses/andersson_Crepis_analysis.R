@@ -333,8 +333,8 @@ plot(log10(var_g_g), log10(var_d_g), pch=16,
      xaxt="n",
      yaxt="n",
      main="", las=1)
-mtext("Proportional divergence", 2, line=3.3, cex=0.8)
-mtext(expression(paste(italic(Crepis), " ", italic(tectorum))), line=0.5, cex=.8)
+mtext("Proportional divergence", 2, line=3.0, cex=1)
+mtext(expression(paste(italic(Crepis), " ", italic(tectorum))), line=0.5, cex=.9)
 
 points(log10(var_g_d), log10(var_d_d), pch=1)
 points(log10(var_g_p), log10(var_d_p), pch=16, col="firebrick")
@@ -345,9 +345,9 @@ mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
 legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
-                               paste0("G directions (", round(100*r2_g, 1),"%)"),
-                               paste0("D directions (", round(100*r2_d, 1),"%)"),
-                               paste0("P directions (", round(100*r2_p, 1),"%)")),
+                               paste0("G-directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D-directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P-directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=c(-.5, 0, .5, 1, 1.5), signif(10^c(-.5, 0, .5, 1, 1.5),1))

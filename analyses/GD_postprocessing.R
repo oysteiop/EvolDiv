@@ -61,12 +61,13 @@ max(c(range(gdDat$betaG), range(gdDat$betaD)))
 #gdDat = gdDat[gdDat$ndims==1,]
 
 # Slope scatterplot figure ####
-#cairo_pdf("pubfigs/slopescatter.pdf", height=6, width=9, family="Times")
+cairo_pdf("pubfigs/slopescatter.pdf", height=6, width=9, family="Times")
 #x11(height=6, width=9)
 mat = matrix(c(1,2,3,4,5,5,6,6,5,5,6,6), nrow=3, byrow=T)
 layout(mat = mat)
 par(mar=c(2,4,4,2), oma=c(1,0,0,0))
 hist(gdDat$r2G, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " G-directions")), las=1)
+mtext("Frequency", 2, line=2.5)
 text(-.275, 10, "(A)", cex=1.5, xpd=T)
 hist(gdDat$r2D, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " D-directions")), las=1)
 hist(gdDat$r2P, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " P-directions")), las=1)
@@ -103,13 +104,28 @@ text(-.165, 3, "(C)", cex=1.5, xpd=T)
 dev.off()
 
 # Models to explain variation in betaG
-m1 = lmer(betaG ~ r2All + ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m2 = lmer(betaG ~ r2All + ntraits + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m3 = lmer(betaG ~ ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m4 = lmer(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m5 = lmer(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
+library(glmmTMB)
+library(MuMIn)
+m1 = glmmTMB(betaG ~ r2All + ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m2 = glmmTMB(betaG ~ r2All + ntraits + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m3 = glmmTMB(betaG ~ ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m4 = glmmTMB(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
+m5 = glmmTMB(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
 AIC(m1, m2, m3, m4, m5)
-summary(m4)
+summary(m1)
+
+m1 = glmmTMB(betaG ~ r2All + ntraits + log(dmean) + (1|species), data=gdDat)
+m2 = glmmTMB(betaG ~ r2All + ntraits + (1|species), data=gdDat)
+m3 = glmmTMB(betaG ~ ntraits + log(dmean) + (1|species), data=gdDat)
+m4 = glmmTMB(betaG ~ r2All + log(dmean) + (1|species), data=gdDat)
+m5 = glmmTMB(betaG ~ r2All + (1|species), data=gdDat)
+AIC(m1, m2, m3, m4, m5)
+summary(m1)
+
+r.squaredGLMM(m4)
+plot(gdDat$r2All, gdDat$betaG)
+plot(gdDat$ntraits, gdDat$betaG)
+plot(log(gdDat$dmean), gdDat$betaG)
 
 #### Comparing e and c (Appendix 2) ####
 x11(height=6, width=9)
@@ -126,7 +142,7 @@ lines(-10:10, -10:10)
 
 plot(gdDat$betaD, gdDat$betaD_cond, las=1,
      xlim=c(0,4), ylim=c(0,4), pch=16,
-     main="D directions",
+     main="D-directions",
      xlab="",
      ylab="")
 mtext("Slope for evolvabilities", 1, line=3)
@@ -135,7 +151,7 @@ lines(-10:10, -10:10)
 
 plot(gdDat$betaP, gdDat$betaP_cond, las=1,
      xlim=c(-.5,3), ylim=c(-.5,3), pch=16,
-     main="P directions",
+     main="P-directions",
      xlab="",
      ylab="")
 mtext("Slope for evolvabilities", 1, line=3)

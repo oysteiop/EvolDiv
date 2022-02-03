@@ -19,6 +19,7 @@ if(check){
 
 computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Species",
                    nFam=out$nFam, nPop=out$nPop, SE=FALSE, nSample=100, fixD=TRUE,
+                   linearonly=F,
                    xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL){
   
   res = data.frame(traits = c("Original", "Original","G eigenvectors", "D eigenvectors", "D eigenvectors", "P eigenvectors", "P eigenvectors", "All"),
@@ -34,7 +35,18 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
     dmat = matrix(apply(dpost, 2, median), nrow=sqrt(ncol(as.matrix(dpost))))
   }
   
+  ww = which(EVOBASE[[out$g]]$Dims[match(colnames(out$G), names(EVOBASE[[out$g]]$Dims))]=="linear")
+  
+  if(linearonly==T){
+    if(length(ww)<1){stop("No linear traits in this G-matrix")}
+    gmat = gmat[ww, ww]
+    dmat = dmat[ww, ww]
+    pmat = pmat[ww, ww]
+    }
+  
   a = alignMat(gmat, dmat)
+  
+  if(nrow(a$G_ge)<3){warning("Less than 3 (linear) traits in this G-matrix")}
   
   # Compute eigenvectors etc.
   g_ev = eigen(a$G_ge)$vectors
@@ -127,7 +139,7 @@ computeGD=function(gmat=out$G, dmat=out$D, pmat=NULL, plot=FALSE, species="Speci
       if(i==nSample/2){print("Halfways done!")}
       sgmat = round(cov(rmvnorm(nFam, mean=rep(1, ncol(gmat)), sigma=gmat)), 10)
       #sdmat = round(cov(rmvnorm(nPop, mean=rep(1, ncol(dmat)), sigma=dmat)), 10)
-      sdmat = matrix(dpost[sample(1:nSample, 1),], nrow=ncol(dmat))
+      sdmat = matrix(dpost[sample(1:nSample, 1),], nrow=sqrt(ncol(dpost)))[ww, ww]
       if(fixD){sdmat = dmat} 
       
       sa = alignMat(sgmat, sdmat)

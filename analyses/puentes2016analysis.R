@@ -151,7 +151,7 @@ colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flower
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot="e")
+vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot=F)
 
 #Uncertainty over the posterior
 out = list()
@@ -266,7 +266,7 @@ points(log10(diag(gmat)), log10(diag(dmat)), pch=16, col="blue")
 legend("bottomright", c("G eigenvectors", "D eigenvectors", "Traits"), pch=c(1,16, 16), col=c("black", "black", "blue"))
 
 # Plot with modified axes
-x11(width=5, height=5)
+#x11(width=5, height=5)
 xmin = log10(min(c(var_g_g, var_g_d), na.rm=T))
 xmax = log10(max(c(var_g_g, var_g_d), na.rm=T))
 ymin = log10(min(c(var_d_g, var_d_d), na.rm=T))
@@ -278,9 +278,9 @@ plot(log10(diag(gmat)), log10(diag(dmat)),
      yaxt="n",
      xaxt="n",
      main="", las=1, pch=16, col="blue3")
-mtext("Evolvability (%)", 1, line=2.5, cex=0.8)
-mtext("Proportional divergence", 2, line=3.3, cex=0.8)
-mtext(expression(paste(italic(Arabidopsis), " ", italic(lyrata))), line=0.5, cex=.8)
+mtext("Evolvability (%)", 1, line=2.5, cex=1)
+mtext("Proportional divergence", 2, line=3.0, cex=1)
+mtext(expression(paste(italic(Arabidopsis), " ", italic(lyrata))), line=0.5, cex=.9)
 
 points(log10(var_g_g), log10(var_d_g), pch=16)
 points(log10(var_g_d), log10(var_d_d), pch=1)
@@ -291,9 +291,9 @@ mean2 = mean(log10(c(diag(gmat), var_g_g, var_g_d)))
 segments(x0=mean2-10, y0=mean1-10, x1=mean2+10, y1=mean1+10)
 
 legend("bottomright", legend=c(paste0("Original traits (", round(100*r2_t, 1),"%)"),
-                               paste0("G directions (", round(100*r2_g, 1),"%)"),
-                               paste0("D directions (", round(100*r2_d, 1),"%)"),
-                               paste0("P directions (", round(100*r2_p, 1),"%)")),
+                               paste0("G-directions (", round(100*r2_g, 1),"%)"),
+                               paste0("D-directions (", round(100*r2_d, 1),"%)"),
+                               paste0("P-directions (", round(100*r2_p, 1),"%)")),
        pch=c(16, 16, 1, 16), col=c("blue3", "black", "black", "firebrick"))
 
 axis(1, at=seq(-.4, 1, .2), signif(10^seq(-.4, 1, .2), 2))

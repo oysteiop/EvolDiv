@@ -9,36 +9,27 @@ load(file="deltaDat.RData")
 
 # Misc plots for supporting information
 
-# Delta vs. angles
-x11(height=4, width=10)
-par(mfrow=c(1,3))
+# Plots of delta vs. angles ####
+x11(height=3.5, width=10)
+par(mfrow=c(1,3), mar=c(4,4,2,2))
 plot(deltaDat$edelta, deltaDat$theta, ylim=c(0, 90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="Evolvability along divergence vector")
+     ylab="",
+     xlab="")
+
+mtext(expression(paste("Angle btw div vector and  ",g[max])), 2, line=2.5, cex=.9)
+mtext(expression(paste("Evolvability along div vector [", e(Delta),"]")), 1, line=2.5, cex=.9)
 
 plot(deltaDat$edelta/deltaDat$emean, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="Evolvability_delta/e_mean)")
+     ylab="",
+     xlab="")
 abline(v=1, lty=2)
+#mtext(expression(paste("Angle btw div vector and  ",g[max])), 2, line=2.5)
+mtext(expression(paste("Prop evol along div vector", " [", e(Delta), "/", bar(e), "]")), 1, line=2.5, cex=.9)
 
 plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="Evolvability_delta/e_max")
-
-x11(height=4, width=10)
-par(mfrow=c(1,3))
-plot(deltaDat$edelta, deltaDat$theta, ylim=c(0, 90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="Evolvability along divergence vector")
-
-plot(log(deltaDat$edelta/deltaDat$emean), deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="log(e_delta/e_mean)")
-abline(v=0, lty=2)
-
-plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16, col="black",
-     ylab="Angle between divergence vector and gmax",
-     xlab="Evolvability_delta/e_max")
+     ylab="",
+     xlab="")
+mtext(expression(paste("Prop of max evol along div vector "," [", e(Delta), "/", e[max], "]")), 1, line=2.5, cex=.9)
 
 
 deltaDat[which(deltaDat$theta > 75 & (deltaDat$edelta/deltaDat$emax)>0.4),]
@@ -54,6 +45,7 @@ meanDat = ddply(deltaDat, .(species), summarize,
 
 #deltaDat=deltaDat[-which(deltaDat$sp=="Senecio_pinnatifolius"),]
 
+# Summary figure for divergence vector analyses ####
 x11(height=6.5, width=8)
 par(mfrow=c(2,2), mar=c(4,4,2,4))
 
@@ -145,7 +137,7 @@ text(x=x, y=log(1/2), labels=expression(paste(c(Delta),"=",frac(1,2),bar(c))), x
 
 points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, col="blue")
 
-# Alternative figure with scaling between min, mean, and max
+# Alternative summary figure with scaling between min, mean, and max ####
 
 #deltaDat = deltaDat[deltaDat$ndims==1,]
 
@@ -194,8 +186,7 @@ abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
 mtext("Divergence from focal population (x100)", 1, line=2.5)
 
-
-#### Plotting individual studies from deltaList ####
+#### Function for plotting individual studies from deltaList ####
 plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), 
                      xlab=T, ylab=T,
                      cex=.8, lab.offset=0.05){
@@ -208,8 +199,8 @@ plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]),
   plot(plotData$div, plotData$edelta, pch=16, ylim=ylim, las=1,
        xlab="", ylab="",
        main=title)
-  if(xlab) {mtext("Divergence from focal population", 1, line=2.5)}
-  if(ylab) {mtext("Evolvability (%)", 2, line=2.5)}
+  if(xlab) {mtext("Divergence from focal population", 1, line=2.5, cex=.9)}
+  if(ylab) {mtext("Evolvability along divergence vector (%)", 2, line=2.5, cex=.9)}
   points(plotData$div, plotData$cdelta, pch=16, col="grey")
   
   abline(h=plotData$emean, lty=2)
@@ -229,8 +220,8 @@ plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]),
 unlist(lapply(deltaList, function(x) unique(x$species)))
 
 # Figure 4 ####
-#cairo_pdf("pubfigs/edeltaFig.pdf", height=6, width=10, fam="Times")
-#x11(height=8, width=12)
+cairo_pdf("pubfigs/edeltaFig.pdf", height=6, width=10, fam="Times")
+#x11(height=6, width=10)
 par(mfrow=c(2,3), mar=c(4, 4, 2, 3))
 
 plotDelta(37, lab.offset=0.07, cex=1, xlab=F, title = "")
@@ -247,11 +238,11 @@ abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
 #mtext("Divergence from focal population (x100)", 1, line=2.5)
 
-plotDelta(2, lab.offset=0.07, cex=1, title = "")
-mtext(expression(paste("", italic(Lobelia)," ", italic(siphilitica))), 3, line=0.5, cex=.8)
-
-plotDelta(45, lab.offset=0.07, cex=1, ylab=F, title = "")
+plotDelta(45, lab.offset=0.07, cex=1, title = "")
 mtext(expression(paste("", italic(Arabidopsis)," ", italic(lyrata))), 3, line=0.5, cex=.8)
+
+plotDelta(2, lab.offset=0.07, cex=1, ylab=F, title = "")
+mtext(expression(paste("", italic(Lobelia)," ", italic(siphilitica))), 3, line=0.5, cex=.8)
 
 plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
      main="")
@@ -260,7 +251,7 @@ mtext(expression("All studies (cond. evolvability)"), 3, line=0.5, cex=.9)
 #points(meanDat$div, newcmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
-mtext("Divergence from focal population", 1, line=2.5)
+mtext("Divergence from focal population", 1, line=2.5, cex=.9)
 
 dev.off()
 

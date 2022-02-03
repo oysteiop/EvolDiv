@@ -112,7 +112,7 @@ medians = tapply(comb2$edelta/comb2$emean.y, comb2$traitgroups, median, na.rm=T)
 comb2$traitgroups = factor(comb2$traitgroups, levels=names(sort(medians, decreasing=F)))
 plot(factor(comb2$traitgroups), comb2$edelta/comb2$emean.y, xaxt="n", xlab="", las=1,
      ylab="")
-mtext(expression(paste("Proportional evol. along   ", Delta,"x"," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
+mtext(expression(paste("Prop evol along div vector  "," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
 
 axis(1, at=1:4, labels=rep("", 4))
 text(1:4, par("usr")[3] - .25, srt = 45, adj = 1, cex=1,
@@ -134,7 +134,7 @@ x11(height=5, width=8)
 par(mfrow=c(1,2))
 plot(ms, comb2$betaG, las=1, xlab="", ylab="Slope for G-directions")
 plot(ms, comb2$edelta/comb2$emean.y, las=1, xlab="", ylab="")
-mtext(expression(paste("Proportional evol. along   ", Delta,"x"," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
+mtext(expression(paste("Prop evol along div vector   "," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
 
 # Study environments
 
@@ -152,7 +152,7 @@ x11(height=5*1.3, width=8*1.3)
 par(mfrow=c(1,2))
 plot(env, comb2$betaG, las=1, xlab="", ylab="Slope for G-directions")
 plot(env, comb2$edelta/comb2$emean.y, las=1, xlab="", ylab="")
-mtext(expression(paste("Proportional evol. along   ", Delta,"x"," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
+mtext(expression(paste("Prop evol along div vector   "," [", e(Delta), "/", bar(e), "]")), 2, line=2.5)
 
 #### Figures for Appendix 3 (comparing GD and delta analyses) ####
 x11(height=5, width=9)
@@ -160,14 +160,14 @@ par(mfrow=c(1,2))
 plot(log(comb2$edelta/comb2$emean.x), comb2$betaG, pch=16, col="lightgrey", las=1,
      xlab="", ylab="Slope of G-directions")
 points(log(comb$edelta/comb$emean.x), comb$betaG, pch=16)
-mtext(expression(paste("Prop. evol. along  ", Delta,"x (log "," [", e(Delta), "/", bar(e), "])")), 1, line=2.5)
+mtext(expression(paste("Prop evol along div vector "," (log "," [", e(Delta), "/", bar(e), "])")), 1, line=2.5)
 abline(v=0, lty=2)
 abline(h=1, lty=2)
 
 plot(log(comb2$cdelta/comb2$cmean.x), comb2$betaG, pch=16, col="lightgrey", las=1,
      xlab="", ylab="Slope of G-directions")
 points(log(comb$cdelta/comb$cmean.x), comb$betaG, pch=16)
-mtext(expression(paste("Prop. cond. evol. along  ", Delta,"x (log "," [", c(Delta), "/", bar(c), "])")), 1, line=2.5)
+mtext(expression(paste("Prop cond evol along div vector "," (log "," [", c(Delta), "/", bar(c), "])")), 1, line=2.5)
 abline(v=0, lty=2)
 abline(h=1, lty=2)
 
@@ -179,45 +179,45 @@ par(mfrow=c(2,2), mar = c(4,4,1,1))
 plot(comb2$r2All, comb2$thetaGD, pch=16, col="lightgrey", las=1, xlim=c(0,1), ylim=c(0,90),
      xlab="", ylab="")
 points(comb$r2All, comb$thetaGD, pch=16)
-mtext(expression(paste("Overall ", r^2, " of scaling relationship")), 1, line=2.5)
-mtext(expression(paste("Angle between  ", g[max], " and ", d[max])), 2, line=2.5)
+mtext(expression(paste("Overall ", r^2, " of scaling relationship")), 1, line=2.5, cex=.9)
+mtext(expression(paste("Angle between  ", g[max], " and ", d[max])), 2, line=2.5, cex=.9)
 
 plot(comb2$thetaGD, comb2$betaG, pch=16, col="lightgrey", las=1,
      ylab="", xlab="")
 points(comb$thetaGD, comb$betaG, pch=16)
-mtext(expression(paste("Angle between ", g[max], " and ", d[max])), 1, line=2.5)
-mtext("Slope for G-directions", 2, line=2.5)
+mtext(expression(paste("Angle between ", g[max], " and ", d[max])), 1, line=2.5, cex=.9)
+mtext("Slope for G-directions", 2, line=2.5, cex=.9)
 
 plot(log(comb2$edelta/comb2$emean.x), comb2$thetaGD, pch=16, col="lightgrey", las=1,
      xlab="", ylab="")
 points(log(comb$edelta/comb$emean.x), comb$thetaGD, pch=16)
-mtext(expression(paste("Prop. evol. along  ", Delta,"x (log "," [", e(Delta), "/", bar(e), "])")), 1, line=2.5)
-mtext(expression(paste("Angle between  ", g[max], " and ", d[max])), 2, line=2.5)
+mtext(expression(paste("Prop evol along div vector ","(log"," [", e(Delta), "/", bar(e), "])")), 1, line=2.5, cex=.9)
+mtext(expression(paste("Angle between ", g[max], " and ", d[max])), 2, line=2.5, cex=.9)
 abline(v=0, lty=2)
 
 plot(comb2$edelta/comb2$emax, comb2$thetaGD, pch=16, col="lightgrey", las=1,
      xlab="", ylab="")
 points(comb$edelta/comb$emax, comb$thetaGD, pch=16)
-mtext(expression(paste("Angle between  ", g[max], " and ", d[max])), 2, line=2.5)
-mtext(expression(paste("Prop. of max evol. along ", Delta,"x "," [", e(Delta), "/", e[max], "]")), 1, line=2.5)
+mtext(expression(paste("Angle between ", g[max], " and ", d[max])), 2, line=2.5, cex=.9)
+mtext(expression(paste("Prop of max evol along div vector ","[", e(Delta), "/", e[max], "]")), 1, line=2.5, cex=.85)
 
 # Figures for Appendix 4 (trait dimensions) ####
 x11(height=11, width=12)
 par(mfrow=c(2,2), mar=c(3,4,4,2))
 
 plot(factor(comb2$ndims), comb2$betaG, xlab="", ylab="", las=1)
-mtext("Number of trait dimensions", 1, line=2.5)
-mtext("Slope for G directions", 2, line=2.5)
+mtext("Number of trait dimensions", 1, line=2.5, cex=.9)
+mtext("Slope for G-directions", 2, line=2.5, cex=.9)
 
 plot(factor(comb2$ndims), comb2$edelta/comb2$emean.y, xlab="", ylab="", las=1)
-mtext("Number of trait dimensions", 1, line=2.5)
-mtext(expression(paste("Prop. evol. along   ", Delta,"z"," [", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext("Number of trait dimensions", 1, line=2.5, cex=.9)
+mtext(expression(paste("Prop evol along div vector  ","[", e(Delta), "/", bar(e), "]")), 2, line=2, cex=.9)
 
 par(mar=c(8,4,2,2))
 medians = tapply(comb2$betaG, comb2$dims, median, na.rm=T)
 comb2$dims = factor(comb2$dims, levels=names(sort(medians, decreasing=F)))
 plot(factor(comb2$dims), comb2$betaG, xaxt="n", xlab="", las=1, ylab="")
-mtext("Slope for G directions", 2, line=2.5)
+mtext("Slope for G-directions", 2, line=2.5, cex=.9)
 
 axis(1, at=1:10, labels=rep("", 10))
 text(1:10, par("usr")[3] - .15, srt = 45, adj = 1, cex=1,
@@ -227,7 +227,7 @@ medians = tapply(comb2$edelta/comb2$emean.y, comb2$dims, median, na.rm=T)
 comb2$dims = factor(comb2$dims, levels=names(sort(medians, decreasing=F)))
 plot(factor(comb2$dims), comb2$edelta/comb2$emean.y, xaxt="n", xlab="", las=1,
      ylab="")
-mtext(expression(paste("Prop. evol. along   ", Delta,"z"," [", e(Delta), "/", bar(e), "]")), 2, line=2)
+mtext(expression(paste("Prop evol along div vector  ", "[", e(Delta), "/", bar(e), "]")), 2, line=2, cex=.9)
 
 axis(1, at=1:10, labels=rep("", 10))
 text(1:10, par("usr")[3] - .4, srt = 45, adj = 1, cex=1,
@@ -235,7 +235,7 @@ text(1:10, par("usr")[3] - .4, srt = 45, adj = 1, cex=1,
 
 
 
-
+#### END OF FINAL ANALYSES ####
 
 
 
@@ -290,6 +290,3 @@ summary(lm(betaG~log(maxdist)+dmean, data=comb2))
 
 plot(log(comb2$maxdist),comb2$betaD)
 plot(log(comb2$maxdist),comb2$betaD)
-
-
-
