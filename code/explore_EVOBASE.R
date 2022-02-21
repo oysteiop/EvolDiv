@@ -34,6 +34,16 @@ names(EVOBASE)
 
 unique(unlist(lapply(EVOBASE, function(x) x$Species)))
 
+# Matrix of trait groups
+ss = lapply(EVOBASE, function(x) x$Subgroups)
+ns = lapply(ss, length)
+studyVec = rep(names(ss), times=ns)
+
+df = data.frame(study=studyVec, subgroup=as.factor(unlist(ss)))
+df = droplevels(df)
+
+sdf = dcast(df, study~subgroup, fun.aggregate = length)
+
 # Extracting a single species
 s = "Raphanus raphanistrum: Binghamton III"
 View(EVOBASE[[s]])
@@ -54,13 +64,6 @@ mg
 evolvabilityMeans(mg)
 eigen(mg)$values
 signif(cov2cor(mg), 3)
-
-EVOBASE[[s]]$Subgroups
-sel = c(4,1,2)
-redG = mg[sel, sel] 
-redG
-evolvabilityBeta(redG, Beta = c(1,0,0))$a
-
 
 # Extracting just all the G matrices
 GG = lapply(EVOBASE, function(x) x$G)
@@ -119,26 +122,3 @@ for(i in 1:length(GG)){
 names(MG) = lapply(EVOBASE, function(x) x$Study_ID)[sel][-drop]
 MG
 
-evolvabilityBeta(MG[37][[1]], Beta=c(0,0,1,0))$a
-
-cov2cor(MG[34][[1]])
-
-elist = lapply(MG, evolvabilityMeans)
-elist
-
-lapply(MG, function(x) signif(cov2cor(x), 2))
-
-table(unlist(lapply(MG, dim)))/2
-
-
-# Autonomy hypothesis fig
-x11(height=5, width=6)
-par(mar=c(8,5,2,2))
-avals = c(40, 60, 80, 15)
-out = barplot(avals, ylim=c(0, 100), las=1, ylab="Autonomy (%)")
-
-axis(1, at = out, labels=F)
-labels =labels = c("c(Flower size|Flower size)", "c(Flower size|Fit)", 
-                   "c(Flower size|Display)", "c(Flower size|G)")
-text(out, par("usr")[3] -7, srt = 45, adj = 1,cex=1,
-     labels = labels, xpd = TRUE)

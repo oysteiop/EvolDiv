@@ -17,7 +17,7 @@ library(evolvability)
 library(MuMIn)
 library(fBasics)
 
-nbot = 10
+nbot = 1000
 
 # Read datafiles
 ddat = read.table("data/dmatdata.txt", header=T)
@@ -125,7 +125,6 @@ stab = ddply(ddf, .(study_ID), summarize,
 head(stab)
 write.csv2(stab[order(stab$species),], "studytable.csv")
 
-
 #### Start of analyses ####
 head(ddf)
 summary(ddf)
@@ -169,16 +168,6 @@ AIC(m0, m)$AIC[2]-AIC(m0, m)$AIC[1] #delta AIC, support for model m
 
 summary(m)
 
-#floveg = floveg[!is.na(floveg$ms),]
-
-#m0 = lmer(log(d)~ 1 + (1|study_ID) + (1|species), REML=F, data=floveg)
-#m1 = lmer(log(d)~ tg1 + (1|study_ID) + (1|species), REML=F, data=floveg)
-#m2 = lmer(log(d)~ ms + (1|study_ID) + (1|species), REML=F, data=floveg)
-#m3 = lmer(log(d)~ tg1 + ms + (1|study_ID) + (1|species), REML=F, data=floveg)
-#m4 = lmer(log(d)~ tg1 * ms + (1|study_ID) + (1|species), REML=F, data=floveg)
-
-#AIC(m0, m1, m2, m3, m4)
-
 # Linear traits only
 lin = ddf[ddf$dimension=="linear",]
 tapply(lin$d, lin$tg1, median)
@@ -219,6 +208,24 @@ sort(tapply(flo$d, flo$tg2, median, na.rm=T))
 sort(tapply(flo$dP, flo$tg2, median, na.rm=T))
 sort(tapply(flo$dP>-1, flo$tg2, sum, na.rm=T))
 
+shapesamp = NULL
+for(i in 1:nbot){
+  shapesamp[i] = median(sample(flo$dP[which(flo$tg2=="shape")], replace=T))
+}
+sd(shapesamp)
+
+fitsamp = NULL
+for(i in 1:nbot){
+  fitsamp[i] = median(sample(flo$dP[which(flo$tg2=="fit")], replace=T))
+}
+sd(fitsamp)
+
+displaysamp = NULL
+for(i in 1:nbot){
+  displaysamp[i] = median(sample(flo$dP[which(flo$tg2=="display")], replace=T))
+}
+sd(displaysamp)
+
 # Summary stats per mating system category ####
 tapply(ddf$d, ddf$ms, median)
 tapply(ddf$dP, ddf$ms, median)
@@ -240,15 +247,6 @@ for(i in 1:nbot){
 sd(selfsamp)
 sd(mixsamp)
 sd(outsamp)
-quantile(selfsamp, c(0.025, 0.975))
-quantile(mixsamp, c(0.025, 0.975))
-quantile(outsamp, c(0.025, 0.975))
-
-#ss = na.omit(subset(ddf, select=c("d","d_se","ms")))
-#ss = ss[ss$d>0,]
-#ss$se2 = (ss$d_se^2)/(ss$d^2)
-#summary(lm(log(d)~ms, weights = 1/se2, data=ss))
-#plot(ss$ms, log(ss$d))
 
 round(tapply(ddf$d, list(ddf$ms, ddf$tg1), median), 3)
 round(tapply(ddf$d>0, list(ddf$ms, ddf$tg1), sum, na.rm=T), 3)
@@ -271,7 +269,6 @@ xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(100*log(xt3)^2/(2/pi))
 axis(2, at=x3at, signif(xt3, 4), las=1)
 
-
 # Summary stats per study environment category ####
 tapply(ddf$d, ddf$environment, median)
 tapply(ddf$dP, ddf$environment, median)
@@ -292,11 +289,6 @@ for(i in 1:nbot){
 sd(ghsamp)
 sd(cgsamp)
 sd(fsamp)
-
-#ss = na.omit(subset(ddf, select=c("d","environment")))
-#ss = ss[ss$d>0,]
-#summary(lm(log(d)~environment, data=ss))
-#plot(ss$environment, log(ss$d))
 
 # Environment vs. trait group ####
 tapply(ddf$d, list(ddf$tg1, ddf$environment), median)
@@ -938,214 +930,3 @@ data.frame(meanvals, ddf$dimension)
 m = lmer(log(d*100) ~ log(evals) + meanvals + scale_npop + scale_maxdist
          + (1|species/study_ID), data=ddf)
 summary(m)
-
-
-#### END OF ANALYSES REPORTED IN PAPER ####
-
-# Function to plot e vs. d with subset highlighted ####
-plotSubset = function(category, subset, xlim=c(-2.5,2), ylim=c(-4,3), ...){
-plot(log10(ddf$evals),log10(ddf$d*100),
-     xlab="Evolvability (%)",
-     ylab="Among-population variance (%)",
-     pch=1,cex=1*sqrt(ddf$npop),
-     col="grey", main=paste0(category, ": ",subset),
-     xlim=xlim, ylim=ylim, xaxt="n", yaxt="n")
-axis(1,c(-2,-1,0,1,2,3), 10^c(-2,-1,0,1,2,3))
-axis(2,c(-4,-3,-2,-1,0,1,2), 10^c(-4,-3,-2,-1,0,1,2), las=1)
-
-column=which(names(ddf)==category)
-ddf2=ddf[ddf[,column]==subset,]
-points(log10(ddf2$evals), log10(ddf2$d*100), col="black", cex=1*sqrt(ddf2$npop), ...)
-}
-
-x11()
-par(mfrow=c(1,3))
-plotSubset("ms", "S", lwd=2)
-plotSubset("ms", "M", lwd=2)
-plotSubset("ms", "O", lwd=2)
-
-x11()
-par(mfrow=c(1,3))
-plotSubset("environment", "greenhouse", lwd=2)
-plotSubset("environment", "field", lwd=2)
-plotSubset("environment", "common_garden", lwd=2)
-
-x11()
-par(mfrow=c(2,3))
-plotSubset("tg1", "floral")
-plotSubset("tg1", "vegetative")
-plotSubset("tg2", "flowersize")
-plotSubset("tg2", "fit")
-plotSubset("tg2", "display")
-plotSubset("tg2", "reward")
-
-x11()
-par(mfrow=c(2,3))
-plotSubset("dimension", "linear")
-plotSubset("dimension", "area")
-plotSubset("dimension", "mass_volume")
-plotSubset("dimension", "count")
-plotSubset("dimension", "ratio")
-plotSubset("dimension", "time")
-
-# Individual studies
-studies = unique(ddf$study_ID)
-pdf("figs/univariate_G_D_plots2.pdf")
-for(s in 1:length(studies)){
-  study=studies[s]
-  plotSubset("study_ID", study)
-}
-dev.off()
-
-#### Test off-setting of area and cubic measures
-for(i in 1:nrow(ddf)){
-  if(ddf$dimension[i]=="area"){
-    ddf$d[i]=ddf$d[i]/4
-    ddf$evals[i]=ddf$evals[i]/4
-  }
-  if(ddf$dimension[i]=="mass_volume"){
-    ddf$d[i]=ddf$d[i]/9
-    ddf$evals[i]=ddf$evals[i]/9
-  }
-}
-
-
-# Outcrossing rates ####
-for(i in 1:nrow(ddf)){
-  if(!is.na(ddf$ms[i])){
-    if(is.na(ddf$tmvals[i]) & ddf$ms[i]=="O")
-      ddf$tmvals[i]=1
-  }}
-
-plot(ddf$tmvals, log(ddf$d))
-
-#Scaling of trait variances with the mean
-#ddat=ddat[ddat$trait!="organ_size",]
-#plot(log10(ddat$mean), log10(ddat$sd))
-#lines(-10:10, -10:10)
-
-
-flo = ddf[which(ddf$tg1=="floral"),]
-veg = ddf[which(ddf$tg1=="vegetative"),]
-fit = ddf[which(ddf$tg2=="fit"),]
-size = ddf[which(ddf$tg2=="flowersize"),]
-
-length(which(fit$evals<median(ddf$evals, na.rm=T)))/sum(fit$evals>-Inf, na.rm=T)
-length(which(fit$d<median(ddf$d, na.rm=T)))/sum(fit$d>-Inf, na.rm=T)
-length(which(size$evals<median(ddf$evals, na.rm=T)))/sum(size$evals>-Inf, na.rm=T)
-length(which(size$d<median(ddf$d, na.rm=T)))/sum(size$d>-Inf, na.rm=T)
-
-par(mfrow=c(1,1))
-plot(log10(flo$evals), log10(flo$d), ylim=c(-7.2, 0.5), yaxt="n")
-
-plot(log10(ddf$evals), log10(ddf$d), ylim=c(-6, 1), col="lightgrey",
-     xlab="Evolvability", ylab="Proportional divergence", yaxt="n")
-points(log10(fit$evals), log10(fit$d), pch=16)
-abline(h=log10(median(fit$d)))
-abline(v=log10(median(fit$evals, na.rm=T)))
-
-xt3 = c(1.001, 1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
-x3at = log10(log(xt3)^2)
-axis(2, at=x3at, signif(xt3, 4), las=1)
-
-
-# Back-transformation
-dp = exp(sqrt(ddf$d*(2/pi)))
-cor(ddf$d, (log(dp))^2/(2/pi))
-
-# Contextual model
-emeans = tapply(log(ddf$evals), ddf$study_ID, mean)
-
-meanvals=NULL
-for(i in 1:nrow(ddf)){
-  meanvals[i]=emeans[which(names(emeans)==ddf$study_ID[i])] 
-}
-data.frame(meanvals, ddf$study_ID)
-
-m = lmer(log(d*100) ~ log(evals) + meanvals + scale_maxdist + scale_npop +
-           + (1|species/study_ID), data=ddf)
-summary(m)
-
-# Formal meta-analysis using Almer_SE
-SE = sqrt((ddf$d_se^2)/(ddf$d^2))
-plot(ddf$npop, SE)
-m0 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID) + (1|species), 
-                            SE=SE, maxiter = 100, data=ddf)
-summary(m0)
-
-m1 = evolvability::Almer_SE(log(d) ~ log(evals) + log(npop) + log(maxdist) + (log(evals)|study_ID), 
-                            SE=SE, maxiter = 100, data=ddf)
-AIC(m0, m1)
-
-#### Formal meta-analysis using MCMCglmm
-
-#Prepare data
-names(ddf)
-moddat=subset(ddf, select=c("d", "evals", "maxdist", "npop", "tg1", "dimension", "ms","study_ID", "species", "d_se", "mean"))
-moddat=na.omit(moddat)
-moddat$d=moddat$d*100
-moddat$d_se=moddat$d_se*100
-
-#moddat=moddat[moddat$dimension=="linear",]
-
-#Set prior
-prior<-list(R=list(V=1, nu=0.002), G=list(G1=list(V=1, nu=0.002),
-                                          G2=list(V=1, nu=0.002)))
-
-prior<-list(R=list(V=1, nu=0.002), G=list(G1=list(V=1, nu=0.002),
-                                          G2=list(V=1, nu=0.002),
-                                          G3=list(V = diag(1), fix = 1)))
-
-#Compute mean-scaled measurement error variances
-mev = moddat$d_se^2
-moddat$SE = sqrt(mev)  
-
-#To log-normal
-moddat$test=(-2*log(moddat$d)) + log(mev+(moddat$d^2))
-moddat$test=sqrt(moddat$test)
-
-hist(moddat$test)
-plot(moddat$npop, moddat$test)
-
-#test2=mev/moddat$d^2
-
-#Set sampling parameters
-samples = 1000
-thin = 50
-burnin = samples*thin*.5
-nitt = (samples*thin)+burnin
-
-#Sample MCMC
-mod<-MCMCglmm(log(d) ~ log(evals) + log(maxdist) + log(npop) + ms + tg1 + dimension,
-              random = ~study_ID + species + idh(test):units,
-              rcov = ~units,
-              #mev = mev,
-              data = moddat, 
-              family = "gaussian", prior = prior, 
-              nitt = nitt, burnin = burnin, thin = thin)
-
-#Check convergence
-x11()
-plot(mod$VCV)
-
-#Parameter estimates
-summary(mod)
-str(summary(mod)$solutions)
-ests = summary(mod)$solutions
-
-x11(height=5, width=5)
-par(mar=c(4, 8, 2, 2))
-plot(rev(ests[-1,1]), 1:12, xlim=c(-4, 3), las=1, pch=16, yaxt="n", ylab="", xlab="")
-mtext(1, text="Estimate (95% CI)", line=2.5)
-axis(2, 1:12, labels=F)
-segments(rev(ests[-1,2]), 1:12, rev(ests[-1,3]), 1:12)
-abline(v=0, lty=2)
-labels=rev(rownames(ests)[-1])
-text(x=-4.7, y=1:12, labels=labels, las=1, cex=.8, adj=1, xpd=T)
-
-
-plot(log(moddat$maxdist), log(moddat$d))
-plot(log(moddat$evals), log(moddat$d))
-plot(log(moddat$npop), log(moddat$d))
-
-

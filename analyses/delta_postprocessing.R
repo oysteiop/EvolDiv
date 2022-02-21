@@ -4,6 +4,8 @@
 
 rm(list=ls())
 
+library(plyr)
+
 load(file="deltaListFull.RData")
 load(file="deltaDat.RData")
 
@@ -139,7 +141,7 @@ points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, c
 
 # Alternative summary figure with scaling between min, mean, and max ####
 
-#deltaDat = deltaDat[deltaDat$ndims==1,]
+deltaDat = deltaDat[deltaDat$ndims==1,]
 
 x11(height=4, width=8)
 par(mfrow=c(1,2), mar=c(4,4,2,2))
