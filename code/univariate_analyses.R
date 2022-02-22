@@ -477,11 +477,6 @@ tapply(ddf$d, list(ddf$ms, ddf$tg1), median)
 
 #### Univariate meta-analysis ####
 
-# Remove some of the repeated D. scandens studies?
-#ddf = ddf[ddf$study_ID!="Hansen_et_al._2003_Dalechampia_scandens_A_greenhouse",]
-#ddf = ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_field",]
-#ddf=ddf[ddf$study_ID!="Opedal_et_al._Costa_Rica_Dalechampia_scandens_A_greenhouse",]
-
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
 ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
 ddf$scale_log_evol = scale(log(ddf$evals), scale=F)
@@ -811,7 +806,6 @@ axis(1,c(-2,-1,0,1,2,3),10^c(-2,-1,0,1,2,3))
 xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 x3at = log10(100*log(xt3)^2/(2/pi))
 axis(2, at=x3at, c("<1.005", signif(xt3, 4)[-1]), las=1)
-
 
 x1=seq(min(log(ddf$evals[ddf$dimension=="ratio"])),
        max(log(ddf$evals[ddf$dimension=="ratio"])), .1)
