@@ -6,7 +6,7 @@ rm(list=ls())
 library(plyr)
 library(lme4)
 
-load(file="gdDat.RData")
+load(file="gdDatSE.RData")
 load(file="deltaDat.RData")
 load("data/EVOBASE.RData")
 load("data/POPBASE.RData")
@@ -16,7 +16,6 @@ names(gdDat)
 GDTable = gdDat
 GDTable[,c(9:13, 15:34)] = signif(GDTable[,c(9:13, 15:34)], 3)
 write.csv2(GDTable, file = "GDTable.csv", dec=".")
-
 
 # Combine dataframes
 names(gdDat)
@@ -57,8 +56,10 @@ gdMeans2= ddply(gdDat, .(species, ID), summarize,
                betaG_SE = betaG_SE,
                r2G = median(r2G),
                betaD = median(betaD),
+               betaD_SE = betaD_SE,
                r2D = median(r2D),
                betaP = median(betaP, na.rm=T),
+               betaP_SE = betaP_SE,
                betaP_cond = median (betaP_cond, na.rm=T),
                thetaGD = median(theta),
                r2All = median(r2All),
@@ -88,7 +89,6 @@ comb2$dims = unlist(apply(subset(comb2, select=c("dims.x", "dims.y")), 1, functi
 comb2$traitgroups = unlist(apply(subset(comb2, select=c("traitgroups.x", "traitgroups.y")), 1, function(x) sort(unique(x))))
 
 # Start of analyses ####
-
 table(comb2$traitgroups)
 table(comb2$dims)
 table(comb2$ndims)

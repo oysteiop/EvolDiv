@@ -382,11 +382,12 @@ evolvabilityMeans(pmat*100)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens A", plot=F)
+vals = computeGD(gmat, dpost, pmat, species="Dalechampia scandens A",
+                 linearonly=F, SE=T, fixD=F, nSample=1000, nPop=12, nFam=69, plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -398,11 +399,12 @@ slopemean = apply(simplify2array(slopes), 1, median)
 slopeSE = apply(simplify2array(slopes), 1, sd)
 
 vals$res$slope_MC = slopemean
-vals$res$SE = slopeSE
+#vals$res$SE = slopeSE
 
 vals
 
 gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A: Tulum", ntraits = ncol(gmat), 
+                  nPop = 12, nFam = 69,
                   dims = "line",
                   ndims = 1,
                   traitgroups = "flo",
@@ -414,12 +416,12 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A:
                   d = "Dalechampia scandens A: Bolstad et al. Mexico greenhouse" , nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
-                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
+                  betaT_cond = vals$res[2,3], betaT_cond_SE = vals$res[2,5], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
-                  betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
+                  betaD_cond = vals$res[5,3], betaD_cond_SE = vals$res[5,5], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], betaP_SE = vals$res[6,5], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], betaP_cond_SE = vals$res[7,5], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
@@ -528,11 +530,12 @@ eigen(pmat)
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dmat, pmat, species="Dalechampia scandens", ymin=-1, plot=F)
+vals = computeGD(gmat, dpost, pmat, species="Dalechampia scandens A",
+                 linearonly=F, SE=T, fixD=F, nSample=1000, nPop=16, nFam=69, plot=F)
 
 # Uncertainty over the posterior
 out = list()
-for(i in 1:10){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -544,11 +547,12 @@ slopemean = apply(simplify2array(slopes), 1, median)
 slopeSE = apply(simplify2array(slopes), 1, sd)
 
 vals$res$slope_MC = slopemean
-vals$res$SE = slopeSE
+#vals$res$SE = slopeSE
 
 vals
 
 gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A: Tulum", ntraits = ncol(gmat), 
+                  nPop = 16, nFam = 69,
                   dims = "line",
                   ndims = 1,
                   traitgroups = "flo",
@@ -560,12 +564,12 @@ gdDF = data.frame(species="Dalechampia_scandens_A", g = "Dalechampia scandens A:
                   d = "Dalechampia scandens A: Opedal et al. Costa Rica greenhouse", nPop = 17, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
-                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
+                  betaT_cond = vals$res[2,3], betaT_cond_SE = vals$res[2,5], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
-                  betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
+                  betaD_cond = vals$res[5,3], betaD_cond_SE = vals$res[5,5], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], betaP_SE = vals$res[6,5], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], betaP_cond_SE = vals$res[7,5], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
@@ -783,15 +787,16 @@ cov2cor(gmat)
 cov2cor(dmat)
 cov2cor(pmat)
 
-vals = computeGD(gmat, dmat, pmat, nPop=12, nFam = 45, species="Dalechampia scandens B", SE=F, plot=F)
+vals = computeGD(gmat, dpost, pmat, species="Dalechampia scandens B",
+                 linearonly=F, SE=T, fixD=F, nSample=1000, nPop=12, nFam=44, plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
-  out[[i]] = computeGD(sgmat, sdmat, pmat, species="Dalechampia scandens A")   
+  out[[i]] = computeGD(sgmat, sdmat, pmat, species="Dalechampia scandens B")   
 }
 
 slopes = lapply(out, function(x) x$res$slope)
@@ -799,11 +804,12 @@ slopemean = apply(simplify2array(slopes), 1, median)
 slopeSE = apply(simplify2array(slopes), 1, sd)
 
 vals$res$slope_MC = slopemean
-vals$res$SE = slopeSE
+#vals$res$SE = slopeSE
 
 vals
 
 gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens B: Tovar", ntraits = ncol(gmat), 
+                  nPop = 12, nFam = 44, 
                   dims = "line",
                   ndims = 1,
                   traitgroups = "flo",
@@ -815,12 +821,12 @@ gdDF = data.frame(species="Dalechampia_scandens_B", g = "Dalechampia scandens B:
                   d = "Dalechampia scandens B: Bolstad et al. Mexico greenhouse", nPop = 12, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
-                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
+                  betaT_cond = vals$res[2,3], betaT_cond_SE = vals$res[2,5], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
-                  betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
+                  betaD_cond = vals$res[5,3], betaD_cond_SE = vals$res[5,5], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], betaP_SE = vals$res[6,5], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], betaP_cond_SE = vals$res[7,5], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)

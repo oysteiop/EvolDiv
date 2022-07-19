@@ -193,11 +193,12 @@ pmat = MeanP
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dmat, pmat, species="Lythrum salicaria", plot=F)
+vals = computeGD(gmat, dpost, pmat, species="Lythrum salicaria",
+                 linearonly=F, SE=T, fixD=F, nSample=1000, nPop=20, nFam=339, plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -208,12 +209,13 @@ slopes = lapply(out, function(x) x$res$slope)
 slopemean = apply(simplify2array(slopes), 1, median)
 slopeSE = apply(simplify2array(slopes), 1, sd)
 
-vals$res$slope_MC = slopemean
-vals$res$SE = slopeSE
+#vals$res$slope_MC = slopemean
+#vals$res$SE = slopeSE
 
 vals
 
 gdDF = data.frame(species="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops", ntraits = ncol(gmat), 
+                  nPop = 20, nFam = 339,
                   dims = "area+line+mass+time",
                   ndims = 4,
                   traitgroups = "flo+lif+veg",
@@ -225,12 +227,12 @@ gdDF = data.frame(species="Lythrum_salicaria", g = "Lythrum salicaria: 20 pops",
                   d = "Lythrum salicaria: Colautti and Barrett 2011 greenhouse", nPop = 20, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
-                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
+                  betaT_cond = vals$res[2,3], betaT_cond_SE = vals$res[2,5], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
-                  betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
+                  betaD_cond = vals$res[5,3], betaD_cond_SE = vals$res[5,5], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], betaP_SE = vals$res[6,5], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], betaP_cond_SE = vals$res[7,5], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)

@@ -3,20 +3,12 @@
 ###########################################################
 rm(list=ls())
 
-library(devtools)
 library(plyr)
-library(reshape2)
-library(lme4)
-library(glmmTMB)
-library(MCMCglmm)
-library(evolvability)
-library(MuMIn)
-library(fBasics)
+#library(reshape2)
 
 # Read datafiles
-ddat = read.table("data/dmatdata.txt", header=T)
+ddat = read.csv2("data/dmatdata2.csv", dec=".", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
-maxdists = read.csv(file="data/maxdists.csv")
 
 # List of studies
 studies = sort(unique(ddat$ID))
@@ -44,7 +36,7 @@ ddat$species_trait = paste0(ddat$species, "_", ddat$trait)
 ddf$species_trait = paste0(ddf$species, "_", ddf$trait)
 
 # Combine with data from Evolvability database
-edat = read.table("data/evolvabilitydatabase2020.txt", header=T)
+edat = read.csv2("data/evolvabilitydatabase2020.csv", header=T, dec=".")
 edat$species_measurement = paste0(edat$species,"_", edat$measurement)
 
 evals = NULL
@@ -58,17 +50,44 @@ for(i in 1:nrow(ddf)){
 }
 ddf$evals = evals
 
-sum(n_e>1)
-sum(n_e>0)
 ddf$var.obs = evar # Variance in log evolvability among repeated estimates
 ddf$log_e = log(evals) # Log evolvability
 ddf$n_e = n_e # Number of evolvability estimates
-pop.mean.obs <- weighted.mean(x = ddf$var.obs,
-                              w = n_e/sum(n_e, na.rm = T), 
-                              na.rm = T)
 
 ddf = ddf[-which(is.infinite(ddf$log_e)),] #Removing one -Inf value
 
-pop.rel.k = 1 - sum(((ddf$log_e^2)*ddf$var.obs/(var(ddf$log_e, na.rm=T)-
-                  pop.mean.obs+ddf$var.obs)), na.rm = T)/sum(ddf$log_e^2, na.rm = T)
+ww = which(ddf$n_e>1)
+ddf = ddf[ww,]
+ddf = na.omit(ddf)
+
+sum(ddf$n_e>1)
+
+# Weighed observation error
+pop.mean.obs <- weighted.mean(x = ddf$var.obs,
+                              w = ddf$n_e/sum(ddf$n_e, na.rm = T), 
+                              na.rm = T)
+
+var.pred = 2.948813 # Variance of predictor in meta-analytical model
+
+
+pop.rel.k = 1 - sum(((ddf$log_e^2)*ddf$var.obs/(var.pred-pop.mean.obs+ddf$var.obs)))/
+  sum(ddf$log_e^2)
+
 pop.rel.k
+0.76/pop.rel.k # Corrected slope
+0.76/0.777
+
+# Simpler estimate
+1-pop.mean.obs/var.pred
+0.76/(1-pop.mean.obs/var.pred) # Corrected slope
+
+
+
+1-mean(ddf$var.obs/var.pred)
+0.76/(1-mean(ddf$var.obs/var.pred))
+
+pop.rel.k = 1 - sum(((ddf$log_e^2)*ddf$var.obs/(var(ddf$log_e)-pop.mean.obs+ddf$var.obs)))/
+  sum(ddf$log_e^2)
+pop.rel.k
+
+0.76/pop.rel.k # Corrected slope
