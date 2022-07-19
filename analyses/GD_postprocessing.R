@@ -4,7 +4,9 @@
 
 rm(list=ls())
 
-load(file="gdDat.RData")
+library(lme4)
+
+load(file="gdDatSE.RData")
 
 # Summary stats ####
 sum(gdDat$betaG>-Inf) # Number of multivariate scaling relationships for G/D directions
@@ -29,14 +31,31 @@ for(i in 1:nrow(gdDat)){
   u[i] = 1/(gdDat$betaG_SE[i]^2)
   wval[i] = gdDat$betaG[i]*u[i]
 }
-sum(wval)/sum(u)
-median(gdDat$betaG)
+sum(wval, na.rm=T)/sum(u, na.rm=T)
+mean(gdDat$betaG)
 
-m = lmer(betaG~1 + (1|species), weights= (1/(gdDat$betaG_SE^2)), data=gdDat)
-mSE = Almer_SE(betaG ~ 1 + (1|species), SE=gdDat$betaG_SE, data=gdDat)
-#m=lm(betaG~1, weights=(1/gdDat$betaG_SE^2), data=gdDat)
+tapply(gdDat$g, gdDat$d, length)
+
+# Meta-analysis
+m = lmer(betaD~1 + (1|species/d), weights= (1/(betaD_SE^2)), data=gdDat[which(gdDat$betaD_SE>0),])
 summary(m)
-summary(mSE)
+
+m = lmer(betaG~1 + (1|species/d), weights=(1/(betaG_SE^2)), data=gdDat[which(gdDat$betaG_SE>0),])
+summary(m)
+
+m = lmer(betaP~1 + (1|species/d), weights= (1/(betaP_SE^2)), data=gdDat[which(gdDat$betaP_SE>0),])
+summary(m)
+
+m = lmer(betaD_cond~1 + (1|species/d), weights=(1/(betaD_cond_SE^2)), data=gdDat[which(gdDat$betaD_cond_SE>0),])
+summary(m)
+
+m = lmer(betaP_cond~1 + (1|species/d), weights=(1/(betaP_cond_SE^2)), data=gdDat[which(gdDat$betaP_cond_SE>0),])
+summary(m)
+
+#aDat = gdDat[which(gdDat$betaG_SE>0),]
+#mSE = Almer_SE(betaG ~ 1 + (1|species/d), SE=aDat$betaG_SE, data=aDat)
+#m=lm(betaG~1, weights=(1/gdDat$betaG_SE^2), data=gdDat)
+#summary(mSE)
 
 # Means per species
 meanDat = ddply(gdDat, .(species), summarize,

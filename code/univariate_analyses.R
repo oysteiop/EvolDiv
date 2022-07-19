@@ -20,7 +20,7 @@ library(fBasics)
 nbot = 1000
 
 # Read datafiles
-ddat = read.table("data/dmatdata.txt", header=T)
+ddat = read.csv2("data/dmatdata2.csv", dec=".", header=T)
 ddat$ID = paste(ddat$reference, ddat$species, ddat$environment, sep="_")
 maxdists = read.csv(file="data/maxdists.csv")
 
@@ -98,8 +98,8 @@ ddf$d_se = sqrt(sv)
 #plot(ddf$npop, (ddf$d_se/ddf$d))
 
 # Combine with data from Evolvability database
-edat = read.table("data/evolvabilitydatabase2020.txt", header=T)
-edat$species_measurement = paste0(edat$species,"_",edat$measurement)
+edat = read.csv2("data/evolvabilitydatabase2020.csv", header=T, dec=".")
+edat$species_measurement = paste0(edat$species, "_", edat$measurement)
 
 evals = NULL
 for(i in 1:nrow(ddf)){
@@ -107,6 +107,13 @@ w = which(as.character(edat$species)==as.character(ddf$species)[i] & as.characte
 evals[i] = mean(edat$evolvability[w], na.rm=T)
 }
 ddf$evals = evals
+
+h2tvals = NULL
+for(i in 1:nrow(ddf)){
+  w = which(as.character(edat$species)==as.character(ddf$species)[i] & as.character(edat$species_measurement)==as.character(ddf$species_trait)[i])
+  h2tvals[i] = edat$h2type[w][1]
+}
+ddf$h2type = h2tvals
 
 tmvals = NULL
 for(i in 1:nrow(ddf)){
@@ -406,7 +413,7 @@ segments(min(a), h, max(a), h, lwd=3)
 
 # Simpler boxplot for main text ####
 #x11(height=5.5, width=5.5)
-#cairo_pdf("pubfigs/FloVegBoxes.pdf", height=5.5, width=5.5, fam = "Times")
+cairo_pdf("pubfigs/FloVegBoxes.pdf", height=5.5, width=5.5, fam = "Times")
 par(mar=c(8,4,2,2))
 plot(veg$tg2, veg$logd, cex=.8, notch=F, xaxt="n", col="darkgreen", 
      ylab="Proportional divergence", xlab="", yaxt="n", ylim=c(-3,3), xlim=c(0,23))
@@ -415,7 +422,9 @@ axis(2, at=x3atNEW, c("<1.005", signif(xt3, 4)[-1]), las=1)
 a = 1:8
 
 axis(1, at=a, labels = FALSE)
-labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+#labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$logd>-100, veg$tg2, sum, na.rm=T), ",", tapply(veg$study_ID, veg$tg2, function(x) length(unique(x))),") ")
+
 labels = sub("_"," ",labels)
 text(a, par("usr")[3] + tpos, srt = 45, adj = 1,cex=.7,
      labels = labels, xpd = TRUE)
@@ -435,9 +444,11 @@ par(new=T)
 plot(floral$tg2, floral$logd, cex=.8, yaxt="n", at=a, xaxt="n", col="darkblue",
      ylab="", xlab="", ylim=c(-3,3), xlim=c(0,23))
 axis(1, at=a, labels = FALSE)
-labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+#labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T), ",", tapply(floral$study_ID, floral$tg2, function(x) length(unique(x))),") ")
+
 labels = sub("_"," ",labels)
-labels[11] = "FLOWER SIZE (79)"
+labels[11] = "FLOWER SIZE (79,38)"
 text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
      labels = labels, xpd = TRUE)
 h = median(ddf$logd[ddf$tg1=="floral"], na.rm=T)
@@ -447,7 +458,7 @@ legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5,
        bty="n", legend=c(expression(paste("Floral (", italic(n)," = 273)")), 
                          expression(paste("Vegetative (", italic(n)," = 80)"))))
 
-#dev.off()
+dev.off()
 
 #### Subset data for d vs. e meta-analysis ####
 ddf = na.omit(ddf)
@@ -476,7 +487,6 @@ length(unique(ddf$species))
 tapply(ddf$d, list(ddf$ms, ddf$tg1), median)
 
 #### Univariate meta-analysis ####
-
 ddf$scale_npop = scale(log(ddf$npop), scale=F)
 ddf$scale_maxdist = scale(log(ddf$maxdist), scale=F)
 ddf$scale_log_evol = scale(log(ddf$evals), scale=F)
@@ -924,3 +934,63 @@ data.frame(meanvals, ddf$dimension)
 m = lmer(log(d*100) ~ log(evals) + meanvals + scale_npop + scale_maxdist
          + (1|species/study_ID), data=ddf)
 summary(m)
+
+
+#### Plots of d/e ratio ####
+ddf$logde = log((ddf$d*100)/ddf$evals)
+
+ddf2 = ddf[which(ddf$logde>-Inf),]
+veg = ddf2[ddf2$tg1=="vegetative",]
+
+medians = tapply(veg$logde, veg$tg2, median, na.rm=T)
+veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
+levels(veg$tg2)
+
+tpos=-.5
+
+cairo_pdf("pubfigs/deBoxes.pdf", height=5.5, width=5.5, fam = "Times")
+par(mar=c(8,4,2,2))
+plot(veg$tg2, veg$logde, cex=.8, notch=F, xaxt="n", col="darkgreen", 
+     ylab="log(d/e)", xlab="", ylim=c(-6,10), xlim=c(0,20))
+#axis(2, at=x3atNEW, c("<1.005", signif(xt3, 4)[-1]), las=1)
+
+a = 1:6
+
+axis(1, at=a, labels = FALSE)
+#labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$logde>-100, veg$tg2, sum, na.rm=T), ",", tapply(veg$study_ID, veg$tg2, function(x) length(unique(x))),") ")
+
+labels = sub("_"," ",labels)
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1,cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logde[ddf$tg1=="vegetative"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+# Floral
+floral = ddf2[ddf2$tg1=="floral" & ddf2$tg2!="fitness",]
+#floral$logd[which(floral$logd==-Inf)]=log10(0.01)
+
+medians = tapply(floral$logde, floral$tg2, median, na.rm=T)
+floral$tg2 = factor(floral$tg2, levels=names(sort(medians,decreasing=T)))
+levels(floral$tg2)
+a = (max(a)+2):((max(a)+1)+length(levels(floral$tg2)))
+
+par(new=T)
+plot(floral$tg2, floral$logde, cex=.8, yaxt="n", at=a, xaxt="n", col="darkblue",
+     ylab="", xlab="", ylim=c(-6,10), xlim=c(0,20))
+axis(1, at=a, labels = FALSE)
+#labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logde>-100, floral$tg2, sum, na.rm=T), ",", tapply(floral$study_ID, floral$tg2, function(x) length(unique(x))),") ")
+
+labels = sub("_"," ",labels)
+labels[11] = "FLOWER SIZE (60,38)"
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logde[ddf$tg1=="floral"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
+       bty="n", legend=c(expression(paste("Floral (", italic(n)," = 264)")), 
+                         expression(paste("Vegetative (", italic(n)," = 67)"))))
+
+dev.off()

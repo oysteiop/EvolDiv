@@ -139,6 +139,8 @@ gmat = apply(simplify2array(glist), 1:2, mean)
 # Each G
 levels(Gdat$pop)
 pops = c("SPIT", "STUC", "STUS", "VIS")
+nFam = tapply(dat$sire, dat$pop, function(x) length(unique(x)))
+
 p = 1
 for(p in 1:length(pops)){
   pop = pops[p]
@@ -151,11 +153,12 @@ colnames(gmat) = rownames(gmat) = c("petal.width.mm", "petal.length.mm", "flower
 
 source("code/computeGD.R")
 source("code/alignMat.R")
-vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata", plot=F)
+vals = computeGD(gmat, dpost, MeanP, species="Arabidopsis lyrata",
+                 linearonly=F, SE=T, fixD=F, nSample=1000, nPop=4, nFam=nFam[p], plot=F)
 
 #Uncertainty over the posterior
 out = list()
-for(i in 1:100){
+for(i in 1:1000){
   sgmat = matrix(gpost[i,], nrow=n)
   sdmat = matrix(dpost[i,], nrow=n)
   #sdmat = dmat
@@ -166,14 +169,15 @@ slopes = lapply(out, function(x) x$res$slope)
 slopemean = apply(simplify2array(slopes), 1, median)
 slopeSE = apply(simplify2array(slopes), 1, sd)
 
-vals$res$slope_MC = slopemean
-vals$res$SE = slopeSE
+#vals$res$slope_MC = slopemean
+#vals$res$SE = slopeSE
 
 vals
 
 name = paste0("Arabidopsis lyrata: ", pop)
 
 gdDF = data.frame(species="Arabidopsis_lyrata", g = name, ntraits = ncol(gmat), 
+                  nPop = 4, nFam = nFam[p],
                   dims = "line+coun",
                   ndims = 2,
                   traitgroups = "flo+veg",
@@ -185,12 +189,12 @@ gdDF = data.frame(species="Arabidopsis_lyrata", g = name, ntraits = ncol(gmat),
                   d = "Arabidopsis lyrata: Puentes et al. 2016 common garden", nPop = 4, 
                   dmean = evolvabilityMeans(dmat)[1],
                   betaT = vals$res[1,3], betaT_SE = vals$res[1,5], r2T = vals$res[1,6],
-                  betaT_cond = vals$res[2,3], r2T_cond = vals$res[2,6],
+                  betaT_cond = vals$res[2,3], betaT_cond_SE = vals$res[2,5], r2T_cond = vals$res[2,6],
                   betaG = vals$res[3,3], betaG_SE = vals$res[3,5], r2G = vals$res[3,6],
                   betaD = vals$res[4,3], betaD_SE = vals$res[4,5], r2D = vals$res[4,6],
-                  betaD_cond = vals$res[5,3], r2D_cond = vals$res[5,6],
-                  betaP = vals$res[6,3], r2P = vals$res[6,6],
-                  betaP_cond = vals$res[7,3], r2P_cond = vals$res[7,6],
+                  betaD_cond = vals$res[5,3], betaD_cond_SE = vals$res[5,5], r2D_cond = vals$res[5,6],
+                  betaP = vals$res[6,3], betaP_SE = vals$res[6,5], r2P = vals$res[6,6],
+                  betaP_cond = vals$res[7,3], betaP_cond_SE = vals$res[7,5], r2P_cond = vals$res[7,6],
                   r2All = vals$res[8,6],
                   theta = vals$theta, row.names = NULL)
 head(gdDF)
@@ -200,10 +204,10 @@ filename = paste0("analyses/puentes2016/gdDF_", pop,".RData")
 save(gdDF, file=filename)
 }
 
-save(gdDF, file="analyses/puentes2016/gdDF_SPIT.RData")
-save(gdDF, file="analyses/puentes2016/gdDF_STUC.RData")
-save(gdDF, file="analyses/puentes2016/gdDF_STUS.RData")
-save(gdDF, file="analyses/puentes2016/gdDF_VIS.RData")
+#save(gdDF, file="analyses/puentes2016/gdDF_SPIT.RData")
+#save(gdDF, file="analyses/puentes2016/gdDF_STUC.RData")
+#save(gdDF, file="analyses/puentes2016/gdDF_STUS.RData")
+#save(gdDF, file="analyses/puentes2016/gdDF_VIS.RData")
 
 
 
