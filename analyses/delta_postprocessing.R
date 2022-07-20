@@ -5,9 +5,50 @@
 rm(list=ls())
 
 library(plyr)
+library(lme4)
 
-load(file="deltaListFull.RData")
-load(file="deltaDat.RData")
+#load(file="deltaListFull.RData")
+#load(file="deltaDat.RData")
+#ddorg = deltaDat
+
+load(file="deltaListFullSE.RData")
+load(file="deltaDatSE.RData")
+
+# Meta-analysis of proportional evolvability along divergence vectors
+eratio = deltaDat$edelta/deltaDat$emean
+cratio = deltaDat$cdelta/deltaDat$cmean
+
+sum(eratio>1)/sum(eratio>-Inf)*100
+sum(cratio>1)/sum(cratio>-Inf)*100
+
+hist(eratio)
+hist(cratio)
+hist(log(eratio))
+hist(log(cratio))
+
+mean(eratio)
+mean(cratio)
+median(eratio)
+median(cratio)
+
+deltaDat$pop = paste0(deltaDat$species, deltaDat$pop)
+
+# Meta-analysis
+ww = 1/((deltaDat$edeltaSE^2)/(eratio^2))
+m = lmer(log(eratio) ~ 1 + (1|g) + (1|pop), weights = ww, data=deltaDat)
+summary(m)
+exp(0.71058)
+
+ww = 1/((deltaDat$cdeltaSE^2)/(cratio^2))
+m = lmer(log(cratio) ~ 1 + (1|g) + (1|pop),  weights = ww, data=deltaDat)
+summary(m)
+exp(0.7355)
+
+m = lmer(eratio ~ 1 + (1|g) + (1|pop),  weights = 1/(edeltaSE^2), data=deltaDat)
+summary(m)
+
+m = lmer(cratio ~ 1 + (1|g) + (1|pop),  weights = 1/(cdeltaSE^2), data=deltaDat)
+summary(m)
 
 # Misc plots for supporting information
 
@@ -33,8 +74,7 @@ plot(deltaDat$edelta/deltaDat$emax, deltaDat$theta, ylim=c(0,90), las=1, pch=16,
      xlab="")
 mtext(expression(paste("Prop of max evol along div vector "," [", e(Delta), "/", e[max], "]")), 1, line=2.5, cex=.9)
 
-
-deltaDat[which(deltaDat$theta > 75 & (deltaDat$edelta/deltaDat$emax)>0.4),]
+#deltaDat[which(deltaDat$theta > 75 & (deltaDat$edelta/deltaDat$emax)>0.4),]
 
 meanDat = ddply(deltaDat, .(species), summarize,
                 emean = median(emean),
@@ -141,7 +181,7 @@ points(median(meanDat$div), median(log(meanDat$cdelta/meanDat$cmean)), pch=16, c
 
 # Alternative summary figure with scaling between min, mean, and max ####
 
-deltaDat = deltaDat[deltaDat$ndims==1,]
+#deltaDat = deltaDat[deltaDat$ndims==1,]
 
 x11(height=4, width=8)
 par(mfrow=c(1,2), mar=c(4,4,2,2))
@@ -161,11 +201,11 @@ for(i in 1:nrow(meanDat)){
 }
 
 plot(deltaDat$div, newe, pch=16, col="black", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
-     main=" (e) All studies (evolvability)")
+     main="All studies (evolvability)")
 #points(meanDat$div, newmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(e)), expression(e[max])), las=1)
-mtext("Divergence from focal population (x100)", 1, line=2.5)
+mtext("Divergence from focal population", 1, line=2.5)
 
 newc = (deltaDat$cdelta-deltaDat$cmean)/(deltaDat$emax-deltaDat$cmean)
 for(i in 1:nrow(deltaDat)){
@@ -182,7 +222,7 @@ for(i in 1:nrow(meanDat)){
 }
 
 plot(deltaDat$div, newc, pch=16, col="grey", ylim=c(-1,1), yaxt="n", ylab="", xlab="",
-     main=" (f) All studies (conditional evolvability)")
+     main="All studies (conditional evolvability)")
 #points(meanDat$div, newcmeans, pch=16)
 abline(h=0)
 axis(2, at=c(-1,0,1), labels=c(expression(e[min]), expression(bar(c)), expression(e[max])), las=1)
@@ -190,7 +230,7 @@ mtext("Divergence from focal population (x100)", 1, line=2.5)
 
 #### Function for plotting individual studies from deltaList ####
 plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]), 
-                     xlab=T, ylab=T,
+                     xlab=T, ylab=T, clab=T,
                      cex=.8, lab.offset=0.05){
   plotData = deltaList[[index]]
   
@@ -214,7 +254,7 @@ plotDelta = function(index, title=paste(plotData$g[1], "/", plotData$d[1]),
   text(x=x, y=plotData$emean[1], labels=expression(bar(e)), xpd=T, cex=cex, adj=0)
   text(x=x, y=plotData$emin[1], labels=expression(e[min]), xpd=T, cex=cex, adj=0)
   text(x=x, y=plotData$emax[1], labels=expression(e[max]), xpd=T, cex=cex, adj=0)
-  text(x=x, y=plotData$cmean[1], labels=expression(bar(c)), xpd=T, cex=cex, adj=0)
+  if(clab){text(x=x, y=plotData$cmean[1], labels=expression(bar(c)), xpd=T, cex=cex, adj=0)}
   
   legend("topleft", c("e","c"), pch=16, col=c("black","grey"), bty="n")
 }
@@ -226,7 +266,7 @@ cairo_pdf("pubfigs/edeltaFig.pdf", height=6, width=10, fam="Times")
 #x11(height=6, width=10)
 par(mfrow=c(2,3), mar=c(4, 4, 2, 3))
 
-plotDelta(37, lab.offset=0.07, cex=1, xlab=F, title = "")
+plotDelta(37, lab.offset=0.07, cex=1, xlab=F, clab=F, title = "")
 mtext(expression(paste("", italic(Crepis)," ", italic(tectorum))), 3, line=0.5, cex=.8)
 plotDelta(38, lab.offset=0.07, cex=1, xlab=F, ylab=F, title = "")
 mtext(expression(paste("", italic(Dalechampia)," ", italic(scandens))), 3, line=0.5, cex=.8)

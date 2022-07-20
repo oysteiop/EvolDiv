@@ -22,7 +22,7 @@ str(dat)
 #### - Estimating the G matrix - ####
 #####################################
 
-Mik=dat[đat$Population=="Mikonos",]
+Mik=dat[dat$Population=="Mikonos",]
 
 #Remove outlier
 Mik=Mik[-which.max(Mik$mp_Leaf_length),]

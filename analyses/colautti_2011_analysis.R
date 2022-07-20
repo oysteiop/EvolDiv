@@ -318,7 +318,8 @@ dim(means)
 
 z0 = colMeans(means)
 
-outdat = computeDelta2(gmat/100, means, z0)
+source("code/computeDelta.R")
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=339, nSample=1000)
 
 deltaDF = data.frame(species="Lythrum_salicaria", g="Lythrum salicaria: 20 pops", ntraits=ncol(gmat), 
                      d="Lythrum salicaria: Colautti and Barrett 2011 greenhouse", pop=rownames(means), 
@@ -326,7 +327,9 @@ deltaDF = data.frame(species="Lythrum_salicaria", g="Lythrum salicaria: 20 pops"
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE = outdat$edeltaSE, 
+                     cdelta=outdat$cdelta, cdeltaSE = outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 head(deltaDF)
 save(deltaDF, file="analyses/colautti/deltaDF.RData")

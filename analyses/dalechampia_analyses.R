@@ -930,7 +930,7 @@ head(means)
 dim(means)
 
 source("code/computeDelta.R")
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=69, nSample = 1000)
 
 deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens A: Tulum", ntraits=ncol(gmat), 
                      d="Dalechampia scandens A: Bolstad et al. Mexico greenhouse", pop=rownames(means), 
@@ -938,7 +938,9 @@ deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens A
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE=outdat$edeltaSE, 
+                     cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 
 head(deltaDF)
@@ -1010,7 +1012,7 @@ head(means)
 dim(means)
 
 source("code/computeDelta.R")
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=69, nSample=1000)
 
 outlist = list()
 for(i in 1:100){
@@ -1034,7 +1036,9 @@ deltaDF = data.frame(species="Dalechampia_scandens_A", g="Dalechampia scandens A
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE=outdat$edeltaSE, 
+                     cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 
 head(deltaDF)
@@ -1107,7 +1111,7 @@ means = means[,c(5,4,2,3,1)]
 head(means)
 dim(means)
 
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=44, nSample=1000)
 
 deltaDF = data.frame(species="Dalechampia_scandens_B", g="Dalechampia scandens B: Tovar", ntraits=ncol(gmat), 
                      d="Dalechampia scandens B: Bolstad et al. Mexico greenhouse", pop=rownames(means), 
@@ -1115,7 +1119,9 @@ deltaDF = data.frame(species="Dalechampia_scandens_B", g="Dalechampia scandens B
                      emin=evolvabilityMeans(gmat)[2],
                      emax=evolvabilityMeans(gmat)[3],
                      cmean=evolvabilityMeans(gmat)[4],
-                     div=outdat[,1], edelta=outdat[,2], cdelta=outdat[,3], 
+                     div=outdat[,1],
+                     edelta=outdat$edelta, edeltaSE=outdat$edeltaSE, 
+                     cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                      theta=outdat[,4], row.names=NULL)
 head(deltaDF)
 

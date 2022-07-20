@@ -280,6 +280,8 @@ GDellipse(dmat, gmat, xlim=c(-7,7), ylim=c(-7, 7), main="Senecio: Dune")
 Gdat = read.csv("data/walter/Data_Exp2_Gvariance.csv")
 
 pops = c("Dune", "Head", "Table", "Wood")
+nFam = tapply(Gdat$sire, Gdat$Type, function(x) length(unique(x)))
+
 p=1
 for(p in 1:length(pops)){
   pop = pops[p]
@@ -305,7 +307,7 @@ z0 = apply(Gdat[,8:17], 2, function(x){tapply(x, Gdat$Type, mean, na.rm=T)})
 z0 = z0[p,] #Choose reference
 
 source("code/computeDelta.R")
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=nFam[p], nSample=1000)
 
 name = paste0("Senecio pinnatifolius: ", pop)
 deltaDF = data.frame(species="Senecio_pinnatifolius", g=name, ntraits=ncol(gmat), 
@@ -314,7 +316,9 @@ deltaDF = data.frame(species="Senecio_pinnatifolius", g=name, ntraits=ncol(gmat)
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE=outdat$edeltaSE,
+                     cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 head(deltaDF)
 
@@ -323,10 +327,10 @@ filename=paste0("analyses/walter2018/deltaDF_", pop,".RData")
 save(deltaDF, file=filename)
 }
 
-save(deltaDF, file="analyses/walter2018/deltaDF_Dune.RData")
-save(deltaDF, file="analyses/walter2018/deltaDF_Head.RData")
-save(deltaDF, file="analyses/walter2018/deltaDF_Table.RData")
-save(deltaDF, file="analyses/walter2018/deltaDF_Wood.RData")
+#save(deltaDF, file="analyses/walter2018/deltaDF_Dune.RData")
+#save(deltaDF, file="analyses/walter2018/deltaDF_Head.RData")
+#save(deltaDF, file="analyses/walter2018/deltaDF_Table.RData")
+#save(deltaDF, file="analyses/walter2018/deltaDF_Wood.RData")
 
 
 #x11(width=5, height=5)

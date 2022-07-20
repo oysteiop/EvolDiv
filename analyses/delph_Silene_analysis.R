@@ -238,7 +238,7 @@ means=means_as
 z0 = colMeans(means)
 
 source("code/computeDelta.R")
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=13, nSample=1000)
 
 deltaDF = data.frame(species="Silene_latifolia", g="Silene latifolia: 3 pops", ntraits=ncol(gmat), 
                      d= "Silene latifolia: Yu et al 2011 greenhouse", pop=rownames(means), 
@@ -249,7 +249,9 @@ deltaDF = data.frame(species="Silene_latifolia", g="Silene latifolia: 3 pops", n
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE = outdat$edeltaSE, 
+                     cdelta=outdat$cdelta, cdeltaSE = outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 head(deltaDF)
 save(deltaDF, file="analyses/delph_Silene/deltaDF.RData")

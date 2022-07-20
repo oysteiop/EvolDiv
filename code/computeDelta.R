@@ -1,10 +1,11 @@
 computeDelta = function(G, means, z0, ndrift=1000){
-outdat = matrix(NA, nrow=nrow(means), ncol=5)
+  require(mvtnorm)
+  outdat = matrix(NA, nrow=nrow(means), ncol=10)
 
-#Drift expectation
-rb = randomDelta(n = ndrift, gmat = G)
-e_beta = NULL
-e_drift = mean(evolvabilityBeta(G*100, rb)$e)
+  #Drift expectation
+  rb = randomDelta(n = ndrift, gmat = G)
+  e_beta = NULL
+  e_drift = mean(evolvabilityBeta(G*100, rb)$e)
 
 for(i in 1:nrow(means)){
   z1 = unlist(means[i,])
@@ -17,7 +18,7 @@ for(i in 1:nrow(means)){
   c_delta = evolvabilityBeta(G*100, scale_delta)$c
   theta = acos(t(eigen(G)$vectors[,1]) %*% scale_delta)*(180/pi)
   
-  outdat[i,]=c(div, e_delta, c_delta, theta, e_drift)
+  outdat[i,]=c(div, e_delta, c_delta, theta, evolvabilityMeans(G*100)[c(1:4,7)], e_drift)
   }
 return(outdat)
 }
@@ -78,7 +79,7 @@ computeDelta3 = function(G=out$G, means, z0, SE=FALSE, nSample=10, nFam=out$nFam
     scale_delta = rot_delta/sqrt(sum(rot_delta^2)) #Normalize to unit length 
     
     d = rot_delta
-    div = mean(abs(d))*100
+    div = mean(abs(delta))*100
     
     e_delta = evolvabilityBeta(G_ge*100, scale_delta)$e
     c_delta = evolvabilityBeta(G_ge*100, scale_delta)$c
@@ -107,8 +108,8 @@ computeDelta3 = function(G=out$G, means, z0, SE=FALSE, nSample=10, nFam=out$nFam
       d = rot_delta
       sdiv = mean(abs(d))*100
       
-      se_delta[s,i] = evolvabilityBeta(sG_ge*100, scale_delta)$e
-      sc_delta[s,i] = evolvabilityBeta(sG_ge*100, scale_delta)$c
+      se_delta[s,i] = evolvabilityBeta(sG_ge*100, scale_delta)$e/evolvabilityMeans(sG_ge*100)[1]
+      sc_delta[s,i] = evolvabilityBeta(sG_ge*100, scale_delta)$c/evolvabilityMeans(sG_ge*100)[4]
       stheta[s,i] = acos(eigen(sG_ge)$vectors[,1] %*% scale_delta)*(180/pi)
     }
     }

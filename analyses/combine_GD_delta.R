@@ -15,7 +15,11 @@ load("data/POPBASE.RData")
 names(gdDat)
 GDTable = gdDat
 GDTable[,c(9:13, 15:34)] = signif(GDTable[,c(9:13, 15:34)], 3)
-write.csv2(GDTable, file = "GDTable.csv", dec=".")
+#write.csv2(GDTable, file = "GDTable.csv", dec=".")
+
+names(deltaDat)
+DeltaTable = deltaDat
+#write.csv2(DeltaTable, file = "DeltaTable.csv", dec=".")
 
 # Combine dataframes
 names(gdDat)
@@ -233,60 +237,4 @@ axis(1, at=1:10, labels=rep("", 10))
 text(1:10, par("usr")[3] - .4, srt = 45, adj = 1, cex=1,
      labels = levels(comb2$dims), xpd = TRUE)
 
-
-
 #### END OF FINAL ANALYSES ####
-
-
-
-# Old crap
-gperd = tapply(gdDat$g, gdDat$d, function(x) length(unique(x)))
-
-red = droplevels(gdDat[gdDat$d %in% names(gperd)[which(gperd>1)],])
-plot(red$d, red$betaG)
-plot(red$d, red$r2G)
-
-plot(as.numeric(red$d), red$betaG)
-plot(as.numeric(red$d), red$r2G)
-plot(red$d, red$betaT)
-
-summary(lmer(betaG~1+(1|d), weights=1/(betaG_SE^2), data=red))
-summary(lmer(betaT~1+(1|d), data=red))
-summary(lmer(betaT~1+(1|d), data=gdDat))
-
-sigma = tapply(red$betaG, red$d, sd)
-mean(sigma)
-
-corr_sigma = sqrt(tapply(red$betaG, red$d, var)-tapply(red$betaG_SE^2, red$d, mean))
-sum(corr_sigma>0, na.rm=T)
-length(corr_sigma)
-sum(corr_sigma>0, na.rm=T)/length(corr_sigma)
-mean(corr_sigma, na.rm=T)
-median(corr_sigma, na.rm=T)
-
-# Maximum distances
-maxdist = read.csv(file="data/maxdists.csv")
-head(maxdist)
-
-dist=NULL
-for(i in 1:nrow(comb2)){
-  dist[i] = maxdist$V2[which(as.character(maxdist$ID)==as.character(comb2$d[i]))]
-}
-comb2$maxdist=dist
-
-plot(log(comb2$maxdist),comb2$betaG)
-cor(log(comb2$maxdist),comb2$betaG, "pairwise")
-
-plot(log(comb2$maxdist),comb2$betaP)
-cor(log(comb2$maxdist),comb2$betaP, "pairwise")
-
-plot(log(comb2$maxdist),comb2$betaP_cond)
-cor(log(comb2$maxdist),comb2$betaP_cond, "pairwise")
-
-plot(log(comb2$maxdist),comb2$r2All)
-cor(log(comb2$maxdist),comb2$r2All, "pairwise")
-
-summary(lm(betaG~log(maxdist)+dmean, data=comb2))
-
-plot(log(comb2$maxdist),comb2$betaD)
-plot(log(comb2$maxdist),comb2$betaD)

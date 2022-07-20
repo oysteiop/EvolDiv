@@ -404,7 +404,7 @@ dat = dat[dat$TYPE=="OUTX",]
 z0 = colMeans(dat[,4:8])
 
 source("code/computeDelta.R")
-outdat = computeDelta2(G=gmat/100, means=means, z0=z0)
+outdat = computeDelta3(G=gmat/100, means=means, z0=z0, SE=T, nFam=82, nSample = 1000)
 
 deltaDF = data.frame(species="Crepis_tectorum", g="Crepis tectorum: Vickleby", ntraits=ncol(gmat), 
                             d="Crepis tectorum: Andersson Crepis greenhouse", pop=rownames(means), 
@@ -412,7 +412,9 @@ deltaDF = data.frame(species="Crepis_tectorum", g="Crepis tectorum: Vickleby", n
                             emin=outdat$emin,
                             emax=outdat$emax,
                             cmean=outdat$cmean,
-                            div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                            div=outdat$div, 
+                            edelta=outdat$edelta, edeltaSE=outdat$edeltaSE, 
+                            cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                             theta=outdat$theta, row.names=NULL)
 
 head(deltaDF)

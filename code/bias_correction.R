@@ -77,17 +77,9 @@ pop.rel.k
 0.76/pop.rel.k # Corrected slope
 0.76/0.777
 
-# Simpler estimate
+# Simpler estimates
 1-pop.mean.obs/var.pred
 0.76/(1-pop.mean.obs/var.pred) # Corrected slope
 
-
-
 1-mean(ddf$var.obs/var.pred)
 0.76/(1-mean(ddf$var.obs/var.pred))
-
-pop.rel.k = 1 - sum(((ddf$log_e^2)*ddf$var.obs/(var(ddf$log_e)-pop.mean.obs+ddf$var.obs)))/
-  sum(ddf$log_e^2)
-pop.rel.k
-
-0.76/pop.rel.k # Corrected slope

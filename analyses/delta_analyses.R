@@ -4,6 +4,8 @@
 
 rm(list=ls())
 
+a = Sys.time()
+
 add2deltaList=function(pop=POPBASE[[s]]$popmeans[,1]){
   data.frame(species = out$species, g = out$gmat, ntraits = ncol(out$G),
              d = out$dmat, pop = pop, 
@@ -14,8 +16,10 @@ add2deltaList=function(pop=POPBASE[[s]]$popmeans[,1]){
              emin = outdat$emin,
              emax = outdat$emax,
              cmean = outdat$cmean,
-             div = outdat$div, edelta = outdat$edelta, cdelta = outdat$cdelta,
-             theta = outdat$theta, edrift = outdat$edrift, row.names=NULL)
+             div = outdat$div, 
+             edelta = outdat$edelta, edeltaSE = outdat$edeltaSE,
+             cdelta = outdat$cdelta, cdeltaSE = outdat$cdeltaSE,
+             theta = outdat$theta, row.names=NULL)
 }
 
 library(plyr)
@@ -35,6 +39,9 @@ names(dsp)
 both_sp = unique(gsp[which(gsp %in% dsp)])
 both_sp
 
+SE=T
+nSample=1000
+
 deltaList = list()
 
 #### Lobelia ####
@@ -51,10 +58,8 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-#outdat = computeDelta(G=out$G, means=means, z0=z0)
 #evolvabilityMeans(out$G)
-outdat = computeDelta2(G=out$G, means=means, z0=z0)
-#outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -70,7 +75,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(1,3:6)] #Caruso 2012
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -86,7 +91,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means #Caruso 2003
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -102,7 +107,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(1,3:6)] #Caruso 2012
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList()
 
@@ -121,7 +126,7 @@ z0 = unlist(means[2,])
 means = means[-2,]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-2,1])
 
@@ -137,7 +142,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -154,7 +159,7 @@ z0 = unlist(means[3,]) #Second G mat, first D mat
 means = means[-3,]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-3,1])
 
@@ -170,7 +175,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means #Second D mat
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -187,7 +192,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0=EVOBASE[[out$gmat]]$Means[c(2:5)]
 colnames(means)==names(z0)
 
-outdat=computeDelta2(out$G, means, z0)
+outdat=computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -203,7 +208,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(2,3,5)]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -219,7 +224,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(1:3)]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -235,7 +240,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means[c(1:3, 5)]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -254,8 +259,7 @@ for(gg in 1:5){
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta2(G=out$G, means=means, z0=z0)
-  #outdat2 = computeDelta3(G=out$G, means=means, z0=z0, SE=T, nSample=100)
+  outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -272,7 +276,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = EVOBASE[[out$gmat]]$Means
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -289,7 +293,7 @@ z0 = unlist(c(means[4,])) #Second G-matrix
 means = means[-4,]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-4,1])
 
@@ -307,7 +311,7 @@ for(gg in 1:4){
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta2(out$G, means, z0)
+  outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -327,7 +331,7 @@ for(gg in 1:3){
   
   colnames(means)==names(z0)
   
-  outdat=computeDelta2(out$G, means, z0)
+  outdat=computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -346,7 +350,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = apply(means, 2, mean)
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -362,7 +366,7 @@ means = means[,match(colnames(out$D), names(means))]
 z0 = apply(means, 2, mean)
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[,1])
 
@@ -383,8 +387,7 @@ z0 = unlist(c(means[gg,])) #First G-matrix
 means = means[-gg,]
 colnames(means)==names(z0)
 
-outdat = computeDelta2(out$G, means, z0)
-outdat2 = computeDelta3(out$G, means, z0, SE=T, nSample=100)
+outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
 
 deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -404,7 +407,7 @@ for(gg in 1:2){
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta2(out$G, means, z0)
+  outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -424,7 +427,7 @@ for(gg in 1:2){
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta2(out$G, means, z0)
+  outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
@@ -443,17 +446,19 @@ for(gg in 1:2){
   means = means[-gg,]
   colnames(means)==names(z0)
   
-  outdat = computeDelta2(out$G, means, z0)
+  outdat = computeDelta3(G=out$G, means=means, z0=z0, SE=SE, nSample=nSample)
   
   deltaList[[length(deltaList)+1]] = add2deltaList(pop=POPBASE[[s]]$popmeans[-gg,1])
 }
 
+b = Sys.time()
+b-a # nSample=1000, 15.7 min
 
-#### Plotting deltaList ####
+#### deltaList output ####
 
-#save(deltaList, file="deltaList.RData")
+save(deltaList, file="deltaListSE.RData")
 
-load(file="deltaList.RData")
+load(file="deltaListSE.RData")
 
 # Add data from orginal analyses
 load(file="analyses/andersson_crepis/deltaDF.RData")
@@ -490,7 +495,7 @@ deltaList[[length(deltaList)+1]]=deltaDF
 load(file="analyses/delph_Silene/deltaDF.RData")
 deltaList[[length(deltaList)+1]]=deltaDF
 
-save(deltaList, file="deltaListFull.RData")
+save(deltaList, file="deltaListFullSE.RData")
 
 # Compile dataframe
 deltaDat = rbind.fill(deltaList)
@@ -504,6 +509,6 @@ for(i in 1: nrow(deltaDat)){
   }
 }
 
-save(deltaDat, file="deltaDat.RData")
+save(deltaDat, file="deltaDatSE.RData")
 
 #### END OF FINAL ANALYSES ####

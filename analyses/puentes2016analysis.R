@@ -315,8 +315,12 @@ axis(2, at=x3at, signif(x3, 3), las=1)
 #exp(sqrt(diag(dmat/100)*(2/pi)))
 
 #### Divergence vectors ####
+Gdat = read.csv("data/puentes/puentes_etal_phen_multivariate_G_matrices.csv")
+dat = Gdat
 
 pops = c("SPIT", "STUC", "STUS", "VIS")
+nFam = tapply(dat$sire, dat$pop, function(x) length(unique(x)))
+
 p=1
 for(p in 1:length(pops)){
   pop = pops[p]
@@ -340,7 +344,7 @@ head(means)
 dim(means)
 
 source("code/computeDelta.R")
-outdat = computeDelta2(gmat/100, means, z0)
+outdat = computeDelta3(gmat/100, means, z0, SE=T, nFam=nFam[p], nSample=1000)
 
 name = paste0("Arabidopsis lyrata: ", pop)
 deltaDF = data.frame(species="Arabidopsis_lyrata", g=name, ntraits=ncol(gmat), 
@@ -349,7 +353,9 @@ deltaDF = data.frame(species="Arabidopsis_lyrata", g=name, ntraits=ncol(gmat),
                      emin=outdat$emin,
                      emax=outdat$emax,
                      cmean=outdat$cmean,
-                     div=outdat$div, edelta=outdat$edelta, cdelta=outdat$cdelta,
+                     div=outdat$div,
+                     edelta=outdat$edelta, edeltaSE=outdat$edeltaSE,
+                     cdelta=outdat$cdelta, cdeltaSE=outdat$cdeltaSE,
                      theta=outdat$theta, row.names=NULL)
 head(deltaDF)
 
@@ -358,10 +364,10 @@ filename=paste0("analyses/puentes2016/deltaDF_", pop,".RData")
 save(deltaDF, file=filename)
 }
 
-save(deltaDF, file="analyses/puentes2016/deltaDF_SPIT.RData")
-save(deltaDF, file="analyses/puentes2016/deltaDF_STUC.RData")
-save(deltaDF, file="analyses/puentes2016/deltaDF_STUS.RData")
-save(deltaDF, file="analyses/puentes2016/deltaDF_VIS.RData")
+#save(deltaDF, file="analyses/puentes2016/deltaDF_SPIT.RData")
+#save(deltaDF, file="analyses/puentes2016/deltaDF_STUC.RData")
+#save(deltaDF, file="analyses/puentes2016/deltaDF_STUS.RData")
+#save(deltaDF, file="analyses/puentes2016/deltaDF_VIS.RData")
 
 
 
