@@ -608,7 +608,7 @@ summary(lm(tapply(ddf$logd, ddf$study_ID, mean, na.rm=T)~tapply(log(ddf$evals), 
 floveg = ddf[ddf$tg1=="floral" | ddf$tg1=="vegetative",]
 floveg$tg1 = factor(floveg$tg1)
 m = glmmTMB(log(d*100) ~ -1 + tg1 + log(evals):tg1 + scale_npop+ scale_maxdist 
-         + (log(evals)|study_ID) +(1|species), weights = floveg_wgts, data=floveg)
+         + (log(evals)|study_ID) +(1|species), weights = floveg_wgts, REML=T, data=floveg)
 
 xt3 = c(1.005, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5, 3)
 #x3at = log10(100*log(xt3)^2)
@@ -649,7 +649,7 @@ me_e = log(median(ddf$evals[ddf$tg1=="floral"]))
 y = summary(m)$coef$cond[1,1] + summary(m)$coef$cond[5,1]*me_e +
   summary(m)$coef$cond[3,1]*mean(ddf$scale_npop[ddf$tg1=="floral"]) +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_maxdist[ddf$tg1=="floral"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkblue")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 x2=seq(min(log(floveg$evals[floveg$tg1=="vegetative"])),
        max(log(floveg$evals[floveg$tg1=="vegetative"])), .1)
@@ -662,14 +662,14 @@ me_e = log(median(ddf$evals[ddf$tg1=="vegetative"]))
 y = summary(m)$coef$cond[2,1] + summary(m)$coef$cond[6,1]*me_e +
   summary(m)$coef$cond[3,1]*mean(ddf$scale_npop[ddf$tg1=="vegetative"]) +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_maxdist[ddf$tg1=="vegetative"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkgreen")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 legend("topleft", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Floral", "Vegetative"))
 
 # Mating systems
 m = glmmTMB(log(d*100) ~ -1 + ms + log(evals):ms + scale_npop+ scale_maxdist 
-         + (log(evals)|study_ID) +(1|species), weight = wgts, data=ddf)
+         + (log(evals)|study_ID) +(1|species), weight = wgts, REML=T, data=ddf)
 summary(m)$coef$cond
 
 plot(log10(ddf$evals), ddf$logd,
@@ -700,7 +700,7 @@ me_e=log(median(ddf$evals[ddf$ms=="S"]))
 y = summary(m)$coef$cond[1,1] + summary(m)$coef$cond[6,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$ms=="S"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$ms=="S"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkblue")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 x2=seq(min(log(ddf$evals[ddf$ms=="M"])),
        max(log(ddf$evals[ddf$ms=="M"])), .1)
@@ -713,7 +713,7 @@ me_e = log(median(ddf$evals[ddf$ms=="M"]))
 y = summary(m)$coef$cond[2,1] + summary(m)$coef$cond[7,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$ms=="M"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$ms=="M"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkgreen")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 x3=seq(min(log(ddf$evals[ddf$ms=="O"])),
        max(log(ddf$evals[ddf$ms=="O"])), .1)
@@ -726,14 +726,14 @@ me_e = log(median(ddf$evals[ddf$ms=="O"]))
 y = summary(m)$coef$cond[3,1] + summary(m)$coef$cond[8,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$ms=="O"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$ms=="O"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkred")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 legend("topleft", pch=15, col=c("darkblue", "darkgreen", "darkred"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Selfing", "Mixed", "Outcrossing"))
 
 # Environments
 m = glmmTMB(log(d*100) ~ -1 + environment + log(evals):environment + scale_npop+ scale_maxdist 
-         + (log(evals)|study_ID) +(1|species), weights=wgts, data=ddf)
+         + (log(evals)|study_ID) +(1|species), weights=wgts, REML=T, data=ddf)
 
 plot(log10(ddf$evals), ddf$logd,
      xlab="",
@@ -762,7 +762,7 @@ me_e=log(median(ddf$evals[ddf$environment=="greenhouse"]))
 y = summary(m)$coef$cond[1,1] + summary(m)$coef$cond[6,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$environment=="greenhouse"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$environment=="greenhouse"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkblue")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 x2=seq(min(log(ddf$evals[ddf$environment=="common_garden"])),
        max(log(ddf$evals[ddf$environment=="common_garden"])), .1)
@@ -775,7 +775,7 @@ me_e = log(median(ddf$evals[ddf$environment=="common_garden"]))
 y = summary(m)$coef$cond[2,1] + summary(m)$coef$cond[7,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$environment=="common_garden"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$environment=="common_garden"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkgreen")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 x3=seq(min(log(ddf$evals[ddf$environment=="field"])),
        max(log(ddf$evals[ddf$environment=="field"])), .1)
@@ -788,7 +788,7 @@ me_e = log(median(ddf$evals[ddf$environment=="field"]))
 y = summary(m)$coef$cond[3,1] + summary(m)$coef$cond[8,1]*me_e +
   summary(m)$coef$cond[4,1]*mean(ddf$scale_npop[ddf$environment=="field"]) +
   summary(m)$coef$cond[5,1]*mean(ddf$scale_maxdist[ddf$environment=="field"])
-points(log10(exp(me_e)), log10(exp(y)), pch=16, col="darkred")
+points(log10(exp(me_e)), log10(exp(y)), pch=16, col="black")
 
 legend("topleft", pch=15, col=c("darkblue", "darkgreen", "darkred"), cex=1, pt.cex=1.5, 
        bty="n", legend=c("Greenhouse", "Garden", "Field"))
@@ -799,7 +799,7 @@ dev.off()
 tapply(ddf$dimension, ddf$dimension, length)
 
 m = glmmTMB(log(d*100) ~ -1 + dimension + log(evals):dimension + scale_npop + scale_maxdist 
-         + (log(evals)|study_ID) +(1|species), weights = wgts, data=ddf)
+         + (log(evals)|study_ID) +(1|species), weights = wgts, REML=T, data=ddf)
 
 cols = c("blue3", "firebrick", "green3", "yellow3","cyan", "black") 
 
@@ -904,7 +904,7 @@ rese = summary(lm(log10(ddf$evals)~ddf$dimension))$residuals
 
 plot(rese, resd)
 m = glmmTMB(resd ~ rese + scale_npop + scale_maxdist
-         + (rese|study_ID) + (1|species), weights = wgts, data=ddf)
+         + (rese|study_ID) + (1|species), weights = wgts, REML=T, data=ddf)
 summary(m)
 
 r.squaredGLMM(m)

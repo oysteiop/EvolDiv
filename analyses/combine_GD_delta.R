@@ -183,7 +183,7 @@ par(mfrow=c(2,2), mar = c(4,4,1,1))
 plot(comb2$r2All, comb2$thetaGD, pch=16, col="lightgrey", las=1, xlim=c(0,1), ylim=c(0,90),
      xlab="", ylab="")
 points(comb$r2All, comb$thetaGD, pch=16)
-mtext(expression(paste("Overall ", r^2, " of scaling relationship")), 1, line=2.5, cex=.9)
+mtext(expression(paste("Overall ", r^2, "")), 1, line=2.5, cex=.9)
 mtext(expression(paste("Angle between  ", g[max], " and ", d[max])), 2, line=2.5, cex=.9)
 
 plot(comb2$thetaGD, comb2$betaG, pch=16, col="lightgrey", las=1,

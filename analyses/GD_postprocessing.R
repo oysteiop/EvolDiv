@@ -4,7 +4,7 @@
 
 rm(list=ls())
 
-library(lme4)
+library(glmmTMB)
 
 load(file="gdDatSE.RData")
 
@@ -36,26 +36,21 @@ mean(gdDat$betaG)
 
 tapply(gdDat$g, gdDat$d, length)
 
-# Meta-analysis
-m = lmer(betaD~1 + (1|species/d), weights= (1/(betaD_SE^2)), data=gdDat[which(gdDat$betaD_SE>0),])
+# Meta-analysis ####
+m = glmmTMB(betaD~1 + (1|species/d), weights= (1/(1+(betaD_SE^2))), REML = T, data=gdDat[which(gdDat$betaD_SE>0),])
 summary(m)
 
-m = lmer(betaG~1 + (1|species/d), weights=(1/(betaG_SE^2)), data=gdDat[which(gdDat$betaG_SE>0),])
+m = glmmTMB(betaG~1 + (1|species/d), weights=(1/(1+(betaG_SE^2))), REML = T, data=gdDat[which(gdDat$betaG_SE>0),])
 summary(m)
 
-m = lmer(betaP~1 + (1|species/d), weights= (1/(betaP_SE^2)), data=gdDat[which(gdDat$betaP_SE>0),])
+m = glmmTMB(betaP~1 + (1|species/d), weights= (1/(1+(betaP_SE^2))), REML = T, data=gdDat[which(gdDat$betaP_SE>0),])
 summary(m)
 
-m = lmer(betaD_cond~1 + (1|species/d), weights=(1/(betaD_cond_SE^2)), data=gdDat[which(gdDat$betaD_cond_SE>0),])
+m = glmmTMB(betaD_cond~1 + (1|species/d), weights=(1/(1+(betaD_cond_SE^2))), REML = T, data=gdDat[which(gdDat$betaD_cond_SE>0),])
 summary(m)
 
-m = lmer(betaP_cond~1 + (1|species/d), weights=(1/(betaP_cond_SE^2)), data=gdDat[which(gdDat$betaP_cond_SE>0),])
+m = glmmTMB(betaP_cond~1 + (1|species/d), weights=(1/(1+(betaP_cond_SE^2))), REML = T, data=gdDat[which(gdDat$betaP_cond_SE>0),])
 summary(m)
-
-#aDat = gdDat[which(gdDat$betaG_SE>0),]
-#mSE = Almer_SE(betaG ~ 1 + (1|species/d), SE=aDat$betaG_SE, data=aDat)
-#m=lm(betaG~1, weights=(1/gdDat$betaG_SE^2), data=gdDat)
-#summary(mSE)
 
 # Means per species
 meanDat = ddply(gdDat, .(species), summarize,
@@ -72,10 +67,6 @@ meanDat
 
 min(c(range(gdDat$betaG), range(gdDat$betaD)))
 max(c(range(gdDat$betaG), range(gdDat$betaD)))
-
-#cm = cov(cbind(gdDat$betaG, gdDat$betaD))/38
-#library(ellipse)
-#ellipse(cm, centre=c(mean(gdDat$betaG), mean(gdDat$betaD)))
 
 #gdDat = gdDat[gdDat$ndims==1,]
 
@@ -95,6 +86,7 @@ hist(gdDat$r2T, breaks=10, xlab="", ylab="", main=expression(paste(r^2, " origin
 par(mar=c(4,4,1,2))
 plot(gdDat$betaG, gdDat$betaD, cex=gdDat$r2All*6, lwd=2, col="lightgrey",
      ylim=c(-1,4), xlim=c(-.2,2), xlab="", ylab="", las=1)
+
 #segments(gdDat$betaG-gdDat$betaG_SE, gdDat$betaD, gdDat$betaG+gdDat$betaG_SE, gdDat$betaD, col="grey")
 #segments(gdDat$betaG, gdDat$betaD-gdDat$betaD_SE, gdDat$betaG, gdDat$betaD+gdDat$betaD_SE, col="grey")
 points(meanDat$betaG, meanDat$betaD, pch=16)
@@ -121,30 +113,6 @@ abline(h=1)
 text(-.165, 3, "(C)", cex=1.5, xpd=T)
 
 dev.off()
-
-# Models to explain variation in betaG
-library(glmmTMB)
-library(MuMIn)
-m1 = glmmTMB(betaG ~ r2All + ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m2 = glmmTMB(betaG ~ r2All + ntraits + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m3 = glmmTMB(betaG ~ ntraits + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m4 = glmmTMB(betaG ~ r2All + log(dmean) + (1|species), weights=1/betaG_SE^2, data=gdDat)
-m5 = glmmTMB(betaG ~ r2All + (1|species), weights=1/betaG_SE^2, data=gdDat)
-AIC(m1, m2, m3, m4, m5)
-summary(m1)
-
-m1 = glmmTMB(betaG ~ r2All + ntraits + log(dmean) + (1|species), data=gdDat)
-m2 = glmmTMB(betaG ~ r2All + ntraits + (1|species), data=gdDat)
-m3 = glmmTMB(betaG ~ ntraits + log(dmean) + (1|species), data=gdDat)
-m4 = glmmTMB(betaG ~ r2All + log(dmean) + (1|species), data=gdDat)
-m5 = glmmTMB(betaG ~ r2All + (1|species), data=gdDat)
-AIC(m1, m2, m3, m4, m5)
-summary(m1)
-
-r.squaredGLMM(m4)
-plot(gdDat$r2All, gdDat$betaG)
-plot(gdDat$ntraits, gdDat$betaG)
-plot(log(gdDat$dmean), gdDat$betaG)
 
 #### Comparing e and c (Appendix 2) ####
 x11(height=6, width=9)
