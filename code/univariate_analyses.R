@@ -40,6 +40,7 @@ for(s in 1:length(studies)){
                 environment = sort(unique(red$environment)),
                 npop = tapply(red$mean>-Inf, red$trait, sum, na.rm=T),
                 d = cbind(tapply(log(abs(red$mean)), red$trait, var, na.rm=T)),
+                draw = cbind(tapply(red$mean, red$trait, var, na.rm=T)),
                 mean = cbind(tapply(red$mean, red$trait, mean, na.rm=T)),
                 ref = unique(red$reference))
   df = na.omit(df)
@@ -107,6 +108,14 @@ w = which(as.character(edat$species)==as.character(ddf$species)[i] & as.characte
 evals[i] = mean(edat$evolvability[w], na.rm=T)
 }
 ddf$evals = evals
+
+edat2 = edat[-which(edat$e_on_log==1),]
+Vavals = NULL
+for(i in 1:nrow(ddf)){
+  w = which(as.character(edat2$species)==as.character(ddf$species)[i] & as.character(edat2$species_measurement)==as.character(ddf$species_trait)[i])
+  Vavals[i] = mean(edat2$Va[w], na.rm=T)
+}
+ddf$Vavals = Vavals
 
 h2tvals = NULL
 for(i in 1:nrow(ddf)){
@@ -994,3 +1003,68 @@ legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5,
                          expression(paste("Vegetative (", italic(n)," = 67)"))))
 
 dev.off()
+
+# Raw variances
+ddf$logde2 = log((ddf$draw)/ddf$Va)
+
+ddf2 = ddf[which(ddf$logde2>-Inf),]
+
+plot(ddf$logde, ddf$logde2, las=1,
+     xlab="log(d/e) (Mean-scaled)",
+     ylab="log(D/Va) (Raw variances)")
+lines(-10:10, -10:10)
+
+veg = ddf2[ddf2$tg1=="vegetative",]
+
+medians = tapply(veg$logde2, veg$tg2, median, na.rm=T)
+veg$tg2 = factor(veg$tg2, levels=names(sort(medians, decreasing=T)))
+levels(veg$tg2)
+
+tpos=-.5
+
+x11(height=5, width=5)
+par(mar=c(8,4,2,2))
+plot(veg$tg2, veg$logde2, cex=.8, notch=F, xaxt="n", col="darkgreen", 
+     ylab="log(D/Va) (Raw variances)", xlab="", ylim=c(-6,10), xlim=c(0,20))
+#axis(2, at=x3atNEW, c("<1.005", signif(xt3, 4)[-1]), las=1)
+
+a = 1:6
+
+axis(1, at=a, labels = FALSE)
+#labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$d>-100, veg$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(veg$tg2)))," (",tapply(veg$logde2>-100, veg$tg2, sum, na.rm=T), ",", tapply(veg$study_ID, veg$tg2, function(x) length(unique(x))),") ")
+
+labels = sub("_"," ",labels)
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1,cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logde2[ddf$tg1=="vegetative"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+# Floral
+floral = ddf2[ddf2$tg1=="floral" & ddf2$tg2!="fitness",]
+#floral$logd[which(floral$logd==-Inf)]=log10(0.01)
+
+medians = tapply(floral$logde2, floral$tg2, median, na.rm=T)
+floral$tg2 = factor(floral$tg2, levels=names(sort(medians, decreasing=T)))
+levels(floral$tg2)
+a = (max(a)+2):((max(a)+1)+length(levels(floral$tg2)))
+
+par(new=T)
+plot(floral$tg2, floral$logde2, cex=.8, yaxt="n", at=a, xaxt="n", col="darkblue",
+     ylab="", xlab="", ylim=c(-6,10), xlim=c(0,20))
+axis(1, at=a, labels = FALSE)
+#labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logd>-100, floral$tg2, sum, na.rm=T),") ")
+labels = paste0(toupper(as.character(levels(floral$tg2)))," (",tapply(floral$logde2>-100, floral$tg2, sum, na.rm=T), ",", tapply(floral$study_ID, floral$tg2, function(x) length(unique(x))),") ")
+
+labels = sub("_"," ",labels)
+labels[11] = "FLOWER SIZE (58,30)"
+text(a, par("usr")[3] + tpos, srt = 45, adj = 1, cex=.7,
+     labels = labels, xpd = TRUE)
+h = median(ddf$logde2[ddf$tg1=="floral"], na.rm=T)
+segments(min(a), h, max(a), h, lwd=3)
+
+legend("topright", pch=15, col=c("darkblue", "darkgreen"), cex=1, pt.cex=1.5, 
+       bty="n", legend=c(expression(paste("Floral (", italic(n)," = 264)")), 
+                         expression(paste("Vegetative (", italic(n)," = 67)"))))
+
+
